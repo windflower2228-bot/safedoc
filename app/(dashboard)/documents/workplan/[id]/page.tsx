@@ -33,13 +33,13 @@ export default async function WorkPlanDetailPage({ params }: Params) {
 
   if (error || !wp) notFound()
 
-  const doc        = wp as WorkPlan
+  const doc        = wp as unknown as WorkPlan
   const riskItems  = (doc.risk_items ?? []) as WorkPlanRiskItem[]
   const workers    = ((doc.workers ?? []) as WorkPlanWorker[]).filter(w => w.name?.trim())
-  const company    = doc.company    as { name: string; address: string } | null
-  const project    = doc.project    as { name: string; site_name: string } | null
-  const author     = doc.author     as { name: string; position: string } | null
-  const sourceRisk = doc.source_risk as { id: string; title: string } | null
+  const company    = doc.company    as unknown as { name: string; address: string } | null
+  const project    = doc.project    as unknown as { name: string; site_name: string } | null
+  const author     = doc.author     as unknown as { name: string; position: string } | null
+  const sourceRisk = doc.source_risk as unknown as { id: string; title: string } | null
 
   const highItems   = riskItems.filter(i => i.risk_level === 'high')
   const totalWorkers = riskItems.reduce((s, i) => s + (i.worker_count || 0), 0)
