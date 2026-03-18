@@ -1,0 +1,51 @@
+{
+  "name": "SafeDoc — 산업안전보건 문서관리",
+  "short_name": "SafeDoc",
+  "description": "위험성평가·교육일지·작업계획서·점검일지를 스마트폰에서 바로 작성하는 산업안전보건 통합 플랫폼",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FFFFFF",
+  "theme_color": "#1E3A5F",
+  "lang": "ko",
+  "categories": ["productivity", "business"],
+  "icons": [
+    { "src": "/icons/icon-72.png",   "sizes": "72x72",   "type": "image/png", "purpose": "maskable any" },
+    { "src": "/icons/icon-96.png",   "sizes": "96x96",   "type": "image/png", "purpose": "maskable any" },
+    { "src": "/icons/icon-128.png",  "sizes": "128x128", "type": "image/png", "purpose": "maskable any" },
+    { "src": "/icons/icon-144.png",  "sizes": "144x144", "type": "image/png", "purpose": "maskable any" },
+    { "src": "/icons/icon-192.png",  "sizes": "192x192", "type": "image/png", "purpose": "maskable any" },
+    { "src": "/icons/icon-512.png",  "sizes": "512x512", "type": "image/png", "purpose": "maskable any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "위험성평가 작성",
+      "short_name": "위험성평가",
+      "url": "/risk/new",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "순회점검 작성",
+      "short_name": "순회점검",
+      "url": "/documents/inspection/new",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "활동계획표",
+      "short_name": "계획표",
+      "url": "/plan",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "SafeDoc 대시보드"
+    }
+  ],
+  "prefer_related_applications": false
+}

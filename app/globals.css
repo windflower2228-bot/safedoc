@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── 기본 설정 ───────────────────────────────────────────── */
+:root {
+  --font-sans: var(--font-noto), 'Malgun Gothic', '맑은 고딕', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── 공통 컴포넌트 ───────────────────────────────────────── */
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white
+           text-sm font-medium rounded-lg hover:bg-blue-700 active:scale-95
+           transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700
+           text-sm font-medium rounded-lg border border-gray-200
+           hover:bg-gray-50 active:scale-95 transition-all
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-danger {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white
+           text-sm font-medium rounded-lg hover:bg-red-700 active:scale-95
+           transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .input-base {
+    @apply w-full px-3 py-2 text-sm border border-gray-200 rounded-lg
+           bg-white text-gray-900 placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+           disabled:bg-gray-50 disabled:text-gray-500 transition-colors;
+  }
+  .label-base {
+    @apply block text-xs font-medium text-gray-600 mb-1;
+  }
+  .card {
+    @apply bg-white border border-gray-200 rounded-xl shadow-sm;
+  }
+  .badge-high   { @apply inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-700; }
+  .badge-medium { @apply inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-700; }
+  .badge-low    { @apply inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-700; }
+  .badge-draft    { @apply inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600; }
+  .badge-approved { @apply inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700; }
+  .badge-review   { @apply inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700; }
+}
+
+/* ─── 인쇄 스타일 ─────────────────────────────────────────── */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  body { background: white !important; font-size: 9pt; }
+
+  .no-print, nav, header, aside, .sidebar, .topbar,
+  .btn-primary, .btn-secondary, button:not(.print-visible) { display: none !important; }
+
+  .print-container {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* A4 페이지 설정 */
+  @page { size: A4 landscape; margin: 10mm 12mm; }
+  @page :first { margin-top: 15mm; }
+
+  .page-break-before { page-break-before: always; }
+  .page-break-after  { page-break-after: always; }
+  .no-page-break     { page-break-inside: avoid; }
+
+  /* 인쇄용 테이블 스타일 */
+  .print-table { border-collapse: collapse; width: 100%; font-size: 8pt; }
+  .print-table th, .print-table td {
+    border: 1px solid #333;
+    padding: 3px 5px;
+    vertical-align: middle;
+  }
+  .print-table th { background: #1E3A5F !important; color: white !important; }
+
+  /* 위험도 배지 인쇄 */
+  .badge-high   { background: #FEE2E2 !important; color: #991B1B !important; border: 1px solid #EF4444; }
+  .badge-medium { background: #FEF3C7 !important; color: #92400E !important; border: 1px solid #F59E0B; }
+  .badge-low    { background: #D1FAE5 !important; color: #065F46 !important; border: 1px solid #10B981; }
+}
+
+/* ─── 스크롤바 ───────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+
+/* ── PWA / 모바일 최적화 ─────────────────────────────────── */
+
+/* 노치·홈바 영역 안전 패딩 */
+.safe-area-pb { padding-bottom: env(safe-area-inset-bottom, 0); }
+.safe-area-pt { padding-top:    env(safe-area-inset-top, 0);    }
+
+/* 터치 최적화 */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 모바일 입력 폼 최적화 */
+@media (max-width: 768px) {
+  .input-base {
+    font-size: 16px !important; /* iOS 줌 방지 */
+    min-height: 44px;           /* 터치 타겟 최소 크기 */
+  }
+  select { font-size: 16px !important; }
+
+  /* 카드 패딩 축소 */
+  .card { border-radius: 12px; }
+
+  /* 테이블 가로 스크롤 */
+  .mobile-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* 고정 헤더 높이 */
+  .top-bar { height: 56px; }
+}
+
+/* 오프라인 배너 */
+.offline-banner {
+  background: #FEF2F2;
+  color: #DC2626;
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* PWA 스플래시 스크린 배경 */
+@media (display-mode: standalone) {
+  body { background-color: #FFFFFF; }
+  /* 하단 홈 인디케이터 영역 */
+  .main-content { padding-bottom: calc(env(safe-area-inset-bottom) + 80px); }
+}
+
+/* 모바일 카드 간격 축소 */
+@media (max-width: 640px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  h1 { font-size: 1.125rem !important; }
+}

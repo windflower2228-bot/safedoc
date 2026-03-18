@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path":     "/api/cron/reminders",
+      "schedule": "0 23 * * *"
+    }
+  ],
+  "functions": {
+    "app/api/worklog/analyze/route.ts":                        { "maxDuration": 30 },
+    "app/api/documents/construction-edu/ocr/route.ts":         { "maxDuration": 30 },
+    "app/api/documents/msds/[id]/analyze-legal/route.ts":      { "maxDuration": 30 },
+    "app/api/documents/msds/[id]/check-special/route.ts":      { "maxDuration": 30 },
+    "app/api/documents/msds/[id]/generate-label/route.ts":     { "maxDuration": 20 },
+    "app/api/risk/occasional/route.ts":                        { "maxDuration": 30 }
+  }
+}
