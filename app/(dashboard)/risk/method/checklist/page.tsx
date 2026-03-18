@@ -42,7 +42,7 @@ export default function ChecklistMethodPage() {
     work_location:'', evaluator_name:'',
   })
 
-  const categories = [...new Set(items.map(i=>i.category))]
+  const categories = Array.from(new Set(items.map(i=>i.category)))
   const improveCnt = items.filter(i=>i.check_result==='improve').length
   const okCnt      = items.filter(i=>i.check_result==='ok').length
   const naCnt      = items.filter(i=>i.check_result==='na').length
