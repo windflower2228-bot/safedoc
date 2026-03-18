@@ -58,7 +58,7 @@ export default function PreWorkInspectionPage() {
               typeFilter === 'all' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500')}>
             전체
           </button>
-          {MACHINE_TYPE_LIST.filter(m => m.code !== 'other').map(m => (
+          {MACHINE_TYPE_LIST.filter(m => (m.code as string) !== 'other').map(m => (
             <button key={m.code} onClick={() => setTypeFilter(m.code)}
               className={clsx('px-3 py-1.5 rounded-md text-xs font-medium transition-all',
                 typeFilter === m.code ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500')}>
