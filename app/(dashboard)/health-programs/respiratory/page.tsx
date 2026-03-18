@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Plus, ArrowLeft, Loader2 } from 'lucide-react'
+import { Plus, ArrowLeft, Loader2, Wind } from 'lucide-react'
 import { clsx } from 'clsx'
 export default function Page() {
   const [items, setItems] = useState<any[]>([])
