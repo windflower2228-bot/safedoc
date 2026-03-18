@@ -118,11 +118,7 @@ export default async function EducationDetailPage({ params }: Params) {
                   <span>
                     {` (${doc.edu_duration_hours}시간`}
                     {doc.worker_type && (
-                      <span className={isHoursValid(
-                        doc.edu_duration_hours,
-                        doc.edu_type as EduType,
-                        doc.worker_type as WorkerType
-                      ) ? ' text-green-600' : ' text-red-600 font-bold'}>
+                      <span className={doc.edu_duration_hours ? ' text-green-600 font-bold' : ' text-red-600 font-bold'}>
                         {isHoursValid(doc.edu_duration_hours, doc.edu_type as EduType, doc.worker_type as WorkerType)
                           ? ' ✓' : ` ⚠ 법정${getMinHours(doc.edu_type as EduType, doc.worker_type as WorkerType)}h미달`}
                       </span>
