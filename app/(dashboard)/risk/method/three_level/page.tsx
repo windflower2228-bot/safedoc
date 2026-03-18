@@ -64,7 +64,7 @@ export default function ThreeLevelMethodPage() {
   }
   function setLevel(idx: number, level: ThreeLevelRisk) {
     // 허용 가능 여부도 자동 결정
-    const isAcceptable = level === 'low' || (form.acceptable_threshold === 'medium' && (level==='low'||level==='medium'))
+    const isAcceptable = level === 'low' || (form.acceptable_threshold === 'medium' && level === 'medium')
     setItems(prev => prev.map((it,i) => i===idx ? {...it, risk_level:level, is_acceptable:isAcceptable} : it))
   }
 
