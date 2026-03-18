@@ -20,6 +20,8 @@ export default function TopBar({ profile }: Props) {
   const router   = useRouter()
   const supabase = createClient()
   const [open, setOpen] = useState(false)
+  const displayName = profile?.name?.trim() || profile?.email?.split('@')[0] || '사용자'
+  const displayRole = (profile?.role && ROLE_LABELS[profile.role]) || profile?.role || 'member'
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -53,11 +55,11 @@ export default function TopBar({ profile }: Props) {
             className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
           >
             <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">
-              <span className="text-xs font-bold text-blue-700">{profile.name.charAt(0)}</span>
+              <span className="text-xs font-bold text-blue-700">{displayName.charAt(0)}</span>
             </div>
             <div className="text-left hidden sm:block">
-              <div className="text-xs font-medium text-gray-900 leading-none">{profile.name}</div>
-              <div className="text-[10px] text-gray-400 mt-0.5">{ROLE_LABELS[profile.role] ?? profile.role}</div>
+              <div className="text-xs font-medium text-gray-900 leading-none">{displayName}</div>
+              <div className="text-[10px] text-gray-400 mt-0.5">{displayRole}</div>
             </div>
             <ChevronDown className="w-3 h-3 text-gray-400" />
           </button>
@@ -67,7 +69,7 @@ export default function TopBar({ profile }: Props) {
               <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
               <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1 overflow-hidden">
                 <div className="px-3 py-2 border-b border-gray-100">
-                  <div className="text-xs font-medium text-gray-900">{profile.name}</div>
+                  <div className="text-xs font-medium text-gray-900">{displayName}</div>
                   <div className="text-[11px] text-gray-400 truncate">{profile.email}</div>
                 </div>
                 <button

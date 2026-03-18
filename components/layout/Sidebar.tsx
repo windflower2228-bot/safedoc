@@ -138,6 +138,9 @@ const NAV: NavGroup[] = [
 
 export default function Sidebar({ profile }: Props) {
   const pathname = usePathname()
+  const displayName = profile?.name?.trim() || profile?.email?.split('@')[0] || '사용자'
+  const displayPosition = profile?.position?.trim() || '직책 미지정'
+  const displayInitial = displayName.charAt(0) || '?'
 
   const initOpen = () => {
     const o: Record<string,boolean> = {}
@@ -240,11 +243,11 @@ export default function Sidebar({ profile }: Props) {
       {/* 사용자 정보 */}
       <div className="px-3 py-3 border-t border-gray-100 flex items-center gap-2.5">
         <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-          <span className="text-xs font-bold text-blue-700">{profile.name?.charAt(0) ?? '?'}</span>
+          <span className="text-xs font-bold text-blue-700">{displayInitial}</span>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-xs font-medium text-gray-900 truncate">{profile.name}</div>
-          <div className="text-[10px] text-gray-400 truncate">{profile.position}</div>
+          <div className="text-xs font-medium text-gray-900 truncate">{displayName}</div>
+          <div className="text-[10px] text-gray-400 truncate">{displayPosition}</div>
         </div>
       </div>
     </aside>

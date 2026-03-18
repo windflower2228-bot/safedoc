@@ -32,17 +32,21 @@ export default async function DashboardPage() {
     approved:  { label: '승인완료', cls: 'badge-approved' },
   }
 
-  const company = profile?.company as unknown as { name: string } | null
+  const companyRaw = profile?.company as unknown
+  const company = Array.isArray(companyRaw) ? companyRaw[0] : companyRaw
+  const companyName = (company as { name?: string } | null)?.name ?? '회사 미지정'
+  const profileName = profile?.name?.trim() || user?.email?.split('@')[0] || '사용자'
+  const profilePosition = profile?.position?.trim() || '직책 미지정'
 
   return (
     <div className="space-y-6">
       {/* 인사 헤더 */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          안녕하세요, {profile?.name}님 👋
+          안녕하세요, {profileName}님 👋
         </h1>
         <p className="text-sm text-gray-500 mt-1">
-          {company?.name} · {profile?.position} ·{' '}
+          {companyName} · {profilePosition} ·{' '}
           {format(new Date(), 'yyyy년 M월 d일 (eee)', { locale: ko })}
         </p>
       </div>
@@ -116,7 +120,15 @@ export default async function DashboardPage() {
             )}
             {recentDocs?.map(doc => {
               const st = STATUS_STYLE[doc.status] ?? { label: doc.status, cls: 'badge-draft' }
-              const author = doc.author as unknown as { name: string } | null
+              const authorRaw = doc.author as unknown
+              const author = Array.isArray(authorRaw) ? authorRaw[0] : authorRaw
+              const authorName = (author as { name?: string } | null)?.name ?? ''
+              const workTypes = Array.isArray(doc.work_types) ? doc.work_types : []
+              const updatedAt = doc.updated_at ? new Date(doc.updated_at) : null
+              const updatedAtLabel =
+                updatedAt && !Number.isNaN(updatedAt.getTime())
+                  ? format(updatedAt, 'MM.dd')
+                  : '-'
               return (
                 <Link
                   key={doc.id}
@@ -131,15 +143,13 @@ export default async function DashboardPage() {
                       {doc.title}
                     </div>
                     <div className="text-xs text-gray-400 mt-0.5">
-                      {(doc.work_types as string[]).slice(0, 2).join(', ')}
-                      {author && ` · ${author.name}`}
+                      {workTypes.slice(0, 2).join(', ') || '공종 미지정'}
+                      {authorName && ` · ${authorName}`}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <span className={st.cls}>{st.label}</span>
-                    <span className="text-xs text-gray-300">
-                      {format(new Date(doc.updated_at), 'MM.dd')}
-                    </span>
+                    <span className="text-xs text-gray-300">{updatedAtLabel}</span>
                   </div>
                 </Link>
               )
