@@ -32,7 +32,7 @@ export default async function DashboardPage() {
     approved:  { label: '승인완료', cls: 'badge-approved' },
   }
 
-  const company = profile?.company as { name: string } | null
+  const company = profile?.company as unknown as { name: string } | null
 
   return (
     <div className="space-y-6">
