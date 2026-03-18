@@ -1,11 +1,9 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { format } from 'date-fns'
-import { ko } from 'date-fns/locale'
 import {
   BookOpen, ArrowLeft, FileSpreadsheet, Printer,
-  Link2, Users, CheckCircle2, Edit2, Clock,
+  Link2, CheckCircle2, Edit2, Clock,
 } from 'lucide-react'
 import type { EducationJournal, EduItem, Attendee } from '@/types/education'
 import { EDU_TYPE_LABELS } from '@/types/education'
@@ -35,13 +33,13 @@ export default async function EducationDetailPage({ params }: Params) {
 
   if (error || !journal) notFound()
 
-  const doc       = journal as EducationJournal
+  const doc       = journal as unknown as EducationJournal
   const items     = (doc.edu_items ?? []) as EduItem[]
   const attendees = (doc.attendees ?? []) as Attendee[]
-  const company   = doc.company as { name: string; address: string; logo_url: string | null } | null
-  const project   = doc.project as { name: string; site_name: string } | null
-  const author    = doc.author  as { name: string; position: string; phone: string | null } | null
-  const sourceRisk = doc.source_risk as { id: string; title: string; eval_type: string } | null
+  const company   = doc.company as unknown as { name: string; address: string; logo_url: string | null } | null
+  const project   = doc.project as unknown as { name: string; site_name: string } | null
+  const author    = doc.author  as unknown as { name: string; position: string; phone: string | null } | null
+  const sourceRisk = doc.source_risk as unknown as { id: string; title: string; eval_type: string } | null
   const realAttendees = attendees.filter(a => a.name?.trim())
 
   return (
@@ -86,9 +84,6 @@ export default async function EducationDetailPage({ params }: Params) {
         </div>
       </div>
 
-      {/* ════════════════════════════════════════════════════════
-          인쇄 전용 문서 — @media print 에서 이 부분만 출력
-          ════════════════════════════════════════════════════════ */}
       <div className="print-container bg-white">
 
         {/* 문서 제목 */}
@@ -127,7 +122,7 @@ export default async function EducationDetailPage({ params }: Params) {
                 )}
               </td>
               <td className="border border-gray-400 bg-gray-100 font-semibold px-3 py-2 w-20 text-center">교육 장소</td>
-              <td className="border border-gray-400 px-3 py-2">{doc.edu_location || '—'}</td>
+              <td className="border border-gray-400 px-3 py-2">{doc.edu_location ?? '—'}</td>
             </tr>
             <tr>
               <td className="border border-gray-400 bg-gray-100 font-semibold px-3 py-2 text-center">근무형태</td>
@@ -138,7 +133,7 @@ export default async function EducationDetailPage({ params }: Params) {
             <tr>
               <td className="border border-gray-400 bg-gray-100 font-semibold px-3 py-2 text-center">강사</td>
               <td className="border border-gray-400 px-3 py-2">
-                {doc.instructor_name || '—'}
+                {doc.instructor_name ?? '—'}
                 {doc.instructor_position && ` (${doc.instructor_position})`}
                 {doc.instructor_affil && ` / ${doc.instructor_affil}`}
               </td>
@@ -147,9 +142,9 @@ export default async function EducationDetailPage({ params }: Params) {
             </tr>
             <tr>
               <td className="border border-gray-400 bg-gray-100 font-semibold px-3 py-2 text-center">사업장</td>
-              <td className="border border-gray-400 px-3 py-2">{company?.name || '—'}</td>
+              <td className="border border-gray-400 px-3 py-2">{company?.name ?? '—'}</td>
               <td className="border border-gray-400 bg-gray-100 font-semibold px-3 py-2 text-center">현장명</td>
-              <td className="border border-gray-400 px-3 py-2">{project?.site_name || '—'}</td>
+              <td className="border border-gray-400 px-3 py-2">{project?.site_name ?? '—'}</td>
             </tr>
             {sourceRisk && (
               <tr>
@@ -220,7 +215,6 @@ export default async function EducationDetailPage({ params }: Params) {
               </tr>
             </thead>
             <tbody>
-              {/* 입력된 참석자 */}
               {realAttendees.map((a, idx) => (
                 <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <td className="border border-gray-300 px-2 py-2.5 text-center">{idx + 1}</td>
@@ -232,7 +226,6 @@ export default async function EducationDetailPage({ params }: Params) {
                   </td>
                 </tr>
               ))}
-              {/* 빈 서명 행 (최소 5행) */}
               {Array.from({ length: Math.max(0, 5 - realAttendees.length) }, (_, i) => (
                 <tr key={`empty-${i}`}>
                   <td className="border border-gray-300 px-2 py-2.5 text-center text-gray-300">{realAttendees.length + i + 1}</td>
@@ -255,7 +248,7 @@ export default async function EducationDetailPage({ params }: Params) {
           </p>
           <div className="grid grid-cols-3 gap-6">
             {[
-              { role: '교육 실시자 (강사)', name: doc.instructor_name || '' },
+              { role: '교육 실시자 (강사)', name: doc.instructor_name ?? '' },
               { role: '안전보건관리책임자', name: '' },
               { role: '확인자 (관리감독자)', name: '' },
             ].map(s => (
@@ -270,8 +263,6 @@ export default async function EducationDetailPage({ params }: Params) {
         </div>
 
       </div>
-      {/* /print-container */}
-
     </div>
   )
 }
