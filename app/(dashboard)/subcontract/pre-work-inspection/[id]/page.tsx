@@ -38,7 +38,7 @@ export default function PreWorkInspectionDetailPage({ params }: { params: { id: 
 
   const mt         = MACHINE_TYPES[doc.machine_type_code as keyof typeof MACHINE_TYPES]
   const checkItems = doc.check_items ?? []
-  const categories = [...new Set(checkItems.map((i: any) => i.category))] as string[]
+  const categories = Array.from(new Set(checkItems.map((i: any) => i.category))) as string[]
   const failItems  = checkItems.filter((i: any) => i.result === 'fail')
   const participants = doc.participants ?? []
 
