@@ -51,7 +51,7 @@ const PROGRAMS = [
   },
   {
     href:  '/health-programs/respiratory',
-    icon:  
+    icon:  Wind,  
     color: '#16a34a', bg: '#f0fdf4',
     title: '호흡기보호프로그램',
     badge: 'KOSHA GUIDE H-82',
