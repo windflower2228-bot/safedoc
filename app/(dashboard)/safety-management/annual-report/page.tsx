@@ -52,9 +52,9 @@ export default function AnnualReportPage() {
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-xs font-mono text-gray-500">{item.doc_number??'—'}</td>
                   <td className="px-4 py-3 font-semibold">{item.report_year}년</td>
-                  <td className="px-4 py-3 text-xs text-gray-500">{{board:'이사회',audit:'감사위원회',general:'주주총회'}[item.meeting_type]??item.meeting_type}</td>
+                  <td className="px-4 py-3 text-xs text-gray-500">{({'board':'이사회','audit':'감사위원회','general':'주주총회'} as Record<string,string>)[item.meeting_type]??item.meeting_type}</td>
                   <td className="px-4 py-3 text-xs text-gray-600">{item.report_date}</td>
-                  <td className="px-4 py-3"><span className={clsx('text-xs px-2 py-0.5 rounded-full font-medium',item.approval_status==='approved'?'bg-green-50 text-green-700':item.approval_status==='rejected'?'bg-red-50 text-red-700':'bg-amber-50 text-amber-700')}>{{'approved':'승인','rejected':'반려','draft':'검토 중'}[item.approval_status]??item.approval_status}</span></td>
+                  <td className="px-4 py-3"><span className={clsx('text-xs px-2 py-0.5 rounded-full font-medium',item.approval_status==='approved'?'bg-green-50 text-green-700':item.approval_status==='rejected'?'bg-red-50 text-red-700':'bg-amber-50 text-amber-700')}>{({'approved':'승인','rejected':'반려','draft':'검토 중'} as Record<string,string>)[item.approval_status]??item.approval_status}</span></td>
                   <td className="px-4 py-3"><span className={clsx('text-xs px-2 py-0.5 rounded-full',item.status==='completed'?'bg-green-50 text-green-700':'bg-amber-50 text-amber-700')}>{item.status==='completed'?'완료':'작성 중'}</span></td>
                   <td className="px-4 py-3"><Link href={'/safety-management/annual-report/'+item.id} className="text-xs text-blue-600 hover:underline">상세</Link></td>
                 </tr>
