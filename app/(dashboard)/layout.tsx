@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/layout/Sidebar'
 import TopBar from '@/components/layout/TopBar'
 import { MobileNav } from '@/components/layout/MobileNav'
@@ -16,6 +16,67 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .single()
 
   if (!profile) {
+    const admin = createAdminClient()
+
+    // 첫 로그인 계정의 user_profiles가 비어 있으면 자동으로 기본 프로필을 생성한다.
+    let companyId: string | null = null
+    const { data: firstCompany } = await admin
+      .from('companies')
+      .select('id')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+    companyId = firstCompany?.id ?? null
+
+    if (!companyId) {
+      const { data: createdCompany } = await admin
+        .from('companies')
+        .insert({
+          name: '기본 회사',
+          biz_number: null,
+          ceo_name: '',
+          address: '',
+          industry: '',
+        })
+        .select('id')
+        .single()
+      companyId = createdCompany?.id ?? null
+    }
+
+    const candidateRole = String(user.user_metadata?.role ?? '')
+    const role =
+      candidateRole === 'super_admin' ||
+      candidateRole === 'company_admin' ||
+      candidateRole === 'manager' ||
+      candidateRole === 'viewer'
+        ? candidateRole
+        : 'company_admin'
+
+    const displayName =
+      String(user.user_metadata?.name ?? '').trim() ||
+      user.email?.split('@')[0] ||
+      '사용자'
+    const displayPosition = String(user.user_metadata?.position ?? '').trim()
+
+    const { error: bootstrapError } = await admin
+      .from('user_profiles')
+      .upsert(
+        {
+          id: user.id,
+          company_id: companyId,
+          email: user.email ?? '',
+          name: displayName,
+          position: displayPosition || '담당자',
+          role,
+          is_active: true,
+        },
+        { onConflict: 'id' }
+      )
+
+    if (!bootstrapError) {
+      redirect('/dashboard')
+    }
+
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <div className="w-full max-w-md bg-white border border-gray-200 rounded-xl p-6 text-center">
