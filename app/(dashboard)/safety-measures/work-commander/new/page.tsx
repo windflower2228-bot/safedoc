@@ -85,7 +85,7 @@ export default function NewWorkCommanderPage() {
   const router  = useRouter()
   const [saving,   setSaving]   = useState(false)
   const [cType,    setCType]    = useState<CommanderType>('work_director')
-  const [duties,   setDuties]   = useState<string[]>(TYPE_CONFIG.work_director.defaultDuties)
+  const [duties,   setDuties]   = useState<string[]>([...TYPE_CONFIG.work_director.defaultDuties])
   const [company,  setCompany]  = useState<any>(null)
 
   const form = useForm<any>({
@@ -120,7 +120,7 @@ export default function NewWorkCommanderPage() {
     form.setValue('commander_type', t)
     form.setValue('legal_basis', cfg.legalBasis)
     form.setValue('work_type', '')
-    setDuties(cfg.defaultDuties)
+    setDuties([...cfg.defaultDuties])
   }
 
   async function onSubmit(data: any) {
