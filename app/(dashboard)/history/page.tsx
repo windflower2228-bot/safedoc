@@ -64,7 +64,7 @@ export default function HistoryPage() {
   }
 
   // 타입별 필터
-  const docTypes = [...new Set(versions.map(v => v.doc_type))]
+  const docTypes = Array.from(new Set(versions.map(v => v.doc_type)))
   const filtered = filter === 'all' ? versions : versions.filter(v => v.doc_type === filter)
 
   // 그룹핑 (doc_type + doc_number 기준)
