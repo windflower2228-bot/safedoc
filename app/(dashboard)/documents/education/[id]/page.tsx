@@ -132,7 +132,7 @@ export default async function EducationDetailPage({ params }: Params) {
             <tr>
               <td className="border border-gray-400 bg-gray-100 font-semibold px-3 py-2 text-center">근무형태</td>
               <td className="border border-gray-400 px-3 py-2">
-                {doc.worker_type ? WORKER_TYPE_LABELS[doc.worker_type as WorkerType] : '—'}
+                {doc.worker_type ?? '-'}
               </td>
             </tr>
             <tr>
