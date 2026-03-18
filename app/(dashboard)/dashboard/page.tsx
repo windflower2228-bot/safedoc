@@ -116,7 +116,7 @@ export default async function DashboardPage() {
             )}
             {recentDocs?.map(doc => {
               const st = STATUS_STYLE[doc.status] ?? { label: doc.status, cls: 'badge-draft' }
-              const author = doc.author as { name: string } | null
+              const author = doc.author as unknown as { name: string } | null
               return (
                 <Link
                   key={doc.id}
