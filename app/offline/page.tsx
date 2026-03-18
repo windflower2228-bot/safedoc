@@ -1,3 +1,5 @@
+'use client'
+
 // app/offline/page.tsx — 오프라인 폴백 페이지
 export default function OfflinePage() {
   return (
