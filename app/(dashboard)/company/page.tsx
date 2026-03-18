@@ -241,7 +241,7 @@ export default function CompanySettingsPage() {
               문서 헤더 미리보기
             </div>
             <DocHeaderPreview
-              logoUrl={logoSrc}
+              logoUrl={logoSrc ?? null}
               companyName={form.name || info?.name || '회사명'}
               headerType={form.doc_header_type}
               customText={form.doc_header_custom}
