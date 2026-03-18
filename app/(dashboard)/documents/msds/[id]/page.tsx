@@ -356,7 +356,7 @@ export default function MsdsDetailPage({ params }: { params: { id: string } }) {
                   return (
                     <div key={badge.key}
                       className={clsx('card p-4 flex items-start gap-3 transition-all',isActive?'ring-2':'')}
-                      style={isActive?{ringColor:badge.border,borderColor:badge.border,background:badge.bg}:{opacity:.5}}>
+                      style={isActive?{borderColor:badge.border,background:badge.bg}:{opacity:.5}}>
                       <div className="flex-1">
                         <div className="font-semibold text-sm" style={{color:isActive?badge.color:'#9ca3af'}}>{badge.label}</div>
                         <div className="text-[10px] text-gray-400 mt-0.5">{badge.legal}</div>
