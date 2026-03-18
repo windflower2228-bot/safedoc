@@ -48,11 +48,14 @@ export async function POST(req: NextRequest) {
     }, { status: 200 })
   }
 
+  // Supabase relation typing can be inferred as array; force object shape for safe access.
+  const author = ra.author as unknown as { name?: string; position?: string } | null
+
   // 초안 생성
   const draft = generateEduDraftFromRisk(ra as any, {
     includeAll: include_all ?? false,
     eduDate:    edu_date,
-    instructor: instructor ?? ra.author?.name ?? '',
+    instructor: instructor ?? author?.name ?? '',
     location:   location,
   })
 
