@@ -296,14 +296,14 @@ function FlowNode({
   return (
     <div className="relative">
       {connector === 'toCenter' && (
-        <span className="hidden lg:block absolute top-1/2 -right-4 w-4 border-t border-[#c68c81]" />
+        <span className="hidden lg:block absolute top-1/2 -right-5 w-5 border-t border-[#c68c81]" />
       )}
       {connector === 'fromCenter' && (
-        <span className="hidden lg:block absolute top-1/2 -left-4 w-4 border-t border-[#c68c81]" />
+        <span className="hidden lg:block absolute top-1/2 -left-5 w-5 border-t border-[#c68c81]" />
       )}
       <Link
         href={node.href}
-        className={`block rounded-xl border px-3 py-2.5 hover:shadow-sm hover:-translate-y-0.5 transition-all ${toneClass}`}
+        className={`relative z-10 block rounded-xl border px-3 py-2.5 hover:shadow-sm hover:-translate-y-0.5 transition-all ${toneClass}`}
       >
         <p className={`text-sm font-semibold leading-tight ${accentClass}`}>{node.label}</p>
         {node.desc && <p className="text-[11px] text-gray-600 mt-1">{node.desc}</p>}
@@ -351,7 +351,11 @@ export default function MenuLinkagePanel() {
 
           <div className="hidden lg:block rounded-2xl border border-[#dadada] bg-[#f8f8f7] px-4 py-4">
             <div className="grid grid-cols-[1fr_230px_1fr] gap-5 items-center">
-              <div className="space-y-2.5">
+              <div className="relative">
+                {diagram.assistLinks.length > 0 && (
+                  <div className="absolute top-4 bottom-4 -right-5 border-l border-[#c68c81]" />
+                )}
+                <div className="space-y-2.5">
                 {diagram.assistLinks.length === 0 && (
                   <div className="rounded-xl border border-dashed border-gray-300 bg-white/70 px-3 py-2 text-xs text-gray-500">
                     선행 연계 없음
@@ -365,6 +369,7 @@ export default function MenuLinkagePanel() {
                     connector="toCenter"
                   />
                 ))}
+                </div>
               </div>
 
               <div className="relative">
@@ -377,7 +382,11 @@ export default function MenuLinkagePanel() {
                 )}
               </div>
 
-              <div className="space-y-2.5">
+              <div className="relative">
+                {diagram.autoLinks.length > 0 && (
+                  <div className="absolute top-4 bottom-4 -left-5 border-l border-[#c68c81]" />
+                )}
+                <div className="space-y-2.5">
                 {diagram.autoLinks.length === 0 && (
                   <div className="rounded-xl border border-dashed border-gray-300 bg-white/70 px-3 py-2 text-xs text-gray-500">
                     자동 연계 없음
@@ -391,11 +400,13 @@ export default function MenuLinkagePanel() {
                     connector="fromCenter"
                   />
                 ))}
+                </div>
               </div>
             </div>
 
             {diagram.bottomLink && (
-              <div className="flex justify-center mt-9">
+              <div className="relative flex justify-center mt-9">
+                <div className="absolute left-1/2 -top-9 h-9 border-l border-dashed border-[#c68c81]" />
                 <FlowNode node={diagram.bottomLink} tone="bottom" />
               </div>
             )}
