@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChevronDown, ChevronRight, Link2 } from 'lucide-react'
@@ -266,14 +266,30 @@ const DIAGRAMS: Record<MenuKey, DiagramConfig> = {
   },
 }
 
+type CurveLayout = {
+  left: string[]
+  right: string[]
+  bottom: string | null
+}
+
+function createCurvePath(startX: number, startY: number, endX: number, endY: number) {
+  const curve = Math.max(42, Math.abs(endX - startX) * 0.45)
+  return `M ${startX} ${startY} C ${startX + curve} ${startY}, ${endX - curve} ${endY}, ${endX} ${endY}`
+}
+
+function createBottomCurvePath(startX: number, startY: number, endX: number, endY: number) {
+  const bend = 34
+  return `M ${startX} ${startY} C ${startX} ${startY + bend}, ${endX} ${endY - bend}, ${endX} ${endY}`
+}
+
 function FlowNode({
   node,
   tone,
-  connector,
+  wrapperRef,
 }: {
   node: LinkNode
   tone: 'left' | 'right' | 'center' | 'bottom'
-  connector?: 'toCenter' | 'fromCenter'
+  wrapperRef?: (el: HTMLDivElement | null) => void
 }) {
   const toneClass =
     tone === 'left'
@@ -294,13 +310,7 @@ function FlowNode({
           : 'text-[#8d4b3f]'
 
   return (
-    <div className="relative">
-      {connector === 'toCenter' && (
-        <span className="hidden lg:block absolute top-1/2 -right-5 w-5 border-t border-[#c68c81]" />
-      )}
-      {connector === 'fromCenter' && (
-        <span className="hidden lg:block absolute top-1/2 -left-5 w-5 border-t border-[#c68c81]" />
-      )}
+    <div ref={wrapperRef} className="relative">
       <Link
         href={node.href}
         className={`relative z-10 block rounded-xl border px-3 py-2.5 hover:shadow-sm hover:-translate-y-0.5 transition-all ${toneClass}`}
@@ -315,9 +325,90 @@ function FlowNode({
 export default function MenuLinkagePanel() {
   const pathname = usePathname()
   const [open, setOpen] = useState(true)
+  const [curves, setCurves] = useState<CurveLayout>({ left: [], right: [], bottom: null })
+
+  const desktopRef = useRef<HTMLDivElement | null>(null)
+  const centerRef = useRef<HTMLDivElement | null>(null)
+  const bottomRef = useRef<HTMLDivElement | null>(null)
+  const leftRefs = useRef<(HTMLDivElement | null)[]>([])
+  const rightRefs = useRef<(HTMLDivElement | null)[]>([])
 
   const menuKey = useMemo(() => resolveMenuKey(pathname), [pathname])
   const diagram = DIAGRAMS[menuKey]
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setCurves({ left: [], right: [], bottom: null })
+      return
+    }
+
+    const container = desktopRef.current
+    const centerNode = centerRef.current
+    if (!container || !centerNode) return
+
+    const computeCurves = () => {
+      const containerRect = container.getBoundingClientRect()
+      const centerRect = centerNode.getBoundingClientRect()
+      const centerLeftX = centerRect.left - containerRect.left + 1
+      const centerRightX = centerRect.right - containerRect.left - 1
+      const centerMidY = centerRect.top - containerRect.top + centerRect.height / 2
+
+      const validLeftNodes = leftRefs.current
+        .slice(0, diagram.assistLinks.length)
+        .filter((node): node is HTMLDivElement => Boolean(node))
+      const validRightNodes = rightRefs.current
+        .slice(0, diagram.autoLinks.length)
+        .filter((node): node is HTMLDivElement => Boolean(node))
+
+      const leftSpread = validLeftNodes.length > 1 ? Math.max(10, 44 / validLeftNodes.length) : 0
+      const rightSpread = validRightNodes.length > 1 ? Math.max(10, 44 / validRightNodes.length) : 0
+
+      const leftPaths = validLeftNodes.map((node, index) => {
+        const rect = node.getBoundingClientRect()
+        const startX = rect.right - containerRect.left
+        const startY = rect.top - containerRect.top + rect.height / 2
+        const offset = (index - (validLeftNodes.length - 1) / 2) * leftSpread
+        const endY = centerMidY + offset
+        return createCurvePath(startX, startY, centerLeftX, endY)
+      })
+
+      const rightPaths = validRightNodes.map((node, index) => {
+        const rect = node.getBoundingClientRect()
+        const endX = rect.left - containerRect.left
+        const endY = rect.top - containerRect.top + rect.height / 2
+        const offset = (index - (validRightNodes.length - 1) / 2) * rightSpread
+        const startY = centerMidY + offset
+        return createCurvePath(centerRightX, startY, endX, endY)
+      })
+
+      let bottomPath: string | null = null
+      if (bottomRef.current) {
+        const bottomRect = bottomRef.current.getBoundingClientRect()
+        const startX = centerRect.left - containerRect.left + centerRect.width / 2
+        const startY = centerRect.bottom - containerRect.top
+        const endX = bottomRect.left - containerRect.left + bottomRect.width / 2
+        const endY = bottomRect.top - containerRect.top
+        bottomPath = createBottomCurvePath(startX, startY, endX, endY)
+      }
+
+      setCurves({ left: leftPaths, right: rightPaths, bottom: bottomPath })
+    }
+
+    const raf = requestAnimationFrame(computeCurves)
+    const observer = new ResizeObserver(computeCurves)
+    observer.observe(container)
+    observer.observe(centerNode)
+    leftRefs.current.forEach((node) => node && observer.observe(node))
+    rightRefs.current.forEach((node) => node && observer.observe(node))
+    if (bottomRef.current) observer.observe(bottomRef.current)
+    window.addEventListener('resize', computeCurves)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      observer.disconnect()
+      window.removeEventListener('resize', computeCurves)
+    }
+  }, [open, menuKey, diagram.assistLinks.length, diagram.autoLinks.length, Boolean(diagram.bottomLink)])
 
   return (
     <section className="card no-print border-[#d8d8d8] bg-[#f3f3f1]">
@@ -349,65 +440,100 @@ export default function MenuLinkagePanel() {
             {diagram.bottomLink && <FlowNode node={diagram.bottomLink} tone="bottom" />}
           </div>
 
-          <div className="hidden lg:block rounded-2xl border border-[#dadada] bg-[#f8f8f7] px-4 py-4">
-            <div className="grid grid-cols-[1fr_230px_1fr] gap-5 items-center">
-              <div className="relative">
-                {diagram.assistLinks.length > 0 && (
-                  <div className="absolute top-4 bottom-4 -right-5 border-l border-[#c68c81]" />
-                )}
-                <div className="space-y-2.5">
+          <div ref={desktopRef} className="hidden lg:block relative rounded-2xl border border-[#dadada] bg-[#f8f8f7] px-4 py-4">
+            <svg className="pointer-events-none absolute inset-0 h-full w-full z-0">
+              {curves.left.map((path, idx) => (
+                <path
+                  key={`left-curve-${idx}`}
+                  d={path}
+                  fill="none"
+                  stroke="#c68c81"
+                  strokeOpacity="0.88"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              ))}
+              {curves.right.map((path, idx) => (
+                <path
+                  key={`right-curve-${idx}`}
+                  d={path}
+                  fill="none"
+                  stroke="#c68c81"
+                  strokeOpacity="0.88"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              ))}
+              {curves.bottom && (
+                <path
+                  d={curves.bottom}
+                  fill="none"
+                  stroke="#c68c81"
+                  strokeOpacity="0.88"
+                  strokeWidth="1.8"
+                  strokeDasharray="6 5"
+                  strokeLinecap="round"
+                />
+              )}
+            </svg>
+
+            <div className="relative z-10 grid grid-cols-[1fr_230px_1fr] gap-5 items-center">
+              <div className="space-y-2.5">
                 {diagram.assistLinks.length === 0 && (
                   <div className="rounded-xl border border-dashed border-gray-300 bg-white/70 px-3 py-2 text-xs text-gray-500">
                     선행 연계 없음
                   </div>
                 )}
-                {diagram.assistLinks.map((node) => (
+                {diagram.assistLinks.map((node, idx) => (
                   <FlowNode
                     key={`assist-${node.href}-${node.label}`}
                     node={node}
                     tone="left"
-                    connector="toCenter"
+                    wrapperRef={(el) => {
+                      leftRefs.current[idx] = el
+                    }}
                   />
                 ))}
-                </div>
               </div>
 
               <div className="relative">
                 <FlowNode
                   node={{ label: diagram.title, href: diagram.centerHref, desc: diagram.centerSub }}
                   tone="center"
+                  wrapperRef={(el) => {
+                    centerRef.current = el
+                  }}
                 />
-                {diagram.bottomLink && (
-                  <div className="absolute left-1/2 -bottom-8 h-8 border-l border-dashed border-[#c68c81]" />
-                )}
               </div>
 
-              <div className="relative">
-                {diagram.autoLinks.length > 0 && (
-                  <div className="absolute top-4 bottom-4 -left-5 border-l border-[#c68c81]" />
-                )}
-                <div className="space-y-2.5">
+              <div className="space-y-2.5">
                 {diagram.autoLinks.length === 0 && (
                   <div className="rounded-xl border border-dashed border-gray-300 bg-white/70 px-3 py-2 text-xs text-gray-500">
                     자동 연계 없음
                   </div>
                 )}
-                {diagram.autoLinks.map((node) => (
+                {diagram.autoLinks.map((node, idx) => (
                   <FlowNode
                     key={`auto-${node.href}-${node.label}`}
                     node={node}
                     tone="right"
-                    connector="fromCenter"
+                    wrapperRef={(el) => {
+                      rightRefs.current[idx] = el
+                    }}
                   />
                 ))}
-                </div>
               </div>
             </div>
 
             {diagram.bottomLink && (
-              <div className="relative flex justify-center mt-9">
-                <div className="absolute left-1/2 -top-9 h-9 border-l border-dashed border-[#c68c81]" />
-                <FlowNode node={diagram.bottomLink} tone="bottom" />
+              <div className="relative z-10 flex justify-center mt-9">
+                <FlowNode
+                  node={diagram.bottomLink}
+                  tone="bottom"
+                  wrapperRef={(el) => {
+                    bottomRef.current = el
+                  }}
+                />
               </div>
             )}
           </div>
