@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import {
   ChevronLeft, ChevronRight, Plus, X, Check, Loader2,
   Bell, Trash2, CalendarDays, TrendingUp, AlertTriangle,
-  Clock, RotateCcw, Edit2,
+  Clock, RotateCcw, Edit2, Printer,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import {
@@ -115,6 +115,9 @@ export default function PlanPage() {
       setMonthItems(p => p.map(upd))
       setAnnualItems(p => p.map(upd))
       if (field==='scheduled_date') setHlDate(value)
+    } else {
+      const j = await res.json().catch(() => null)
+      toast.error(j?.error ?? '수정에 실패했습니다.')
     }
   }
 
@@ -132,6 +135,9 @@ export default function PlanPage() {
         ? { ...i, is_completed:action==='complete', completed_at: action==='complete' ? new Date().toISOString() : null }
         : i
       setMonthItems(p=>p.map(upd)); setAnnualItems(p=>p.map(upd))
+    } else {
+      const j = await res.json().catch(() => null)
+      toast.error(j?.error ?? '상태 변경에 실패했습니다.')
     }
   }
 
@@ -146,6 +152,9 @@ export default function PlanPage() {
       setAnnualItems(p=>p.filter(i=>i.id!==id))
       if (hlId===id) setHlId(null)
       setModal(m=>({...m,open:false}))
+    } else {
+      const j = await res.json().catch(() => null)
+      toast.error(j?.error ?? '삭제에 실패했습니다.')
     }
   }
 
@@ -162,7 +171,13 @@ export default function PlanPage() {
       const res = await fetch(`/api/plan/${modal.id}`, {
         method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload),
       })
-      if (res.ok) { toast.success('수정되었습니다.'); await loadMonth(); await loadAnnual() }
+      if (res.ok) {
+        toast.success('수정되었습니다.')
+        await loadMonth(); await loadAnnual()
+      } else {
+        const j = await res.json().catch(() => null)
+        toast.error(j?.error ?? '수정에 실패했습니다.')
+      }
     } else {
       let pid = planId
       // 대상 월의 계획표가 없으면 생성
@@ -171,14 +186,28 @@ export default function PlanPage() {
           method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ year:sy, month:sm, items:[] }),
         })
-        const pj = await pr.json()
-        if (pr.ok) { pid=pj.data.id; if (sy===cur.y&&sm===cur.m) setPlanId(pid) }
+        const pj = await pr.json().catch(() => null)
+        if (pr.ok) {
+          pid = pj?.data?.id
+          if (sy===cur.y&&sm===cur.m && pid) setPlanId(pid)
+        } else {
+          toast.error(pj?.error ?? '활동계획표 생성에 실패했습니다.')
+          setSaving(false)
+          return
+        }
       }
       const res = await fetch('/api/plan/item', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ plan_id:pid, ...payload }),
       })
-      if (res.ok) { toast.success('추가되었습니다.'); setHlDate(data.scheduled_date); await loadMonth(); await loadAnnual() }
+      if (res.ok) {
+        toast.success('추가되었습니다.')
+        setHlDate(data.scheduled_date)
+        await loadMonth(); await loadAnnual()
+      } else {
+        const j = await res.json().catch(() => null)
+        toast.error(j?.error ?? '추가에 실패했습니다.')
+      }
     }
     setSaving(false)
     setModal(m=>({...m,open:false}))
@@ -229,6 +258,7 @@ export default function PlanPage() {
   const overCount   = scope.filter(i=>!i.is_completed&&calcDday(i.scheduled_date)<0).length
 
   const weeks = buildCal(cur.y, cur.m)
+  const handlePrint = () => window.print()
 
   return (
     <div>
@@ -271,6 +301,12 @@ export default function PlanPage() {
               </button>
             ))}
           </div>
+          <button
+            onClick={handlePrint}
+            className="btn-secondary text-sm"
+          >
+            <Printer className="w-4 h-4" /> 인쇄
+          </button>
           <button
             onClick={() => openModal(null, view==='annual' ? `${cur.y}-01-01` : toDS(cur.y,cur.m,Math.min(today.getDate(),new Date(cur.y,cur.m,0).getDate())))}
             className="btn-primary text-sm" style={{background:'#2563eb'}}>
