@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { AlertTriangle, FileText, Plus, TrendingUp, Clock, CheckCircle2, Bell } from 'lucide-react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
+import LinkageDiagram from '@/components/dashboard/LinkageDiagram'
 
 export default async function DashboardPage() {
   const supabase = createClient()
@@ -103,6 +104,9 @@ export default async function DashboardPage() {
           )
         })}
       </div>
+
+      {/* 연계 다이어그램 */}
+      <LinkageDiagram />
 
       {/* 최근 문서 + 빠른 접근 */}
       <div className="grid lg:grid-cols-3 gap-6">
