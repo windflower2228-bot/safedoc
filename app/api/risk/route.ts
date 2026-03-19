@@ -1,6 +1,7 @@
 // app/api/risk/route.ts — GET(목록), POST(생성) — v18 fix: 4가지 평가방법 지원
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getProfileForAuth } from '@/lib/supabase/auth-profile'
 import { riskAssessmentSchema } from '@/lib/validators/schemas'
 
 // ─── GET /api/risk ─────────────────────────────────────────────────────────
@@ -44,9 +45,17 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
 
-  const { data: profile } = await supabase
-    .from('user_profiles').select('company_id, role').eq('id', user.id).single()
-  if (!profile) return NextResponse.json({ error: '프로필 없음' }, { status: 403 })
+  const { profile, errorMessage } = await getProfileForAuth<{ company_id: string; role: string }>(
+    supabase,
+    user.id,
+    'company_id, role'
+  )
+  if (!profile) {
+    return NextResponse.json(
+      { error: errorMessage ? `프로필 없음 (${errorMessage})` : '프로필 없음' },
+      { status: 403 }
+    )
+  }
   if (!['super_admin','company_admin','manager'].includes(profile.role))
     return NextResponse.json({ error: '작성 권한이 없습니다.' }, { status: 403 })
 
