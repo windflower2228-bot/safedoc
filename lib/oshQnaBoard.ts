@@ -40,6 +40,8 @@ export type OshQnaRecord = {
 }
 
 let staticCache: OshQnaRecord[] | null = null
+const USER_POSTS_CACHE_TTL_MS = 30_000
+const userPostsCache = new Map<string, { at: number; items: OshQnaRecord[] }>()
 
 export async function loadStaticQnaData(): Promise<OshQnaRecord[]> {
   if (staticCache) return staticCache
@@ -80,6 +82,11 @@ function toRecordDateSortKey(item: OshQnaRecord): string {
 }
 
 export async function listUserQnaPosts(admin: StorageClient, companyId: string): Promise<OshQnaRecord[]> {
+  const cached = userPostsCache.get(companyId)
+  if (cached && Date.now() - cached.at < USER_POSTS_CACHE_TTL_MS) {
+    return cached.items
+  }
+
   const prefix = getPostsPrefix(companyId)
   const { data, error } = await admin.storage.from(OSH_QNA_BUCKET).list(prefix, {
     limit: 1000,
@@ -88,31 +95,37 @@ export async function listUserQnaPosts(admin: StorageClient, companyId: string):
   })
 
   if (error || !data || data.length === 0) return []
+  const jsonNames = data
+    .map((item) => String(item?.name ?? ''))
+    .filter((name) => name.endsWith('.json'))
 
-  const posts: OshQnaRecord[] = []
-  for (const item of data) {
-    const name = String(item?.name ?? '')
-    if (!name.endsWith('.json')) continue
-
+  const tasks = jsonNames.map(async (name) => {
     const objectPath = `${prefix}/${name}`
     const { data: fileBlob, error: fileError } = await admin.storage.from(OSH_QNA_BUCKET).download(objectPath)
-    if (fileError || !fileBlob) continue
+    if (fileError || !fileBlob) return null
 
     try {
       const text = await fileBlob.text()
       const parsed = JSON.parse(text) as OshQnaRecord
-      if (!parsed?.id || !parsed?.title) continue
-      posts.push({
+      if (!parsed?.id || !parsed?.title) return null
+      return {
         ...parsed,
         isUserUpload: true,
         source: parsed.source || '사용자 업로드',
-      })
+      } satisfies OshQnaRecord
     } catch {
-      // ignore broken JSON
+      return null
     }
-  }
+  })
 
-  return posts.sort((a, b) => toRecordDateSortKey(b).localeCompare(toRecordDateSortKey(a)))
+  const settled = await Promise.all(tasks)
+  const posts = settled
+    .filter(Boolean)
+    .map((item) => item as OshQnaRecord)
+    .sort((a, b) => toRecordDateSortKey(b).localeCompare(toRecordDateSortKey(a)))
+
+  userPostsCache.set(companyId, { at: Date.now(), items: posts })
+  return posts
 }
 
 export async function createUserQnaPost(params: {
@@ -183,6 +196,8 @@ export async function createUserQnaPost(params: {
   if (saveErr) {
     throw new Error(`게시글 저장 실패: ${saveErr.message}`)
   }
+
+  userPostsCache.delete(companyId)
 
   return record
 }

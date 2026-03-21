@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -90,8 +90,11 @@ export default function OshCostQnaPage() {
   const [uAnswer, setUAnswer] = useState('')
   const [uTags, setUTags] = useState('')
   const [uFile, setUFile] = useState<File | null>(null)
+  const [refreshTick, setRefreshTick] = useState(0)
+  const requestSeqRef = useRef(0)
 
   const fetchList = useCallback(async () => {
+    const reqSeq = ++requestSeqRef.current
     setLoading(true)
     setError('')
     try {
@@ -104,19 +107,21 @@ export default function OshCostQnaPage() {
       const res = await fetch(`/api/osh-cost/qna?${params.toString()}`)
       if (!res.ok) throw new Error('질의회시 데이터를 불러오지 못했습니다.')
       const json = (await res.json()) as QnaResponse
-      setData(json)
 
-      if (!selectedId && json.items[0]?.id) {
-        setSelectedId(json.items[0].id)
-      } else if (selectedId && !json.items.some((item) => item.id === selectedId)) {
-        setSelectedId(json.items[0]?.id ?? '')
-      }
+      if (reqSeq !== requestSeqRef.current) return
+      setData(json)
+      setSelectedId((prev) => {
+        if (prev && json.items.some((item) => item.id === prev)) return prev
+        return json.items[0]?.id ?? ''
+      })
     } catch (e: any) {
+      if (reqSeq !== requestSeqRef.current) return
       setError(e?.message ?? '오류가 발생했습니다.')
     } finally {
+      if (reqSeq !== requestSeqRef.current) return
       setLoading(false)
     }
-  }, [institution, keyword, page, selectedId])
+  }, [institution, keyword, page, refreshTick])
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -170,8 +175,8 @@ export default function OshCostQnaPage() {
       setUTags('')
       setUFile(null)
       setPage(1)
-      await fetchList()
       if (json?.data?.id) setSelectedId(json.data.id)
+      setRefreshTick((v) => v + 1)
     } catch (e: any) {
       setUploadMessage(e?.message ?? '업로드 중 오류가 발생했습니다.')
     } finally {
