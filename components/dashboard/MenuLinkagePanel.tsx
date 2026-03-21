@@ -272,7 +272,7 @@ type CurveLayout = {
   bottom: string | null
 }
 
-const CURVE_CARD_GAP = 5
+const CURVE_CARD_GAP = 0
 const CURVE_PORT_EDGE_PADDING = 8
 
 type NodeMetric = {
@@ -288,15 +288,15 @@ function createCardPorts(count: number, topY: number, bottomY: number) {
 }
 
 function createCurvePath(startX: number, startY: number, endX: number, endY: number) {
-  const curve = Math.max(46, Math.min(120, Math.abs(endX - startX) * 0.5))
+  const curve = Math.max(80, Math.min(190, Math.abs(endX - startX) * 0.9))
   const deltaY = endY - startY
-  const cp1Y = startY + deltaY * 0.2
-  const cp2Y = startY + deltaY * 0.8
+  const cp1Y = startY + deltaY * 0.4
+  const cp2Y = startY + deltaY * 0.6
   return `M ${startX} ${startY} C ${startX + curve} ${cp1Y}, ${endX - curve} ${cp2Y}, ${endX} ${endY}`
 }
 
 function createBottomCurvePath(startX: number, startY: number, endX: number, endY: number) {
-  const bend = Math.max(24, Math.min(52, Math.abs(endY - startY) * 0.3))
+  const bend = Math.max(30, Math.min(64, Math.abs(endY - startY) * 0.36))
   return `M ${startX} ${startY} C ${startX} ${startY + bend}, ${endX} ${endY - bend}, ${endX} ${endY}`
 }
 
@@ -523,7 +523,7 @@ export default function MenuLinkagePanel() {
               )}
             </svg>
 
-            <div className="relative z-10 grid grid-cols-[1fr_200px_1fr] gap-8 items-center">
+            <div className="relative z-10 grid grid-cols-[1fr_190px_1fr] gap-12 items-center">
               <div className="space-y-2.5">
                 {diagram.assistLinks.length === 0 && (
                   <div className="rounded-xl border border-dashed border-gray-300 bg-white/70 px-3 py-2 text-xs text-gray-500 lg:w-[220px]">
