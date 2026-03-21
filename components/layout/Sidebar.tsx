@@ -11,7 +11,7 @@ import {
   Users2, ScrollText, BarChart3, Wrench, ShieldAlert, Award, CheckSquare, HardHat, Layers,
   FileSearch, RefreshCw, Calendar, Lightbulb, Heart, Users2 as Users3, Wind, Ear,
   CalendarDays, History, Building2, UserCog,
-  ChevronRight, ChevronDown, HeartPulse,
+  ChevronRight, ChevronDown, HeartPulse, Coins, Calculator, Search,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import type { UserProfile } from '@/types'
@@ -97,6 +97,15 @@ const NAV: NavGroup[] = [
       { href:'/subcontract/committee',         label:'안전 및 보건에 관한 협의체',           icon:UsersRound  },
       { href:'/subcontract/joint-inspection',  label:'도급사업의 합동안전보건점검',     icon:Shield      },
       { href:'/subcontract/pre-work-inspection', label:'작업 시작 전 합동안전점검',           icon:Wrench      },
+    ],
+  },
+  {
+    key:'osh-cost', label:'산업안전보건관리비', icon:Coins, color:'#0284c7',
+    href:'/osh-cost',
+    children:[
+      { href:'/osh-cost/estimation', label:'계상',         icon:Calculator     },
+      { href:'/osh-cost/usage',      label:'사용',         icon:ClipboardCheck },
+      { href:'/osh-cost/qna',        label:'질의회시 검색', icon:Search         },
     ],
   },
   {

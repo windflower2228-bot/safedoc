@@ -15,6 +15,7 @@ type MenuKey =
   | 'education'
   | 'safety_measures'
   | 'subcontract'
+  | 'osh_cost'
   | 'health_programs'
   | 'health'
   | 'hazardous'
@@ -49,6 +50,7 @@ function resolveMenuKey(pathname: string): MenuKey {
     pathname.startsWith('/documents/joint-inspection') ||
     pathname.startsWith('/documents/committee')
   ) return 'subcontract'
+  if (pathname.startsWith('/osh-cost')) return 'osh_cost'
   if (pathname.startsWith('/health-programs')) return 'health_programs'
   if (pathname.startsWith('/health')) return 'health'
   if (pathname.startsWith('/hazardous-machinery')) return 'hazardous'
@@ -181,6 +183,22 @@ const DIAGRAMS: Record<MenuKey, DiagramConfig> = {
       { label: '협의체 회의록', href: '/documents/committee', desc: '회의록 연계' },
     ],
     note: '점검·회의록은 위험성평가를 바탕으로 초안 생성 연계가 가능합니다.',
+  },
+  osh_cost: {
+    title: '산업안전보건관리비',
+    centerHref: '/osh-cost',
+    centerSub: '계상·사용 관리 허브',
+    autoLinks: [
+      { label: '계상', href: '/osh-cost/estimation', desc: '별표 1 산식 기반 계산' },
+      { label: '사용', href: '/osh-cost/usage', desc: '별지 1 사용내역 관리' },
+      { label: '질의회시 검색', href: '/osh-cost/qna', desc: '쟁점 사례 검색' },
+    ],
+    assistLinks: [
+      { label: '위험성평가', href: '/risk', desc: '위험요인 기반 집행 우선순위' },
+      { label: '작업일보 분석', href: '/worklog', desc: '현장 작업량 참고' },
+      { label: '활동계획표', href: '/plan', desc: '월별 집행 일정 연계' },
+    ],
+    note: '관리비 계상(별표 1)과 사용관리(별지 1)를 같은 흐름으로 운영할 수 있습니다.',
   },
   health_programs: {
     title: '보건조치',
