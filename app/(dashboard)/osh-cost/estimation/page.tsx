@@ -20,14 +20,21 @@ type SavedEstimation = {
 }
 
 export default function OshCostEstimationPage() {
+  const normalizeNumericInput = (value: string) => {
+    const digits = value.replace(/[^\d]/g, '')
+    return digits.replace(/^0+(?=\d)/, '')
+  }
+
   const [projectTypeId, setProjectTypeId] = useState(OSH_COST_TYPES[0].id)
   const selectedType = useMemo(
     () => OSH_COST_TYPES.find((item) => item.id === projectTypeId) ?? OSH_COST_TYPES[0],
     [projectTypeId]
   )
 
-  const [materialCost, setMaterialCost] = useState(0)
-  const [laborCost, setLaborCost] = useState(0)
+  const [materialCostInput, setMaterialCostInput] = useState('')
+  const [laborCostInput, setLaborCostInput] = useState('')
+  const materialCost = useMemo(() => Number(materialCostInput || '0'), [materialCostInput])
+  const laborCost = useMemo(() => Number(laborCostInput || '0'), [laborCostInput])
   const [contractorProvidedCost, setContractorProvidedCost] = useState(0)
   const [includeContractorProvided, setIncludeContractorProvided] = useState(false)
   const [isHealthManagerTarget, setIsHealthManagerTarget] = useState(false)
@@ -131,21 +138,25 @@ export default function OshCostEstimationPage() {
               <label className="block">
                 <span className="text-xs text-gray-500">재료비(원)</span>
                 <input
-                  type="number"
-                  min={0}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                  value={materialCost}
-                  onChange={(e) => setMaterialCost(Number(e.target.value) || 0)}
+                  value={materialCostInput}
+                  onChange={(e) => setMaterialCostInput(normalizeNumericInput(e.target.value))}
+                  placeholder="숫자 입력"
                 />
               </label>
               <label className="block">
                 <span className="text-xs text-gray-500">직접노무비(원)</span>
                 <input
-                  type="number"
-                  min={0}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                  value={laborCost}
-                  onChange={(e) => setLaborCost(Number(e.target.value) || 0)}
+                  value={laborCostInput}
+                  onChange={(e) => setLaborCostInput(normalizeNumericInput(e.target.value))}
+                  placeholder="숫자 입력"
                 />
               </label>
             </div>
