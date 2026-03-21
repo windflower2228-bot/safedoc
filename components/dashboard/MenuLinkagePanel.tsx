@@ -272,8 +272,8 @@ type CurveLayout = {
   bottom: string | null
 }
 
-const CURVE_CARD_GAP = 14
-const CURVE_SLOT_SPACING = 20
+const CURVE_CARD_GAP = 5
+const CURVE_PORT_EDGE_PADDING = 8
 
 type NodeMetric = {
   midY: number
@@ -281,18 +281,22 @@ type NodeMetric = {
   rightX: number
 }
 
-function createEvenSlots(count: number, centerY: number, spacing: number) {
-  if (count <= 1) return [centerY]
-  return Array.from({ length: count }, (_, index) => centerY + (index - (count - 1) / 2) * spacing)
+function createCardPorts(count: number, topY: number, bottomY: number) {
+  if (count <= 1) return [(topY + bottomY) / 2]
+  const span = Math.max(0, bottomY - topY)
+  return Array.from({ length: count }, (_, index) => topY + (span * index) / (count - 1))
 }
 
 function createCurvePath(startX: number, startY: number, endX: number, endY: number) {
-  const curve = Math.max(72, Math.min(180, Math.abs(endX - startX) * 0.75))
-  return `M ${startX} ${startY} C ${startX + curve} ${startY}, ${endX - curve} ${endY}, ${endX} ${endY}`
+  const curve = Math.max(46, Math.min(120, Math.abs(endX - startX) * 0.5))
+  const deltaY = endY - startY
+  const cp1Y = startY + deltaY * 0.2
+  const cp2Y = startY + deltaY * 0.8
+  return `M ${startX} ${startY} C ${startX + curve} ${cp1Y}, ${endX - curve} ${cp2Y}, ${endX} ${endY}`
 }
 
 function createBottomCurvePath(startX: number, startY: number, endX: number, endY: number) {
-  const bend = Math.max(52, Math.abs(endY - startY) * 0.45)
+  const bend = Math.max(24, Math.min(52, Math.abs(endY - startY) * 0.3))
   return `M ${startX} ${startY} C ${startX} ${startY + bend}, ${endX} ${endY - bend}, ${endX} ${endY}`
 }
 
@@ -374,7 +378,8 @@ export default function MenuLinkagePanel() {
       const centerRect = centerNode.getBoundingClientRect()
       const centerLeftX = centerRect.left - containerRect.left - CURVE_CARD_GAP
       const centerRightX = centerRect.right - containerRect.left + CURVE_CARD_GAP
-      const centerMidY = centerRect.top - containerRect.top + centerRect.height / 2
+      const centerTopY = centerRect.top - containerRect.top + CURVE_PORT_EDGE_PADDING
+      const centerBottomY = centerRect.bottom - containerRect.top - CURVE_PORT_EDGE_PADDING
 
       const validLeftNodes = leftRefs.current
         .slice(0, diagram.assistLinks.length)
@@ -405,20 +410,20 @@ export default function MenuLinkagePanel() {
         })
         .sort((a, b) => a.midY - b.midY)
 
-      const leftSlots = createEvenSlots(leftMetrics.length, centerMidY, CURVE_SLOT_SPACING)
-      const rightSlots = createEvenSlots(rightMetrics.length, centerMidY, CURVE_SLOT_SPACING)
+      const leftPorts = createCardPorts(leftMetrics.length, centerTopY, centerBottomY)
+      const rightPorts = createCardPorts(rightMetrics.length, centerTopY, centerBottomY)
 
       const leftPaths = leftMetrics.map((metric, index) => {
         const startX = metric.rightX + CURVE_CARD_GAP
         const startY = metric.midY
-        const endY = leftSlots[index]
+        const endY = leftPorts[index]
         return createCurvePath(startX, startY, centerLeftX, endY)
       })
 
       const rightPaths = rightMetrics.map((metric, index) => {
         const endX = metric.leftX - CURVE_CARD_GAP
         const endY = metric.midY
-        const startY = rightSlots[index]
+        const startY = rightPorts[index]
         return createCurvePath(centerRightX, startY, endX, endY)
       })
 
