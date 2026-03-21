@@ -5,6 +5,7 @@ export type OshCostBracket = {
   maxTargetAmount: number | null
   rate: number
   baseAmount: number
+  healthManagerRate?: number
 }
 
 export type OshCostType = {
@@ -16,39 +17,43 @@ export type OshCostType = {
 
 export const OSH_COST_TYPES: OshCostType[] = [
   {
-    id: 'general_a',
-    label: '일반건설공사(갑)',
-    description: '건축·주택 등 (별표 1 기본 분류)',
+    id: 'building',
+    label: '건축공사',
+    description: '별표 1 기준 공사종류',
     brackets: [
-      { id: 'ga_5', label: '5억 미만', minTargetAmount: 0, maxTargetAmount: 500_000_000, rate: 2.93, baseAmount: 0 },
-      { id: 'ga_50', label: '5억 이상 50억 미만', minTargetAmount: 500_000_000, maxTargetAmount: 5_000_000_000, rate: 1.86, baseAmount: 5_349_000 },
-      { id: 'ga_100', label: '50억 이상 100억 미만', minTargetAmount: 5_000_000_000, maxTargetAmount: 10_000_000_000, rate: 2.10, baseAmount: 3_889_000 },
-      { id: 'ga_300', label: '100억 이상 300억 미만', minTargetAmount: 10_000_000_000, maxTargetAmount: 30_000_000_000, rate: 2.21, baseAmount: 2_789_000 },
-      { id: 'ga_300p', label: '300억 이상', minTargetAmount: 30_000_000_000, maxTargetAmount: null, rate: 2.30, baseAmount: 0 },
+      { id: 'under_5', label: '5억원 미만', minTargetAmount: 0, maxTargetAmount: 500_000_000, rate: 3.11, baseAmount: 0 },
+      { id: 'from_5_to_50', label: '5억원 이상 50억원 미만', minTargetAmount: 500_000_000, maxTargetAmount: 5_000_000_000, rate: 2.28, baseAmount: 4_325_000 },
+      { id: 'over_50', label: '50억원 이상', minTargetAmount: 5_000_000_000, maxTargetAmount: null, rate: 2.37, baseAmount: 0, healthManagerRate: 2.64 },
     ],
   },
   {
-    id: 'general_b',
-    label: '일반건설공사(을)',
-    description: '토목·조경·산업설비 일부 (별표 1 기본 분류)',
+    id: 'civil',
+    label: '토목공사',
+    description: '별표 1 기준 공사종류',
     brackets: [
-      { id: 'gb_5', label: '5억 미만', minTargetAmount: 0, maxTargetAmount: 500_000_000, rate: 2.15, baseAmount: 0 },
-      { id: 'gb_50', label: '5억 이상 50억 미만', minTargetAmount: 500_000_000, maxTargetAmount: 5_000_000_000, rate: 1.55, baseAmount: 2_950_000 },
-      { id: 'gb_100', label: '50억 이상 100억 미만', minTargetAmount: 5_000_000_000, maxTargetAmount: 10_000_000_000, rate: 1.65, baseAmount: 2_450_000 },
-      { id: 'gb_300', label: '100억 이상 300억 미만', minTargetAmount: 10_000_000_000, maxTargetAmount: 30_000_000_000, rate: 1.78, baseAmount: 1_650_000 },
-      { id: 'gb_300p', label: '300억 이상', minTargetAmount: 30_000_000_000, maxTargetAmount: null, rate: 1.90, baseAmount: 0 },
+      { id: 'under_5', label: '5억원 미만', minTargetAmount: 0, maxTargetAmount: 500_000_000, rate: 3.15, baseAmount: 0 },
+      { id: 'from_5_to_50', label: '5억원 이상 50억원 미만', minTargetAmount: 500_000_000, maxTargetAmount: 5_000_000_000, rate: 2.53, baseAmount: 3_300_000 },
+      { id: 'over_50', label: '50억원 이상', minTargetAmount: 5_000_000_000, maxTargetAmount: null, rate: 2.60, baseAmount: 0, healthManagerRate: 2.73 },
     ],
   },
   {
-    id: 'special_other',
-    label: '특수 및 기타 건설공사',
-    description: '철도·궤도·특수 공종 등 (별표 1 기본 분류)',
+    id: 'heavy',
+    label: '중건설공사',
+    description: '별표 1 기준 공사종류',
     brackets: [
-      { id: 'sp_5', label: '5억 미만', minTargetAmount: 0, maxTargetAmount: 500_000_000, rate: 1.85, baseAmount: 0 },
-      { id: 'sp_50', label: '5억 이상 50억 미만', minTargetAmount: 500_000_000, maxTargetAmount: 5_000_000_000, rate: 1.35, baseAmount: 2_150_000 },
-      { id: 'sp_100', label: '50억 이상 100억 미만', minTargetAmount: 5_000_000_000, maxTargetAmount: 10_000_000_000, rate: 1.42, baseAmount: 1_950_000 },
-      { id: 'sp_300', label: '100억 이상 300억 미만', minTargetAmount: 10_000_000_000, maxTargetAmount: 30_000_000_000, rate: 1.52, baseAmount: 1_250_000 },
-      { id: 'sp_300p', label: '300억 이상', minTargetAmount: 30_000_000_000, maxTargetAmount: null, rate: 1.64, baseAmount: 0 },
+      { id: 'under_5', label: '5억원 미만', minTargetAmount: 0, maxTargetAmount: 500_000_000, rate: 3.64, baseAmount: 0 },
+      { id: 'from_5_to_50', label: '5억원 이상 50억원 미만', minTargetAmount: 500_000_000, maxTargetAmount: 5_000_000_000, rate: 3.05, baseAmount: 2_975_000 },
+      { id: 'over_50', label: '50억원 이상', minTargetAmount: 5_000_000_000, maxTargetAmount: null, rate: 3.11, baseAmount: 0, healthManagerRate: 3.39 },
+    ],
+  },
+  {
+    id: 'special',
+    label: '특수건설공사',
+    description: '별표 1 기준 공사종류',
+    brackets: [
+      { id: 'under_5', label: '5억원 미만', minTargetAmount: 0, maxTargetAmount: 500_000_000, rate: 2.07, baseAmount: 0 },
+      { id: 'from_5_to_50', label: '5억원 이상 50억원 미만', minTargetAmount: 500_000_000, maxTargetAmount: 5_000_000_000, rate: 1.59, baseAmount: 2_450_000 },
+      { id: 'over_50', label: '50억원 이상', minTargetAmount: 5_000_000_000, maxTargetAmount: null, rate: 1.64, baseAmount: 0, healthManagerRate: 1.78 },
     ],
   },
 ]

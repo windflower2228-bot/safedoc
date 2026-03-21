@@ -9,6 +9,7 @@ type SavedEstimation = {
   savedAt: string
   projectTypeId: string
   bracketId: string
+  isHealthManagerTarget: boolean
   materialCost: number
   laborCost: number
   contractorProvidedCost: number
@@ -29,6 +30,7 @@ export default function OshCostEstimationPage() {
   const [laborCost, setLaborCost] = useState(0)
   const [contractorProvidedCost, setContractorProvidedCost] = useState(0)
   const [includeContractorProvided, setIncludeContractorProvided] = useState(false)
+  const [isHealthManagerTarget, setIsHealthManagerTarget] = useState(false)
 
   const [bracketId, setBracketId] = useState(selectedType.brackets[0].id)
   const selectedBracket = useMemo(
@@ -44,10 +46,17 @@ export default function OshCostEstimationPage() {
     setBracketId(selectedType.brackets[0].id)
   }, [selectedType.id])
 
+  const officialRate = useMemo(() => {
+    if (selectedBracket.id === 'over_50' && isHealthManagerTarget && selectedBracket.healthManagerRate) {
+      return selectedBracket.healthManagerRate
+    }
+    return selectedBracket.rate
+  }, [isHealthManagerTarget, selectedBracket.healthManagerRate, selectedBracket.id, selectedBracket.rate])
+
   useEffect(() => {
-    setRate(selectedBracket.rate)
+    setRate(officialRate)
     setBaseAmount(selectedBracket.baseAmount)
-  }, [selectedBracket.id])
+  }, [officialRate, selectedBracket.baseAmount, selectedBracket.id])
 
   const targetNoProvided = Math.max(0, materialCost) + Math.max(0, laborCost)
   const targetWithProvided = targetNoProvided + Math.max(0, contractorProvidedCost)
@@ -72,6 +81,7 @@ export default function OshCostEstimationPage() {
       savedAt: new Date().toISOString(),
       projectTypeId,
       bracketId,
+      isHealthManagerTarget,
       materialCost,
       laborCost,
       contractorProvidedCost,
@@ -160,6 +170,16 @@ export default function OshCostEstimationPage() {
               />
               도급자관급자재 포함 공사(상한식 동시 적용)
             </label>
+
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                className="rounded border-gray-300"
+                checked={isHealthManagerTarget}
+                onChange={(e) => setIsHealthManagerTarget(e.target.checked)}
+              />
+              영 별표5 보건관리자 선임대상 공사(대상액 50억원 이상 구간에서 전용 비율 적용)
+            </label>
           </div>
         </div>
 
@@ -217,6 +237,13 @@ export default function OshCostEstimationPage() {
               </label>
             </div>
 
+            <p className="text-[11px] text-gray-500">
+              고시값 적용 요율: <b>{officialRate.toFixed(2)}%</b>
+              {selectedBracket.id === 'over_50' && selectedBracket.healthManagerRate && (
+                <> (일반 {selectedBracket.rate.toFixed(2)}% / 보건관리자 선임대상 {selectedBracket.healthManagerRate.toFixed(2)}%)</>
+              )}
+            </p>
+
             <div className="rounded-lg border border-cyan-100 bg-cyan-50/40 px-3 py-2 text-[11px] text-cyan-800">
               <p>대상액(도급자관급 미포함): {formatKrw(targetNoProvided)}원</p>
               <p>대상액(도급자관급 포함): {formatKrw(targetWithProvided)}원</p>
@@ -273,7 +300,8 @@ export default function OshCostEstimationPage() {
 
         {savedMessage && <p className="mt-2 text-xs text-cyan-700">{savedMessage}</p>}
         <p className="mt-2 text-[11px] text-gray-500">
-          화면의 요율/기초액은 편집 가능합니다. 최신 고시 원문과 발주기관 기준이 다르면 해당 값으로 수정해서 계산하세요.
+          고시 기준: 건설업 산업안전보건관리비 계상 및 사용기준(고용노동부고시 제2025-11호, 시행 2025-02-12) 별표 1.
+          화면의 요율/기초액은 편집 가능합니다.
         </p>
       </div>
     </div>
