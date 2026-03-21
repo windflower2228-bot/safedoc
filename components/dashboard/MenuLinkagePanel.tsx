@@ -343,7 +343,7 @@ function FlowNode({
         : 'lg:w-[220px]'
 
   return (
-    <div ref={wrapperRef} className={`relative ${wrapperClassName ?? ''}`}>
+    <div ref={wrapperRef} className={`relative w-fit ${wrapperClassName ?? ''}`}>
       <Link
         href={node.href}
         className={`relative z-10 block w-full ${widthClass} rounded-xl border px-3 py-2.5 hover:shadow-sm hover:-translate-y-0.5 transition-all ${toneClass}`}
@@ -552,7 +552,7 @@ export default function MenuLinkagePanel() {
                 <FlowNode
                   node={{ label: diagram.title, href: diagram.centerHref, desc: diagram.centerSub }}
                   tone="center"
-                  wrapperClassName="lg:flex lg:justify-center"
+                  wrapperClassName="lg:mx-auto"
                   wrapperRef={(el) => {
                     centerRef.current = el
                   }}
@@ -570,7 +570,7 @@ export default function MenuLinkagePanel() {
                     key={`auto-${node.href}-${node.label}`}
                     node={node}
                     tone="right"
-                    wrapperClassName="lg:flex lg:justify-end"
+                    wrapperClassName="lg:ml-auto"
                     wrapperRef={(el) => {
                       rightRefs.current[idx] = el
                     }}
