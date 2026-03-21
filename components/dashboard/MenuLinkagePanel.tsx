@@ -272,6 +272,20 @@ type CurveLayout = {
   bottom: string | null
 }
 
+const CURVE_CARD_GAP = 14
+const CURVE_SLOT_SPACING = 20
+
+type NodeMetric = {
+  midY: number
+  leftX: number
+  rightX: number
+}
+
+function createEvenSlots(count: number, centerY: number, spacing: number) {
+  if (count <= 1) return [centerY]
+  return Array.from({ length: count }, (_, index) => centerY + (index - (count - 1) / 2) * spacing)
+}
+
 function createCurvePath(startX: number, startY: number, endX: number, endY: number) {
   const curve = Math.max(72, Math.min(180, Math.abs(endX - startX) * 0.75))
   return `M ${startX} ${startY} C ${startX + curve} ${startY}, ${endX - curve} ${endY}, ${endX} ${endY}`
@@ -358,8 +372,8 @@ export default function MenuLinkagePanel() {
     const computeCurves = () => {
       const containerRect = container.getBoundingClientRect()
       const centerRect = centerNode.getBoundingClientRect()
-      const centerLeftX = centerRect.left - containerRect.left + 1
-      const centerRightX = centerRect.right - containerRect.left - 1
+      const centerLeftX = centerRect.left - containerRect.left - CURVE_CARD_GAP
+      const centerRightX = centerRect.right - containerRect.left + CURVE_CARD_GAP
       const centerMidY = centerRect.top - containerRect.top + centerRect.height / 2
 
       const validLeftNodes = leftRefs.current
@@ -369,24 +383,42 @@ export default function MenuLinkagePanel() {
         .slice(0, diagram.autoLinks.length)
         .filter((node): node is HTMLDivElement => Boolean(node))
 
-      const leftSpread = validLeftNodes.length > 1 ? Math.max(10, 44 / validLeftNodes.length) : 0
-      const rightSpread = validRightNodes.length > 1 ? Math.max(10, 44 / validRightNodes.length) : 0
+      const leftMetrics = validLeftNodes
+        .map<NodeMetric>((node) => {
+          const rect = node.getBoundingClientRect()
+          return {
+            midY: rect.top - containerRect.top + rect.height / 2,
+            leftX: rect.left - containerRect.left,
+            rightX: rect.right - containerRect.left,
+          }
+        })
+        .sort((a, b) => a.midY - b.midY)
 
-      const leftPaths = validLeftNodes.map((node, index) => {
-        const rect = node.getBoundingClientRect()
-        const startX = rect.right - containerRect.left
-        const startY = rect.top - containerRect.top + rect.height / 2
-        const offset = (index - (validLeftNodes.length - 1) / 2) * leftSpread
-        const endY = centerMidY + offset
+      const rightMetrics = validRightNodes
+        .map<NodeMetric>((node) => {
+          const rect = node.getBoundingClientRect()
+          return {
+            midY: rect.top - containerRect.top + rect.height / 2,
+            leftX: rect.left - containerRect.left,
+            rightX: rect.right - containerRect.left,
+          }
+        })
+        .sort((a, b) => a.midY - b.midY)
+
+      const leftSlots = createEvenSlots(leftMetrics.length, centerMidY, CURVE_SLOT_SPACING)
+      const rightSlots = createEvenSlots(rightMetrics.length, centerMidY, CURVE_SLOT_SPACING)
+
+      const leftPaths = leftMetrics.map((metric, index) => {
+        const startX = metric.rightX + CURVE_CARD_GAP
+        const startY = metric.midY
+        const endY = leftSlots[index]
         return createCurvePath(startX, startY, centerLeftX, endY)
       })
 
-      const rightPaths = validRightNodes.map((node, index) => {
-        const rect = node.getBoundingClientRect()
-        const endX = rect.left - containerRect.left
-        const endY = rect.top - containerRect.top + rect.height / 2
-        const offset = (index - (validRightNodes.length - 1) / 2) * rightSpread
-        const startY = centerMidY + offset
+      const rightPaths = rightMetrics.map((metric, index) => {
+        const endX = metric.leftX - CURVE_CARD_GAP
+        const endY = metric.midY
+        const startY = rightSlots[index]
         return createCurvePath(centerRightX, startY, endX, endY)
       })
 
@@ -394,9 +426,9 @@ export default function MenuLinkagePanel() {
       if (bottomRef.current) {
         const bottomRect = bottomRef.current.getBoundingClientRect()
         const startX = centerRect.left - containerRect.left + centerRect.width / 2
-        const startY = centerRect.bottom - containerRect.top
+        const startY = centerRect.bottom - containerRect.top + CURVE_CARD_GAP
         const endX = bottomRect.left - containerRect.left + bottomRect.width / 2
-        const endY = bottomRect.top - containerRect.top
+        const endY = bottomRect.top - containerRect.top - CURVE_CARD_GAP
         bottomPath = createBottomCurvePath(startX, startY, endX, endY)
       }
 
