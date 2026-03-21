@@ -273,7 +273,7 @@ type CurveLayout = {
 }
 
 const CURVE_CARD_GAP = 0
-const CURVE_PORT_EDGE_PADDING = 8
+const CURVE_PORT_EDGE_PADDING = 18
 
 type NodeMetric = {
   midY: number
@@ -288,11 +288,17 @@ function createCardPorts(count: number, topY: number, bottomY: number) {
 }
 
 function createCurvePath(startX: number, startY: number, endX: number, endY: number) {
-  const curve = Math.max(80, Math.min(190, Math.abs(endX - startX) * 0.9))
+  const direction = endX >= startX ? 1 : -1
+  const stem = Math.max(10, Math.min(20, Math.abs(endX - startX) * 0.16))
+  const aX = startX + direction * stem
+  const bX = endX - direction * stem
+  const curve = Math.max(56, Math.min(150, Math.abs(bX - aX) * 0.62))
   const deltaY = endY - startY
-  const cp1Y = startY + deltaY * 0.4
-  const cp2Y = startY + deltaY * 0.6
-  return `M ${startX} ${startY} C ${startX + curve} ${cp1Y}, ${endX - curve} ${cp2Y}, ${endX} ${endY}`
+  const cp1X = aX + direction * curve
+  const cp2X = bX - direction * curve
+  const cp1Y = startY + deltaY * 0.35
+  const cp2Y = startY + deltaY * 0.65
+  return `M ${startX} ${startY} L ${aX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${bX} ${endY} L ${endX} ${endY}`
 }
 
 function createBottomCurvePath(startX: number, startY: number, endX: number, endY: number) {
@@ -494,8 +500,8 @@ export default function MenuLinkagePanel() {
                   d={path}
                   fill="none"
                   stroke="#c68c81"
-                  strokeOpacity="0.88"
-                  strokeWidth="1.8"
+                  strokeOpacity="0.94"
+                  strokeWidth="2.2"
                   strokeLinecap="round"
                 />
               ))}
@@ -505,8 +511,8 @@ export default function MenuLinkagePanel() {
                   d={path}
                   fill="none"
                   stroke="#c68c81"
-                  strokeOpacity="0.88"
-                  strokeWidth="1.8"
+                  strokeOpacity="0.94"
+                  strokeWidth="2.2"
                   strokeLinecap="round"
                 />
               ))}
@@ -515,8 +521,8 @@ export default function MenuLinkagePanel() {
                   d={curves.bottom}
                   fill="none"
                   stroke="#c68c81"
-                  strokeOpacity="0.88"
-                  strokeWidth="1.8"
+                  strokeOpacity="0.94"
+                  strokeWidth="2.2"
                   strokeDasharray="6 5"
                   strokeLinecap="round"
                 />
