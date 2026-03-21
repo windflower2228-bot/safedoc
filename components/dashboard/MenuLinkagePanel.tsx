@@ -273,12 +273,12 @@ type CurveLayout = {
 }
 
 function createCurvePath(startX: number, startY: number, endX: number, endY: number) {
-  const curve = Math.max(42, Math.abs(endX - startX) * 0.45)
+  const curve = Math.max(72, Math.min(180, Math.abs(endX - startX) * 0.75))
   return `M ${startX} ${startY} C ${startX + curve} ${startY}, ${endX - curve} ${endY}, ${endX} ${endY}`
 }
 
 function createBottomCurvePath(startX: number, startY: number, endX: number, endY: number) {
-  const bend = 34
+  const bend = Math.max(52, Math.abs(endY - startY) * 0.45)
   return `M ${startX} ${startY} C ${startX} ${startY + bend}, ${endX} ${endY - bend}, ${endX} ${endY}`
 }
 
@@ -286,10 +286,12 @@ function FlowNode({
   node,
   tone,
   wrapperRef,
+  wrapperClassName,
 }: {
   node: LinkNode
   tone: 'left' | 'right' | 'center' | 'bottom'
   wrapperRef?: (el: HTMLDivElement | null) => void
+  wrapperClassName?: string
 }) {
   const toneClass =
     tone === 'left'
@@ -309,11 +311,18 @@ function FlowNode({
           ? 'text-[#7b6133]'
           : 'text-[#8d4b3f]'
 
+  const widthClass =
+    tone === 'center'
+      ? 'lg:w-[190px]'
+      : tone === 'bottom'
+        ? 'lg:w-[210px]'
+        : 'lg:w-[220px]'
+
   return (
-    <div ref={wrapperRef} className="relative">
+    <div ref={wrapperRef} className={`relative ${wrapperClassName ?? ''}`}>
       <Link
         href={node.href}
-        className={`relative z-10 block rounded-xl border px-3 py-2.5 hover:shadow-sm hover:-translate-y-0.5 transition-all ${toneClass}`}
+        className={`relative z-10 block w-full ${widthClass} rounded-xl border px-3 py-2.5 hover:shadow-sm hover:-translate-y-0.5 transition-all ${toneClass}`}
       >
         <p className={`text-sm font-semibold leading-tight ${accentClass}`}>{node.label}</p>
         {node.desc && <p className="text-[11px] text-gray-600 mt-1">{node.desc}</p>}
@@ -441,7 +450,7 @@ export default function MenuLinkagePanel() {
           </div>
 
           <div ref={desktopRef} className="hidden lg:block relative rounded-2xl border border-[#dadada] bg-[#f8f8f7] px-4 py-4">
-            <svg className="pointer-events-none absolute inset-0 h-full w-full z-0">
+            <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible z-0">
               {curves.left.map((path, idx) => (
                 <path
                   key={`left-curve-${idx}`}
@@ -477,10 +486,10 @@ export default function MenuLinkagePanel() {
               )}
             </svg>
 
-            <div className="relative z-10 grid grid-cols-[1fr_230px_1fr] gap-5 items-center">
+            <div className="relative z-10 grid grid-cols-[1fr_200px_1fr] gap-8 items-center">
               <div className="space-y-2.5">
                 {diagram.assistLinks.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-gray-300 bg-white/70 px-3 py-2 text-xs text-gray-500">
+                  <div className="rounded-xl border border-dashed border-gray-300 bg-white/70 px-3 py-2 text-xs text-gray-500 lg:w-[220px]">
                     선행 연계 없음
                   </div>
                 )}
@@ -500,6 +509,7 @@ export default function MenuLinkagePanel() {
                 <FlowNode
                   node={{ label: diagram.title, href: diagram.centerHref, desc: diagram.centerSub }}
                   tone="center"
+                  wrapperClassName="lg:flex lg:justify-center"
                   wrapperRef={(el) => {
                     centerRef.current = el
                   }}
@@ -508,7 +518,7 @@ export default function MenuLinkagePanel() {
 
               <div className="space-y-2.5">
                 {diagram.autoLinks.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-gray-300 bg-white/70 px-3 py-2 text-xs text-gray-500">
+                  <div className="rounded-xl border border-dashed border-gray-300 bg-white/70 px-3 py-2 text-xs text-gray-500 lg:w-[220px] ml-auto">
                     자동 연계 없음
                   </div>
                 )}
@@ -517,6 +527,7 @@ export default function MenuLinkagePanel() {
                     key={`auto-${node.href}-${node.label}`}
                     node={node}
                     tone="right"
+                    wrapperClassName="lg:flex lg:justify-end"
                     wrapperRef={(el) => {
                       rightRefs.current[idx] = el
                     }}
