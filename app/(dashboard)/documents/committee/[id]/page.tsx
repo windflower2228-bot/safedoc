@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { ArrowLeft, UsersRound, Loader2, CheckCircle2, BarChart3, Edit2 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { COMMITTEE_ROLE_LABEL } from '@/types/inspection'
+import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
 
 export default function CommitteeDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -200,6 +201,12 @@ export default function CommitteeDetailPage({ params }: { params: { id: string }
           <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{doc.resolution}</p>
         </div>
       )}
+
+      <DocumentPhotoSection
+        category="document_committee"
+        docId={doc.id}
+        title="협의체 회의록 첨부 사진"
+      />
     </div>
   )
 }

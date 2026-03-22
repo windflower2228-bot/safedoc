@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { ArrowLeft, Shield, Loader2, Link2, CheckCircle2, BarChart3 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { RESULT_COLOR, RESULT_LABEL, PARTICIPANT_ROLE_LABEL } from '@/types/inspection'
+import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
 
 export default function JointInspectionDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -173,6 +174,12 @@ export default function JointInspectionDetailPage({ params }: { params: { id: st
           <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{doc.overall_opinion}</p>
         </div>
       )}
+
+      <DocumentPhotoSection
+        category="document_joint_inspection"
+        docId={doc.id}
+        title="합동안전점검 첨부 사진"
+      />
     </div>
   )
 }

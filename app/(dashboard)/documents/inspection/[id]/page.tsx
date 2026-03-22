@@ -15,6 +15,7 @@ import {
   INSPECTION_TYPE_LABEL,
   type Inspection, type InspectionCheckItem, type InspectionCategory,
 } from '@/types/inspection'
+import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
 
 export default function InspectionDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -319,6 +320,12 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
           </p>
         )}
       </div>
+
+      <DocumentPhotoSection
+        category="document_inspection"
+        docId={doc.id}
+        title="순회점검 첨부 사진"
+      />
     </div>
   )
 }

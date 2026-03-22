@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import type { Designation } from '@/types/designation'
 import { DOC_TYPE_LABELS } from '@/types/designation'
+import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
 
 type Params = { params: { id: string } }
 
@@ -205,6 +206,12 @@ export default async function DesignationDetailPage({ params }: Params) {
             ※ 본 {DOC_TYPE_LABELS[doc.doc_type]}는 산업안전보건법령에 따라 발행된 공식 문서입니다.<br />
             ※ 지정된 직무를 성실히 수행하고, 변경 사항 발생 시 즉시 보고하여 주십시오.
           </div>
+
+          <DocumentPhotoSection
+            category="document_designation"
+            docId={doc.id}
+            title="지정서/선임서 첨부 사진"
+          />
         </div>
       </div>
     </div>

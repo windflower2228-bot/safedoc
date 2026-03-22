@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { ArrowLeft, RefreshCw, Loader2, Sparkles, Edit3, AlertTriangle, CheckCircle2, Printer, Save, ChevronDown, ChevronUp } from 'lucide-react'
 import { clsx } from 'clsx'
+import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
 
 const RISK_CFG = {
   high:   { label:'高위험', cls:'bg-red-100 text-red-700',    dot:'#dc2626' },
@@ -166,6 +167,12 @@ export default function OccasionalRiskDetailPage({ params }: { params: { id: str
           })}
         </div>
       </div>
+
+      <DocumentPhotoSection
+        category="risk_occasional"
+        docId={doc.id}
+        title="수시 위험성평가 첨부 사진"
+      />
     </div>
   )
 }
