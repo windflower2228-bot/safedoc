@@ -15,6 +15,7 @@ import { randomUUID } from 'crypto'
 const execAsync = promisify(exec)
 
 type Params = { params: { id: string } }
+const toPythonPath = (value: string) => value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 
 export async function GET(_req: NextRequest, { params }: Params) {
   const supabase = createClient()
@@ -64,18 +65,22 @@ export async function GET(_req: NextRequest, { params }: Params) {
     const uid      = randomUUID()
     const jsonPath = join(tmpdir(), `designation_${uid}.json`)
     const pdfPath  = join(tmpdir(), `designation_${uid}.pdf`)
+    const modulePath = join(process.cwd(), 'lib', 'pdf')
+    const pyModulePath = toPythonPath(modulePath)
+    const pyJsonPath = toPythonPath(jsonPath)
+    const pyPdfPath = toPythonPath(pdfPath)
 
     await writeFile(jsonPath, JSON.stringify(pdfData), 'utf-8')
 
     // Python 인라인 스크립트로 PDF 생성
     const pyScript = `
 import json, sys
-sys.path.insert(0, '/home/claude/safedoc/lib/pdf')
+sys.path.insert(0, '${pyModulePath}')
 from generate_designation import generate_designation_pdf
-with open('${jsonPath}') as f:
+with open('${pyJsonPath}') as f:
     data = json.load(f)
 pdf = generate_designation_pdf(data)
-with open('${pdfPath}', 'wb') as f:
+with open('${pyPdfPath}', 'wb') as f:
     f.write(pdf)
 print(len(pdf))
 `

@@ -202,8 +202,10 @@ if __name__ == "__main__":
              site_name="4공구 신축 현장"),
     ]
     names = ["지정서_안전보건관리책임자.pdf", "선임서_안전관리자.pdf", "지정서_관리감독자.pdf"]
+    output_dir = os.getcwd()
     for s, fn in zip(samples, names):
         pdf = generate_designation_pdf(s)
-        with open(f"/home/claude/safedoc/{fn}", "wb") as f:
+        output_path = os.path.join(output_dir, fn)
+        with open(output_path, "wb") as f:
             f.write(pdf)
-        print(f"✅ {fn}  ({len(pdf):,} bytes)")
+        print(f"✅ {output_path}  ({len(pdf):,} bytes)")
