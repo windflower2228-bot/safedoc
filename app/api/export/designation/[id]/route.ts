@@ -4,7 +4,7 @@
 // 실제 배포 시에는 Python 스크립트를 Next.js API에서 호출합니다.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import { writeFile, readFile, unlink } from 'fs/promises'
@@ -13,12 +13,80 @@ import { join } from 'path'
 import { randomUUID } from 'crypto'
 
 const execAsync = promisify(exec)
+const TEMPLATE_BUCKET = 'company-assets'
+const SAFETY_DOC_TEMPLATE_KEY = 'safety_document'
 
 type Params = { params: { id: string } }
 const toPythonPath = (value: string) => value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function renderTemplate(template: string, values: Record<string, string>): string {
+  const rendered = template.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key: string) =>
+    escapeHtml(values[key] ?? '')
+  )
+  if (rendered.includes('window.print()')) return rendered
+  const printButton = `
+<button onclick="window.print()" style="position:fixed;right:16px;bottom:16px;background:#0f766e;color:white;border:none;padding:10px 16px;border-radius:10px;cursor:pointer;z-index:9999">인쇄</button>`
+  if (rendered.includes('</body>')) return rendered.replace('</body>', `${printButton}</body>`)
+  return `${rendered}${printButton}`
+}
+
+async function renderHtmlToPdf(html: string): Promise<Buffer | null> {
+  const uid = randomUUID()
+  const htmlPath = join(tmpdir(), `designation_custom_${uid}.html`)
+  const pdfPath = join(tmpdir(), `designation_custom_${uid}.pdf`)
+  try {
+    await writeFile(htmlPath, html, 'utf-8')
+    await execAsync(`wkhtmltopdf "${htmlPath}" "${pdfPath}"`)
+    return await readFile(pdfPath)
+  } catch {
+    return null
+  } finally {
+    await Promise.all([unlink(htmlPath).catch(() => {}), unlink(pdfPath).catch(() => {})])
+  }
+}
+
+async function loadCompanyTemplateHtml(
+  admin: ReturnType<typeof createAdminClient>,
+  companyId: string,
+  values: Record<string, string>
+): Promise<string | null> {
+  const configPath = `company_${companyId}/template-center/config.json`
+  const { data: configBlob } = await admin.storage.from(TEMPLATE_BUCKET).download(configPath)
+  if (!configBlob) return null
+  try {
+    const raw = JSON.parse(await configBlob.text())
+    const binding = raw?.bindings?.[SAFETY_DOC_TEMPLATE_KEY]
+    if (!binding || binding.mode !== 'custom' || !binding.activeTemplateId) return null
+    const activeTemplateId = String(binding.activeTemplateId)
+    const template = (raw?.templates ?? []).find((item: any) => String(item?.id) === activeTemplateId)
+    if (!template?.filePath) return null
+
+    const fileName = String(template.fileName ?? '')
+    const fileType = String(template.fileType ?? '')
+    const isHtml = fileName.toLowerCase().endsWith('.html') || fileName.toLowerCase().endsWith('.htm') || fileType.includes('text/html')
+    if (!isHtml) return null
+
+    const { data: templateBlob } = await admin.storage.from(TEMPLATE_BUCKET).download(String(template.filePath))
+    if (!templateBlob) return null
+    const templateHtml = await templateBlob.text()
+    return renderTemplate(templateHtml, values)
+  } catch {
+    return null
+  }
+}
+
 export async function GET(_req: NextRequest, { params }: Params) {
   const supabase = createClient()
+  const admin = createAdminClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new NextResponse('인증 필요', { status: 401 })
 
@@ -58,6 +126,64 @@ export async function GET(_req: NextRequest, { params }: Params) {
     company_name:    company?.name ?? '',
     company_address: company?.address ?? '',
     site_name:       project?.site_name ?? '',
+  }
+
+  const { data: profile } = await admin
+    .from('user_profiles')
+    .select('company_id')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  const tokenMap: Record<string, string> = {
+    company_name: pdfData.company_name ?? '',
+    company_address: pdfData.company_address ?? '',
+    site_name: pdfData.site_name ?? '',
+    doc_type: pdfData.doc_type ?? '',
+    role_label: pdfData.role_label ?? '',
+    doc_number: pdfData.doc_number ?? '',
+    person_name: pdfData.person_name ?? '',
+    person_position: pdfData.person_position ?? '',
+    person_dept: pdfData.person_dept ?? '',
+    person_address: pdfData.person_address ?? '',
+    legal_basis: pdfData.legal_basis ?? '',
+    effective_date: pdfData.effective_date ?? '',
+    expiry_date: pdfData.expiry_date ?? '',
+    work_scope: pdfData.work_scope ?? '',
+    issuer_name: pdfData.issuer_name ?? '',
+    issuer_position: pdfData.issuer_position ?? '',
+    issuer_company: pdfData.issuer_company ?? '',
+    created_at: new Date().toISOString().slice(0, 10),
+    author_name: user.email ?? '',
+    note: '',
+  }
+
+  const customHtml = profile?.company_id
+    ? await loadCompanyTemplateHtml(admin, profile.company_id, tokenMap)
+    : null
+
+  if (customHtml) {
+    const customPdf = await renderHtmlToPdf(customHtml)
+    const docTypeLabel = doc.doc_type === 'appointment' ? '선임서' : '지정서'
+    const safeRole = doc.role_label.replace(/[\\/:*?"<>|]/g, '_')
+    const safeName = doc.person_name.replace(/\s/g, '').replace(/[\\/:*?"<>|]/g, '_')
+    const baseName = `${docTypeLabel}_${safeRole}_${safeName}_${doc.effective_date}_회사서식`
+
+    if (customPdf) {
+      return new NextResponse(new Uint8Array(customPdf), {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(baseName + '.pdf')}`,
+          'Cache-Control': 'no-store',
+        },
+      })
+    }
+    return new NextResponse(customHtml, {
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(baseName + '.html')}`,
+        'Cache-Control': 'no-store',
+      },
+    })
   }
 
   try {
@@ -106,7 +232,7 @@ print(len(pdf))
     const safeName     = doc.person_name.replace(/\s/g, '').replace(/[\\/:*?"<>|]/g, '_')
     const filename     = `${docTypeLabel}_${safeRole}_${safeName}_${doc.effective_date}.pdf`
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
