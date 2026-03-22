@@ -11,7 +11,7 @@ import {
   Users2, ScrollText, BarChart3, Wrench, ShieldAlert, Award, CheckSquare, HardHat, Layers,
   FileSearch, RefreshCw, Calendar, Lightbulb, Heart, Users2 as Users3, Wind, Ear,
   CalendarDays, History, Building2, UserCog,
-  ChevronRight, ChevronDown, HeartPulse, Coins, Calculator, Search,
+  ChevronRight, ChevronDown, HeartPulse, Coins, Calculator, Search, Settings2,
   Table2,
 } from 'lucide-react'
 import { clsx } from 'clsx'
@@ -142,6 +142,7 @@ const NAV: NavGroup[] = [
     ],
   },
   { key:'plan',    section:'일정·관리', label:'활동계획표',    icon:CalendarDays, color:'#ca8a04', href:'/plan'    },
+  { key:'template-center',             label:'서식 관리센터',  icon:Settings2,    color:'#0f766e', href:'/template-center' },
   { key:'history',                       label:'문서 버전 이력', icon:History,      color:'#6366f1', href:'/history' },
   { key:'users',                         label:'사용자 관리',   icon:UserCog,      color:'#888',    href:'/users'   },
   { key:'company',                       label:'회사·현장 관리',icon:Building2,    color:'#888',    href:'/company' },
