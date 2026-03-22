@@ -4,7 +4,7 @@ import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { getProfileForAuth } from '@/lib/supabase/auth-profile'
 
 const BUCKET = 'company-assets'
-const MAX_PHOTO_SIZE = 15 * 1024 * 1024
+const MAX_UPLOAD_SIZE = 30 * 1024 * 1024
 
 type WorklogMatch = {
   worklogId: string
@@ -23,6 +23,8 @@ type WorkStatusItem = {
   createdBy: string
   photoPath: string
   photoUrl: string
+  fileName: string
+  fileType: string
   linkedWorkLabel: string
   worklogMatches: WorklogMatch[]
 }
@@ -31,12 +33,12 @@ function getIndexPath(companyId: string): string {
   return `company_${companyId}/work-status/index.json`
 }
 
-function getPhotoPath(companyId: string, id: string, fileName: string): string {
+function getUploadPath(companyId: string, id: string, fileName: string): string {
   const safeName = fileName
     .replace(/[\\/:*?"<>|]/g, '_')
     .replace(/\s+/g, '_')
     .slice(0, 120)
-  return `company_${companyId}/work-status/photos/${id}_${safeName}`
+  return `company_${companyId}/work-status/files/${id}_${safeName}`
 }
 
 function normalizeText(value: string): string {
@@ -75,6 +77,13 @@ async function readItems(admin: ReturnType<typeof createAdminClient>, companyId:
         createdBy: String(item.createdBy ?? '사용자'),
         photoPath: String(item.photoPath),
         photoUrl: String(item.photoUrl ?? ''),
+        fileName: String(item.fileName ?? ''),
+        fileType: String(
+          item.fileType ??
+            (String(item.photoPath ?? '').toLowerCase().endsWith('.pdf')
+              ? 'application/pdf'
+              : 'image/*')
+        ),
         linkedWorkLabel: String(item.linkedWorkLabel ?? ''),
         worklogMatches: Array.isArray(item.worklogMatches)
           ? item.worklogMatches
@@ -185,22 +194,32 @@ export async function POST(req: NextRequest) {
     const form = await req.formData()
     const location = String(form.get('location') ?? '').trim()
     const note = String(form.get('note') ?? '').trim()
-    const capturedAt = String(form.get('capturedAt') ?? '').trim() || new Date().toISOString()
-    const file = form.get('photo')
+    const file = form.get('photo') ?? form.get('file')
 
     if (!location) return NextResponse.json({ error: '작업위치를 입력해주세요.' }, { status: 400 })
-    if (!(file instanceof File)) return NextResponse.json({ error: '사진 파일이 필요합니다.' }, { status: 400 })
+    if (!(file instanceof File)) return NextResponse.json({ error: '업로드 파일(사진/PDF)이 필요합니다.' }, { status: 400 })
     if (file.size <= 0) return NextResponse.json({ error: '빈 파일은 업로드할 수 없습니다.' }, { status: 400 })
-    if (file.size > MAX_PHOTO_SIZE) return NextResponse.json({ error: '사진은 15MB 이하만 업로드할 수 있습니다.' }, { status: 400 })
+    if (file.size > MAX_UPLOAD_SIZE) return NextResponse.json({ error: '파일은 30MB 이하만 업로드할 수 있습니다.' }, { status: 400 })
+
+    const normalizedType = String(file.type || '').toLowerCase()
+    const normalizedName = String(file.name || '').toLowerCase()
+    const isPdf = normalizedType === 'application/pdf' || normalizedName.endsWith('.pdf')
+    const isImage = normalizedType.startsWith('image/')
+    if (!isPdf && !isImage) {
+      return NextResponse.json({ error: '이미지 파일 또는 PDF 파일만 업로드할 수 있습니다.' }, { status: 400 })
+    }
+
+    const contentType = isPdf ? 'application/pdf' : normalizedType || 'image/jpeg'
 
     const id = randomUUID()
-    const photoPath = getPhotoPath(auth.profile.company_id, id, file.name || 'photo.jpg')
+    const uploadName = file.name || (isPdf ? 'drawing.pdf' : 'photo.jpg')
+    const photoPath = getUploadPath(auth.profile.company_id, id, uploadName)
     const photoBuffer = Buffer.from(await file.arrayBuffer())
     const { error: uploadError } = await auth.admin.storage.from(BUCKET).upload(photoPath, photoBuffer, {
       upsert: true,
-      contentType: file.type || 'image/jpeg',
+      contentType,
     })
-    if (uploadError) return NextResponse.json({ error: `사진 업로드 실패: ${uploadError.message}` }, { status: 500 })
+    if (uploadError) return NextResponse.json({ error: `파일 업로드 실패: ${uploadError.message}` }, { status: 500 })
 
     const {
       data: { publicUrl },
@@ -208,15 +227,18 @@ export async function POST(req: NextRequest) {
 
     const { linkedWorkLabel, matches } = await findWorklogMatches(auth.supabase, auth.profile.company_id, location)
 
+    const now = new Date().toISOString()
     const item: WorkStatusItem = {
       id,
       location,
       note,
-      capturedAt,
-      createdAt: new Date().toISOString(),
+      capturedAt: now,
+      createdAt: now,
       createdBy: auth.profile.name || auth.user.email || '사용자',
       photoPath,
       photoUrl: publicUrl,
+      fileName: uploadName,
+      fileType: contentType,
       linkedWorkLabel,
       worklogMatches: matches.slice(0, 5),
     }
@@ -254,4 +276,3 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: error?.message ?? '작업상황 삭제에 실패했습니다.' }, { status: 500 })
   }
 }
-

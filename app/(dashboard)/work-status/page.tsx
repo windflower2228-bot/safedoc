@@ -11,6 +11,7 @@ import {
   Upload,
   Calendar,
   FileText,
+  FileImage,
 } from 'lucide-react'
 
 type WorklogMatch = {
@@ -30,6 +31,8 @@ type WorkStatusItem = {
   createdBy: string
   photoPath: string
   photoUrl: string
+  fileName: string
+  fileType: string
   linkedWorkLabel: string
   worklogMatches: WorklogMatch[]
 }
@@ -43,7 +46,6 @@ export default function WorkStatusPage() {
 
   const [location, setLocation] = useState('')
   const [note, setNote] = useState('')
-  const [capturedAt, setCapturedAt] = useState(new Date().toISOString().slice(0, 16))
   const [photoFile, setPhotoFile] = useState<File | null>(null)
 
   useEffect(() => {
@@ -70,14 +72,13 @@ export default function WorkStatusPage() {
       return
     }
     if (!photoFile) {
-      toast.error('사진을 첨부해주세요.')
+      toast.error('파일(사진/PDF)을 첨부해주세요.')
       return
     }
 
     const form = new FormData()
     form.append('location', location.trim())
     form.append('note', note.trim())
-    form.append('capturedAt', capturedAt ? new Date(capturedAt).toISOString() : new Date().toISOString())
     form.append('photo', photoFile)
 
     setSaving(true)
@@ -126,7 +127,7 @@ export default function WorkStatusPage() {
           작업상황
         </h1>
         <p className="text-sm text-gray-500 mt-1">
-          사진 + 작업위치를 등록하면 작업일보 분석 데이터에서 같은 위치 문구를 자동 탐지해 연동 표시합니다.
+          사진/PDF + 작업위치를 등록하면 작업일보 분석 데이터에서 같은 위치 문구를 자동 탐지해 연동 표시합니다.
         </p>
       </div>
 
@@ -142,15 +143,6 @@ export default function WorkStatusPage() {
               placeholder="예: 지하1층"
             />
           </div>
-          <div>
-            <label className="label-base">촬영일시</label>
-            <input
-              type="datetime-local"
-              className="input-base"
-              value={capturedAt}
-              onChange={(e) => setCapturedAt(e.target.value)}
-            />
-          </div>
           <div className="md:col-span-2">
             <label className="label-base">메모</label>
             <input
@@ -161,17 +153,17 @@ export default function WorkStatusPage() {
             />
           </div>
           <div className="md:col-span-2">
-            <label className="label-base">사진</label>
+            <label className="label-base">파일 (사진/PDF)</label>
             <label className="input-base flex items-center gap-2 cursor-pointer hover:bg-gray-50">
               <Upload className="w-4 h-4 text-gray-400" />
               <span className="text-sm text-gray-600 truncate">
-                {photoFile ? photoFile.name : '사진 파일 선택 (jpg, png, webp 등)'}
+                {photoFile ? photoFile.name : '파일 선택 (jpg, png, webp, pdf)'}
               </span>
               <input
                 ref={fileRef}
                 type="file"
                 className="hidden"
-                accept="image/*"
+                accept="image/*,.pdf,application/pdf"
                 onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
               />
             </label>
@@ -199,10 +191,23 @@ export default function WorkStatusPage() {
           <div className="text-sm text-gray-400 py-10 text-center">등록된 작업상황이 없습니다.</div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {items.map((item) => (
+            {items.map((item) => {
+              const isPdf =
+                item.fileType === 'application/pdf' ||
+                item.fileName?.toLowerCase().endsWith('.pdf') ||
+                item.photoUrl?.toLowerCase().includes('.pdf')
+              return (
               <div key={item.id} className="border border-gray-200 rounded-xl overflow-hidden bg-white">
                 <a href={item.photoUrl} target="_blank" rel="noreferrer" className="block bg-gray-100">
-                  <img src={item.photoUrl} alt={item.location} className="w-full h-52 object-cover" />
+                  {isPdf ? (
+                    <div className="h-52 flex flex-col items-center justify-center gap-2 bg-slate-50">
+                      <FileText className="w-10 h-10 text-red-500" />
+                      <div className="text-sm font-semibold text-slate-700">PDF 도면 파일</div>
+                      <div className="text-xs text-slate-500">{item.fileName || '도면.pdf'}</div>
+                    </div>
+                  ) : (
+                    <img src={item.photoUrl} alt={item.location} className="w-full h-52 object-cover" />
+                  )}
                 </a>
                 <div className="p-4 space-y-2">
                   <div className="flex items-center justify-between">
@@ -216,12 +221,17 @@ export default function WorkStatusPage() {
                     </button>
                   </div>
 
+                  <div className="text-xs text-gray-500 inline-flex items-center gap-1.5">
+                    <FileImage className="w-3.5 h-3.5" />
+                    파일: {item.fileName || (isPdf ? '도면.pdf' : '이미지')}
+                  </div>
+
                   {item.note && <div className="text-sm text-gray-700">{item.note}</div>}
 
                   <div className="text-xs text-gray-500 flex items-center gap-3">
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
-                      촬영: {new Date(item.capturedAt).toLocaleString('ko-KR')}
+                      등록: {new Date(item.createdAt).toLocaleString('ko-KR')}
                     </span>
                     <span>등록자: {item.createdBy}</span>
                   </div>
@@ -254,11 +264,10 @@ export default function WorkStatusPage() {
                   )}
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>
     </div>
   )
 }
-
