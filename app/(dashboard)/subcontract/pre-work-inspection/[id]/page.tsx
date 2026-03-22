@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { MACHINE_TYPES, PARTICIPANT_ROLES } from '@/types/pre-work-inspection'
+import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
 
 export default function PreWorkInspectionDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -75,13 +76,18 @@ export default function PreWorkInspectionDetailPage({ params }: { params: { id: 
             </div>
           </div>
         </div>
-        {doc.status === 'draft' && (
-          <button onClick={complete} disabled={saving}
-            className="btn-primary gap-1.5" style={{ background: '#ea580c' }}>
-            {saving ? <Loader2 className="w-4 h-4 animate-spin"/> : <CheckCircle2 className="w-4 h-4"/>}
-            완료 처리
+        <div className="flex items-center gap-2">
+          <button onClick={() => window.print()} className="btn-secondary text-sm">
+            출력
           </button>
-        )}
+          {doc.status === 'draft' && (
+            <button onClick={complete} disabled={saving}
+              className="btn-primary gap-1.5" style={{ background: '#ea580c' }}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin"/> : <CheckCircle2 className="w-4 h-4"/>}
+              완료 처리
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 작업중지 배너 */}
@@ -268,6 +274,12 @@ export default function PreWorkInspectionDetailPage({ params }: { params: { id: 
           )}
         </div>
       )}
+
+      <DocumentPhotoSection
+        category="subcontract_pre_work"
+        docId={doc.id}
+        title="사전점검 첨부 사진"
+      />
     </div>
   )
 }

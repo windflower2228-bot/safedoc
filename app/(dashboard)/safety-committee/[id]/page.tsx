@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Users2, Loader2, Printer, CheckCircle2 } from 'lucide-react'
 import { clsx } from 'clsx'
+import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
 
 export default function SafetyCommitteeDetailPage({ params }: { params: { id: string } }) {
   const [doc, setDoc] = useState<any>(null)
@@ -127,6 +128,12 @@ export default function SafetyCommitteeDetailPage({ params }: { params: { id: st
           차기 회의 예정일: <strong style={{color}}>{doc.next_meeting_date}</strong>
         </div>
       )}
+
+      <DocumentPhotoSection
+        category="safety_committee"
+        docId={doc.id}
+        title={`${label} 첨부 사진`}
+      />
     </div>
   )
 }

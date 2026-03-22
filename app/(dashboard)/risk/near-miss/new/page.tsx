@@ -16,7 +16,7 @@ export default function NewNearMissPage() {
     setSaving(false)
     if (!res.ok) { toast.error(json.error); return }
     toast.success('아차사고가 보고되었습니다. 수시 위험성평가를 실시하세요.')
-    router.push('/risk/near-miss')
+    router.push(`/risk/near-miss/${json.data.id}`)
   }
   return (
     <div className="max-w-2xl mx-auto">

@@ -34,7 +34,7 @@ export default function NearMissPage() {
           </div>
         ) : (
           <table className="w-full text-sm"><thead><tr className="bg-gray-50 border-b border-gray-200">
-            {['문서번호','발생일','장소','내용','위험성평가 연계','상태'].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500">{h}</th>)}
+            {['문서번호','발생일','장소','내용','위험성평가 연계','상태',''].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500">{h}</th>)}
           </tr></thead>
           <tbody className="divide-y divide-gray-100">
             {items.map(item=>(
@@ -45,6 +45,7 @@ export default function NearMissPage() {
                 <td className="px-4 py-3 text-xs text-gray-800 max-w-[200px] truncate">{item.description}</td>
                 <td className="px-4 py-3"><span className={clsx('text-xs px-2 py-0.5 rounded-full font-medium',item.linked_to_risk?'bg-green-50 text-green-700':'bg-gray-50 text-gray-400')}>{item.linked_to_risk?'연계됨':'미연계'}</span></td>
                 <td className="px-4 py-3"><span className={clsx('text-xs px-2 py-0.5 rounded-full font-medium',item.status==='closed'?'bg-green-50 text-green-700':item.status==='in_review'?'bg-blue-50 text-blue-700':'bg-red-50 text-red-700')}>{item.status==='closed'?'완료':item.status==='in_review'?'검토 중':'미결'}</span></td>
+                <td className="px-4 py-3"><Link href={`/risk/near-miss/${item.id}`} className="text-xs text-blue-600 hover:underline">상세</Link></td>
               </tr>
             ))}
           </tbody></table>

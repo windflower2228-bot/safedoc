@@ -36,7 +36,7 @@ export default function NewSafetyInfoPage() {
     setSaving(false)
     if (!res.ok) { toast.error(json.error); return }
     toast.success('안전보건 정보제공 문서가 저장되었습니다.')
-    router.push('/subcontract/safety-info')
+    router.push(`/subcontract/safety-info/${json.data.id}`)
   }
 
   return (

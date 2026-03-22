@@ -44,7 +44,7 @@ export default function NewQualifiedVendorPage() {
     setSaving(false)
     if (!res.ok) { toast.error(json.error); return }
     toast.success('적격 수급업체 선정 자료가 저장되었습니다.')
-    router.push('/subcontract/qualified-vendor')
+    router.push(`/subcontract/qualified-vendor/${json.data.id}`)
   }
 
   return (
