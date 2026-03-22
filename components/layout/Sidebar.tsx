@@ -12,7 +12,7 @@ import {
   FileSearch, RefreshCw, Calendar, Lightbulb, Heart, Users2 as Users3, Wind, Ear,
   CalendarDays, History, Building2, UserCog,
   ChevronRight, ChevronDown, HeartPulse, Coins, Calculator, Search, Settings2,
-  Table2,
+  Table2, Camera,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import type { UserProfile } from '@/types'
@@ -28,6 +28,7 @@ interface NavGroup {
 const NAV: NavGroup[] = [
   { key:'dash',        section:'메인',      label:'대시보드',         icon:LayoutDashboard, color:'#2563eb', href:'/dashboard' },
   { key:'doc-list',                        label:'문서목록표',      icon:Table2,          color:'#0ea5e9', href:'/document-list' },
+  { key:'work-status',                     label:'작업상황',        icon:Camera,          color:'#2563eb', href:'/work-status' },
   {
     key:'risk', section:'핵심 문서', label:'위험성평가', icon:AlertTriangle, color:'#dc2626',
     href:'/risk',
