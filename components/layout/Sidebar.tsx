@@ -111,7 +111,7 @@ const NAV: NavGroup[] = [
     ],
   },
   {
-    key:'health-programs', section:'문서 관리', label:'보건조치', icon:Heart, color:'#e11d48',
+    key:'health-programs', label:'보건조치', icon:Heart, color:'#e11d48',
     href:'/health-programs',
     children:[
       { href:'/health-programs/wellness',        label:'건강증진프로그램',      icon:Heart   },
