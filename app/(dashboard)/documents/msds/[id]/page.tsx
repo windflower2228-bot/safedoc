@@ -13,7 +13,6 @@ import {
 import { clsx } from 'clsx'
 import { GHS_LABELS, type GhsHazardClass } from '@/types/msds'
 import { CMR_LABELS, SPECIAL_SUBSTANCES, type CMRType } from '@/lib/special-management-substances'
-import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
 
 const LEGAL_BADGES = [
   { key:'is_managed',       label:'관리대상유해물질',      legal:'안전보건규칙 별표12',     color:'#dc2626', bg:'#fef2f2', border:'#fca5a5' },
@@ -926,12 +925,6 @@ export default function MsdsDetailPage({ params }: { params: { id: string } }) {
           )}
         </div>
       )}
-
-      <DocumentPhotoSection
-        category="document_msds"
-        docId={msds.id}
-        title="MSDS 첨부 사진"
-      />
     </div>
   )
 }

@@ -7,7 +7,6 @@ import {
 } from 'lucide-react'
 import type { EducationJournal, EduItem, Attendee } from '@/types/education'
 import { EDU_TYPE_LABELS } from '@/types/education'
-import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
 
 type Params = { params: { id: string } }
 
@@ -262,12 +261,6 @@ export default async function EducationDetailPage({ params }: Params) {
             ))}
           </div>
         </div>
-
-        <DocumentPhotoSection
-          category="document_education"
-          docId={doc.id}
-          title="교육일지 첨부 사진"
-        />
 
       </div>
     </div>

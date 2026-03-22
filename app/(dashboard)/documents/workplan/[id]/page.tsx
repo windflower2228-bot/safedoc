@@ -7,7 +7,6 @@ import {
 } from 'lucide-react'
 import type { WorkPlan, WorkPlanRiskItem, WorkPlanWorker } from '@/types/workplan'
 import { WORK_PLAN_TYPE_LABELS } from '@/types/workplan'
-import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
 
 type Params = { params: { id: string } }
 
@@ -282,12 +281,6 @@ export default async function WorkPlanDetailPage({ params }: Params) {
             ))}
           </div>
         </div>
-
-        <DocumentPhotoSection
-          category="document_workplan"
-          docId={doc.id}
-          title="작업계획서 첨부 사진"
-        />
       </div>
     </div>
   )

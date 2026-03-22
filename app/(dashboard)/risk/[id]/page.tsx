@@ -8,7 +8,6 @@ import {
   CheckCircle2, Clock, BookOpen, ClipboardCheck,
   Shield, Link2,
 } from 'lucide-react'
-import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
 
 type Params = { params: { id: string } }
 
@@ -366,12 +365,6 @@ export default async function RiskDetailPage({ params }: Params) {
           ))}
         </div>
       )}
-
-      <DocumentPhotoSection
-        category="risk_assessment"
-        docId={ra.id}
-        title="위험성평가 첨부 사진"
-      />
     </div>
   )
 }
