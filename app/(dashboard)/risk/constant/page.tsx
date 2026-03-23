@@ -20,6 +20,7 @@ export default function Page() {
         <p className="text-sm text-gray-500 mb-4">상시 위험성평가 목록을 조회하거나 새 평가를 작성합니다.</p>
         <div className="flex gap-3 justify-center">
           <Link href="/risk/list?type=always_on" className="btn-primary text-sm" style={{background:'#7c3aed'}}> 목록 보기</Link>
+          <Link href="/risk/tbm" className="btn-secondary text-sm">TBM 회의</Link>
           <Link href="/risk/new" className="btn-secondary text-sm">+ 새 평가 작성</Link>
         </div>
       </div>

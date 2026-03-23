@@ -39,6 +39,7 @@ const NAV: NavGroup[] = [
       { href:'/risk/occasional', label:'수시 위험성평가',   icon:RefreshCw    },
       { href:'/risk/periodic',   label:'정기 위험성평가',   icon:Calendar     },
       { href:'/risk/constant',   label:'상시 위험성평가',   icon:Activity     },
+      { href:'/risk/tbm',        label:'T.B.M',            icon:UsersRound   },
       { href:'/risk/near-miss',  label:'아차사고 보고',     icon:Lightbulb    },
     ],
   },
