@@ -134,7 +134,7 @@ export default function SafetyCommitteeDetailPage({ params }: { params: { id: st
           <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{doc.resolution}</p>
         </div>
       )}
-      {doc.next_meeting_date && (
+      {!isCommittee && doc.next_meeting_date && (
         <div className="card p-4 text-sm text-center" style={{background:bg,borderColor:color+'30'}}>
           차기 회의 예정일: <strong style={{color}}>{doc.next_meeting_date}</strong>
         </div>

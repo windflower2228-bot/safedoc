@@ -74,6 +74,9 @@ export default function SafetyCommitteeNewPage() {
     form.setValue('committee_type', t)
     form.setValue('members',      DEFAULT_MEMBERS[t].map((m,i) => ({ ...m, seq:i+1 })))
     form.setValue('agenda_items', DEFAULT_AGENDAS[t].map((a,i) => ({ ...a, seq:i+1 })))
+    if (t === 'safety_committee') {
+      form.setValue('next_meeting_date', '')
+    }
   }
 
   async function onSubmit(data: any) {
@@ -185,10 +188,12 @@ export default function SafetyCommitteeNewPage() {
               <label className="label-base">의장 / 위원장</label>
               <input {...form.register('chairman_name')} placeholder="홍길동" className="input-base"/>
             </div>
-            <div>
-              <label className="label-base">차기 회의 예정일</label>
-              <input {...form.register('next_meeting_date')} type="date" className="input-base"/>
-            </div>
+            {!isCommittee && (
+              <div>
+                <label className="label-base">차기 회의 예정일</label>
+                <input {...form.register('next_meeting_date')} type="date" className="input-base"/>
+              </div>
+            )}
           </div>
         </div>
 
