@@ -10,21 +10,21 @@ import { ArrowLeft, Save, Loader2, Plus, Trash2, Users2 } from 'lucide-react'
 // 산안법에서 정하는 기본 안건 템플릿
 const DEFAULT_AGENDAS = {
   safety_committee: [
-    { title: '산업재해 예방계획의 수립에 관한 사항',          content: '', decision: '', owner: '안전관리자',  deadline: '' },
-    { title: '안전보건관리규정의 작성 및 변경에 관한 사항',    content: '', decision: '', owner: '안전관리자',  deadline: '' },
-    { title: '근로자의 안전·보건 교육에 관한 사항',           content: '', decision: '', owner: '안전관리자',  deadline: '' },
-    { title: '작업환경측정 등 작업환경의 점검 및 개선',        content: '', decision: '', owner: '보건관리자',  deadline: '' },
-    { title: '근로자의 건강진단 등 건강관리에 관한 사항',      content: '', decision: '', owner: '보건관리자',  deadline: '' },
-    { title: '중대재해의 원인 조사 및 재발 방지대책',          content: '', decision: '', owner: '안전보건관리책임자', deadline: '' },
-    { title: '산업재해 통계의 기록·유지에 관한 사항',          content: '', decision: '', owner: '안전관리자',  deadline: '' },
-    { title: '안전장치 및 보호구 구입 시 적격품 여부 확인',    content: '', decision: '', owner: '안전관리자',  deadline: '' },
+    { title: '산업재해 예방계획의 수립에 관한 사항',       content: '', decision: '' },
+    { title: '안전보건관리규정의 작성 및 변경에 관한 사항', content: '', decision: '' },
+    { title: '근로자의 안전·보건 교육에 관한 사항',        content: '', decision: '' },
+    { title: '작업환경측정 등 작업환경의 점검 및 개선',     content: '', decision: '' },
+    { title: '근로자의 건강진단 등 건강관리에 관한 사항',   content: '', decision: '' },
+    { title: '중대재해의 원인 조사 및 재발 방지대책',       content: '', decision: '' },
+    { title: '산업재해 통계의 기록·유지에 관한 사항',       content: '', decision: '' },
+    { title: '안전장치 및 보호구 구입 시 적격품 여부 확인', content: '', decision: '' },
   ],
   labor_management: [
-    { title: '산업재해 예방에 관한 사항',                      content: '', decision: '', owner: '안전관리자',  deadline: '' },
-    { title: '작업환경 점검 및 개선에 관한 사항',              content: '', decision: '', owner: '안전관리자',  deadline: '' },
-    { title: '근로자의 건강진단 등 건강관리에 관한 사항',      content: '', decision: '', owner: '보건관리자',  deadline: '' },
-    { title: '안전보건교육에 관한 사항',                       content: '', decision: '', owner: '안전관리자',  deadline: '' },
-    { title: '위험성평가 결과 및 조치에 관한 사항',            content: '', decision: '', owner: '안전관리자',  deadline: '' },
+    { title: '산업재해 예방에 관한 사항',                      content: '', decision: '' },
+    { title: '작업환경 점검 및 개선에 관한 사항',              content: '', decision: '' },
+    { title: '근로자의 건강진단 등 건강관리에 관한 사항',      content: '', decision: '' },
+    { title: '안전보건교육에 관한 사항',                       content: '', decision: '' },
+    { title: '위험성평가 결과 및 조치에 관한 사항',            content: '', decision: '' },
   ],
 }
 
@@ -81,7 +81,12 @@ export default function SafetyCommitteeNewPage() {
     const payload = {
       ...data,
       members:      data.members.map((m:any,i:number) => ({ ...m, seq:i+1 })),
-      agenda_items: data.agenda_items.map((a:any,i:number) => ({ ...a, seq:i+1 })),
+      agenda_items: data.agenda_items.map((a:any,i:number) => ({
+        seq: i+1,
+        title: a.title,
+        content: a.content,
+        decision: a.decision,
+      })),
     }
     const res = await fetch('/api/safety-committee', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -95,6 +100,15 @@ export default function SafetyCommitteeNewPage() {
   }
 
   const isCommittee = cType === 'safety_committee'
+  const members = form.watch('members') ?? []
+  const managementIndexes = members.reduce((acc: number[], member: any, idx: number) => {
+    if (member?.side === 'management') acc.push(idx)
+    return acc
+  }, [])
+  const laborIndexes = members.reduce((acc: number[], member: any, idx: number) => {
+    if (member?.side === 'labor') acc.push(idx)
+    return acc
+  }, [])
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -180,50 +194,82 @@ export default function SafetyCommitteeNewPage() {
 
         {/* 참석자 명단 */}
         <div className="card overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+          <div className="px-5 py-3.5 border-b border-gray-100">
             <div>
               <h2 className="font-semibold text-gray-800">참석자 명단</h2>
               <p className="text-[10px] text-gray-400 mt-0.5">
-                {isCommittee ? '근로자 위원과 사용자 위원 동수로 구성 (산안법 제24조 제2항)' : '도급인 대표 + 수급인 대표로 구성 (산안법 제75조)'}
+                좌측 사용자위원, 우측 근로자위원으로 구분하여 작성합니다.
               </p>
             </div>
-            <button type="button"
-              onClick={() => addMember({ seq:mFields.length+1, name:'', position:'', affiliation:'', side:'management', is_present:true })}
-              className="btn-secondary text-xs gap-1">
-              <Plus className="w-3 h-3"/> 추가
-            </button>
           </div>
-          <table className="w-full text-sm">
-            <thead><tr className="bg-gray-50 border-b border-gray-100">
-              {['성명','직위','소속', isCommittee ? '구분(근/사)' : '구분(도급/수급)', '참석',''].map(h => (
-                <th key={h} className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500">{h}</th>
-              ))}
-            </tr></thead>
-            <tbody className="divide-y divide-gray-50">
-              {mFields.map((f, idx) => (
-                <tr key={f.id}>
-                  <td className="px-3 py-2"><input {...form.register(`members.${idx}.name`)} placeholder="홍길동" className="input-base text-sm py-1.5"/></td>
-                  <td className="px-3 py-2"><input {...form.register(`members.${idx}.position`)} className="input-base text-sm py-1.5"/></td>
-                  <td className="px-3 py-2"><input {...form.register(`members.${idx}.affiliation`)} className="input-base text-sm py-1.5"/></td>
-                  <td className="px-3 py-2">
-                    <select {...form.register(`members.${idx}.side`)} className="input-base text-sm py-1.5">
-                      {isCommittee
-                        ? <><option value="management">사용자</option><option value="labor">근로자</option></>
-                        : <><option value="management">도급인</option><option value="labor">수급인</option></>}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2 text-center">
-                    <input type="checkbox" {...form.register(`members.${idx}.is_present`)} className="w-4 h-4 accent-blue-600"/>
-                  </td>
-                  <td className="px-2 py-2">
-                    <button type="button" onClick={() => removeMember(idx)} className="p-1 text-gray-300 hover:text-red-500 rounded">
-                      <Trash2 className="w-3.5 h-3.5"/>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="grid grid-cols-2 divide-x divide-gray-100">
+            {[
+              { side: 'management' as const, title: '사용자위원', indexes: managementIndexes },
+              { side: 'labor' as const, title: '근로자위원', indexes: laborIndexes },
+            ].map((group) => (
+              <div key={group.side}>
+                <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                  <span className="text-xs font-semibold text-gray-600">{group.title}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      addMember({
+                        seq: mFields.length + 1,
+                        name: '',
+                        position: '',
+                        affiliation: isCommittee ? '' : group.side === 'management' ? '도급인' : '수급인',
+                        side: group.side,
+                        is_present: true,
+                      })
+                    }
+                    className="btn-secondary text-xs gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> 추가
+                  </button>
+                </div>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-100">
+                      {['성명', '직위', '소속', '참석', ''].map((h) => (
+                        <th key={h} className="px-3 py-2 text-left text-[10px] font-semibold text-gray-500">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {group.indexes.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-3 py-4 text-center text-xs text-gray-400">
+                          등록된 참석자가 없습니다.
+                        </td>
+                      </tr>
+                    )}
+                    {group.indexes.map((idx) => (
+                      <tr key={mFields[idx]?.id ?? idx}>
+                        <td className="px-3 py-2">
+                          <input {...form.register(`members.${idx}.name`)} placeholder="홍길동" className="input-base text-sm py-1.5" />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input {...form.register(`members.${idx}.position`)} className="input-base text-sm py-1.5" />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input {...form.register(`members.${idx}.affiliation`)} className="input-base text-sm py-1.5" />
+                          <input type="hidden" {...form.register(`members.${idx}.side`)} />
+                        </td>
+                        <td className="px-3 py-2 text-center">
+                          <input type="checkbox" {...form.register(`members.${idx}.is_present`)} className="w-4 h-4 accent-blue-600" />
+                        </td>
+                        <td className="px-2 py-2">
+                          <button type="button" onClick={() => removeMember(idx)} className="p-1 text-gray-300 hover:text-red-500 rounded">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* 안건 */}
@@ -234,7 +280,7 @@ export default function SafetyCommitteeNewPage() {
               <p className="text-[10px] text-gray-400 mt-0.5">산안법에서 정하는 심의·의결 사항이 기본 입력됩니다</p>
             </div>
             <button type="button"
-              onClick={() => addAgenda({ seq:aFields.length+1, title:'', content:'', decision:'', owner:'', deadline:'' })}
+              onClick={() => addAgenda({ seq:aFields.length+1, title:'', content:'', decision:'' })}
               className="btn-secondary text-xs gap-1">
               <Plus className="w-3 h-3"/> 안건 추가
             </button>
@@ -253,20 +299,12 @@ export default function SafetyCommitteeNewPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3 ml-9">
                   <div>
-                    <label className="label-base">내용</label>
+                    <label className="label-base">심의내용</label>
                     <textarea {...form.register(`agenda_items.${idx}.content`)} rows={3} className="input-base resize-none text-sm"/>
                   </div>
                   <div>
-                    <label className="label-base">심의·결정 사항</label>
+                    <label className="label-base">의결,결정사항</label>
                     <textarea {...form.register(`agenda_items.${idx}.decision`)} rows={3} className="input-base resize-none text-sm"/>
-                  </div>
-                  <div>
-                    <label className="label-base">담당자</label>
-                    <input {...form.register(`agenda_items.${idx}.owner`)} className="input-base text-sm"/>
-                  </div>
-                  <div>
-                    <label className="label-base">이행 기한</label>
-                    <input {...form.register(`agenda_items.${idx}.deadline`)} type="date" className="input-base text-sm"/>
                   </div>
                 </div>
               </div>

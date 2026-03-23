@@ -75,7 +75,10 @@ export default function SafetyCommitteeDetailPage({ params }: { params: { id: st
       <div className="card overflow-hidden mb-4">
         <div className="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800 text-sm">참석자 명단</div>
         <div className="grid grid-cols-2 divide-x divide-gray-100">
-          {[{side:'management', title: isCommittee ? '사용자 위원' : '도급인', list:mgmtMembers}, {side:'labor', title: isCommittee ? '근로자 위원' : '수급인', list:laborMembers}].map(g => (
+          {[
+            { side:'management', title: '사용자위원', list:mgmtMembers },
+            { side:'labor', title: '근로자위원', list:laborMembers },
+          ].map(g => (
             <div key={g.side} className="p-4">
               <div className="text-xs font-semibold mb-2" style={{color}}>{g.title}</div>
               <div className="space-y-1.5">
@@ -106,10 +109,18 @@ export default function SafetyCommitteeDetailPage({ params }: { params: { id: st
                 <span className="font-semibold text-sm text-gray-900">{a.title}</span>
               </div>
               <div className="grid grid-cols-2 gap-4 ml-9">
-                {a.content && <div><div className="text-[10px] text-gray-400 mb-1">내용</div><p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">{a.content}</p></div>}
-                {a.decision && <div><div className="text-[10px] text-gray-400 mb-1">심의·결정사항</div><p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">{a.decision}</p></div>}
-                {a.owner && <div><div className="text-[10px] text-gray-400 mb-1">담당자</div><p className="text-xs text-gray-700">{a.owner}</p></div>}
-                {a.deadline && <div><div className="text-[10px] text-gray-400 mb-1">이행기한</div><p className="text-xs text-gray-700">{a.deadline}</p></div>}
+                {a.content && (
+                  <div>
+                    <div className="text-[10px] text-gray-400 mb-1">심의내용</div>
+                    <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">{a.content}</p>
+                  </div>
+                )}
+                {a.decision && (
+                  <div>
+                    <div className="text-[10px] text-gray-400 mb-1">의결,결정사항</div>
+                    <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">{a.decision}</p>
+                  </div>
+                )}
               </div>
             </div>
           ))}
