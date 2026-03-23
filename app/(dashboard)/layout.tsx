@@ -3,7 +3,7 @@ import { createAdminClient, createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/layout/Sidebar'
 import TopBar from '@/components/layout/TopBar'
 import { MobileNav } from '@/components/layout/MobileNav'
-import MenuLinkagePanel from '@/components/dashboard/MenuLinkagePanel'
+import RouteAwareMenuLinkagePanel from '@/components/dashboard/RouteAwareMenuLinkagePanel'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
@@ -172,7 +172,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {/* 메인 콘텐츠: 모바일에서 하단 네비 공간 확보 */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6">
           <div className="mb-4">
-            <MenuLinkagePanel />
+            <RouteAwareMenuLinkagePanel />
           </div>
           {children}
         </main>

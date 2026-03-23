@@ -7,12 +7,20 @@ import { ko } from 'date-fns/locale'
 export default async function DashboardPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const now = new Date()
+  const todayDate = format(now, 'yyyy-MM-dd')
 
   const [
     { count: totalRisk },
     { count: draftRisk },
     { data: recentDocs },
     { data: profile },
+    { data: todayPlanItems },
+    { count: totalTodayPlan },
+    { count: doneTodayPlan },
+    { data: todayWorklogs },
+    { data: latestWorklog },
+    { count: updatedTodayRisk },
   ] = await Promise.all([
     supabase.from('risk_assessments').select('*', { count: 'exact', head: true }),
     supabase.from('risk_assessments').select('*', { count: 'exact', head: true }).eq('status', 'draft'),
@@ -21,10 +29,41 @@ export default async function DashboardPage() {
       .order('updated_at', { ascending: false })
       .limit(6),
     supabase.from('user_profiles').select('name, position, company:companies(name)').eq('id', user!.id).single(),
+    supabase
+      .from('activity_items')
+      .select('id, title, scheduled_date, scheduled_time, is_completed, activity_type')
+      .eq('scheduled_date', todayDate)
+      .order('scheduled_time', { ascending: true })
+      .limit(6),
+    supabase.from('activity_items').select('*', { count: 'exact', head: true }).eq('scheduled_date', todayDate),
+    supabase
+      .from('activity_items')
+      .select('*', { count: 'exact', head: true })
+      .eq('scheduled_date', todayDate)
+      .eq('is_completed', true),
+    supabase
+      .from('worklog_analyses')
+      .select('id, upload_date, file_name, detected_worktypes, summary, created_at')
+      .eq('upload_date', todayDate)
+      .order('created_at', { ascending: false })
+      .limit(3),
+    supabase
+      .from('worklog_analyses')
+      .select('id, upload_date, file_name, detected_worktypes, summary, created_at')
+      .order('upload_date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(1),
+    supabase
+      .from('risk_assessments')
+      .select('*', { count: 'exact', head: true })
+      .gte('updated_at', `${todayDate}T00:00:00`),
   ])
 
   const approvedRisk  = (totalRisk ?? 0) - (draftRisk ?? 0)
   const completionPct = totalRisk ? Math.round((approvedRisk / totalRisk) * 100) : 0
+  const todayPlanPct = totalTodayPlan ? Math.round(((doneTodayPlan ?? 0) / totalTodayPlan) * 100) : 0
+  const worklogRows = (todayWorklogs && todayWorklogs.length > 0) ? todayWorklogs : (latestWorklog ?? [])
+  const hasTodayWorklog = Boolean(todayWorklogs && todayWorklogs.length > 0)
 
   const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
     draft:     { label: '작성 중',  cls: 'badge-draft' },
@@ -102,6 +141,107 @@ export default async function DashboardPage() {
             </Link>
           )
         })}
+      </div>
+
+      {/* 한눈에 보는 오늘 핵심 */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-gray-900">활동계획</h2>
+            <Link href="/plan" className="text-xs text-blue-600 hover:underline">전체 보기</Link>
+          </div>
+          <div className="flex items-end justify-between mb-3">
+            <div>
+              <p className="text-xs text-gray-500">오늘 일정 완료</p>
+              <p className="text-xl font-bold text-gray-900">{doneTodayPlan ?? 0}/{totalTodayPlan ?? 0}</p>
+            </div>
+            <p className="text-sm font-semibold text-green-600">{todayPlanPct}%</p>
+          </div>
+          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-3">
+            <div className="h-full bg-green-500 rounded-full" style={{ width: `${todayPlanPct}%` }} />
+          </div>
+          <div className="space-y-2">
+            {todayPlanItems?.length === 0 && (
+              <p className="text-xs text-gray-400 py-1">오늘 등록된 활동계획이 없습니다.</p>
+            )}
+            {todayPlanItems?.slice(0, 3).map((item) => (
+              <div key={item.id} className="flex items-center justify-between gap-2 text-xs">
+                <div className="min-w-0">
+                  <p className="text-gray-800 truncate">{item.title}</p>
+                  <p className="text-gray-400 mt-0.5">{item.scheduled_time || '시간 미지정'}</p>
+                </div>
+                <span className={item.is_completed ? 'text-green-600' : 'text-amber-600'}>
+                  {item.is_completed ? '완료' : '예정'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-gray-900">오늘 작업내용</h2>
+            <Link href="/worklog" className="text-xs text-blue-600 hover:underline">분석 보기</Link>
+          </div>
+          <p className="text-xs text-gray-500 mb-3">
+            {hasTodayWorklog ? '오늘 등록된 작업일보 분석 내용입니다.' : '오늘 데이터가 없어 최근 작업일보를 표시합니다.'}
+          </p>
+          <div className="space-y-3">
+            {worklogRows.length === 0 && (
+              <p className="text-xs text-gray-400 py-1">작업일보 분석 이력이 아직 없습니다.</p>
+            )}
+            {worklogRows.slice(0, 2).map((row) => {
+              const workTypes = Array.isArray(row.detected_worktypes) ? row.detected_worktypes : []
+              return (
+                <div key={row.id} className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5">
+                  <p className="text-xs font-medium text-gray-800 line-clamp-2">{row.summary || '요약 없음'}</p>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {workTypes.slice(0, 3).map((wt) => (
+                      <span key={`${row.id}-${wt}`} className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+                        {wt}
+                      </span>
+                    ))}
+                    {workTypes.length === 0 && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">공종 미감지</span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-gray-900">위험성평가 내용</h2>
+            <Link href="/risk" className="text-xs text-blue-600 hover:underline">전체 보기</Link>
+          </div>
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="rounded-lg bg-amber-50 px-3 py-2">
+              <p className="text-[11px] text-amber-700">오늘 수정</p>
+              <p className="text-base font-bold text-amber-800">{updatedTodayRisk ?? 0}건</p>
+            </div>
+            <div className="rounded-lg bg-blue-50 px-3 py-2">
+              <p className="text-[11px] text-blue-700">작성 중</p>
+              <p className="text-base font-bold text-blue-800">{draftRisk ?? 0}건</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {recentDocs?.slice(0, 3).map((doc) => {
+              const st = STATUS_STYLE[doc.status] ?? { label: doc.status, cls: 'badge-draft' }
+              return (
+                <Link
+                  key={doc.id}
+                  href={`/risk/${doc.id}`}
+                  className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-50"
+                >
+                  <p className="text-xs text-gray-800 truncate">{doc.title}</p>
+                  <span className={st.cls}>{st.label}</span>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
       </div>
 
       {/* 최근 문서 + 빠른 접근 */}
