@@ -35,7 +35,20 @@ interface RiskItem {
   measure_done:        boolean
 }
 
-const HAZARD_TYPES = ['추락','끼임','충돌','화재·폭발','유해물질','감전','근골격계','기타']
+const HAZARD_TYPES = [
+  '떨어짐',
+  '넘어짐',
+  '깔림/뒤집힘',
+  '부딪힘',
+  '물체에 맞음',
+  '무너짐',
+  '끼임',
+  '절단/베임/찔림',
+  '화재/폭발/파열',
+  '무리한동작',
+  '업무상질병',
+  '기타',
+]
 const OCCASION_TYPES = [
   { value:'construction_change', label:'건설물 설치·이전·변경·해체' },
   { value:'equipment_new',       label:'기계·기구·설비·원재료 신규 도입·변경' },
@@ -72,7 +85,7 @@ function buildAnalysisPrompt(): string {
   {
     "work_content": "작업 내용 (사진에서 파악된 작업)",
     "hazard_factor": "유해·위험요인 (구체적으로)",
-    "hazard_type": "추락|끼임|충돌|화재·폭발|유해물질|감전|근골격계|기타",
+    "hazard_type": "떨어짐|넘어짐|깔림/뒤집힘|부딪힘|물체에 맞음|무너짐|끼임|절단/베임/찔림|화재/폭발/파열|무리한동작|업무상질병|기타",
     "probability": 1~5 숫자,
     "severity": 1~5 숫자,
     "measure_engineering": "공학적 대책 (설비·시설 개선)",

@@ -12,11 +12,24 @@ import { clsx } from 'clsx'
 import { createClient } from '@/lib/supabase/client'
 import type { OpsItem } from '@/types/risk-method'
 
-const INJURY_TYPES = ['추락','끼임','충돌','화재·폭발','감전','유해물질','근골격계','기타']
+const INJURY_TYPES = [
+  '떨어짐',
+  '넘어짐',
+  '깔림/뒤집힘',
+  '부딪힘',
+  '물체에 맞음',
+  '무너짐',
+  '끼임',
+  '절단/베임/찔림',
+  '화재/폭발/파열',
+  '무리한동작',
+  '업무상질병',
+  '기타',
+]
 
 function defaultOps(seq: number): OpsItem {
   return {
-    seq, work_name:'', work_step:'', hazard_factor:'', injury_type:'추락',
+    seq, work_name:'', work_step:'', hazard_factor:'', injury_type:'떨어짐',
     current_measure:'', is_sufficient: false, additional_measure:'',
     worker_pledge:'', photo_url: undefined,
   }

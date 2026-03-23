@@ -14,7 +14,20 @@ import {
   type MatrixSize,
 } from '@/types/risk-method'
 
-const HAZARD_TYPES = ['추락·전도','끼임','충돌·협착','화재·폭발','유해물질','감전','근골격계','기타']
+const HAZARD_TYPES = [
+  '떨어짐',
+  '넘어짐',
+  '깔림/뒤집힘',
+  '부딪힘',
+  '물체에 맞음',
+  '무너짐',
+  '끼임',
+  '절단/베임/찔림',
+  '화재/폭발/파열',
+  '무리한동작',
+  '업무상질병',
+  '기타',
+]
 
 interface MatrixItem {
   seq:           number
@@ -32,7 +45,7 @@ interface MatrixItem {
 
 function defaultItem(seq: number, size: MatrixSize): MatrixItem {
   const mid = Math.ceil(size / 2)
-  return { seq, work_content:'', hazard_factor:'', hazard_type:'추락·전도',
+  return { seq, work_content:'', hazard_factor:'', hazard_type:'떨어짐',
     probability: mid, severity: mid,
     current_measure:'', reduce_measure:'', measure_owner:'', measure_due:'', measure_done: false }
 }
