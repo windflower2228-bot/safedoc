@@ -17,11 +17,11 @@ export default function Page() {
         </div>
       </div>
       <div className="card p-6 text-center">
-        <p className="text-sm text-gray-500 mb-4">상시 위험성평가 목록을 조회하거나 새 평가를 작성합니다.</p>
+        <p className="text-sm text-gray-500 mb-4">상시 위험성평가 목록 조회 또는 수동입력/이미지분석 기반으로 새 평가를 작성합니다.</p>
         <div className="flex gap-3 justify-center">
           <Link href="/risk/list?type=always_on" className="btn-primary text-sm" style={{background:'#7c3aed'}}> 목록 보기</Link>
           <Link href="/risk/tbm" className="btn-secondary text-sm">TBM 회의</Link>
-          <Link href="/risk/new" className="btn-secondary text-sm">+ 새 평가 작성</Link>
+          <Link href="/risk/new?eval_type=always_on" className="btn-secondary text-sm">+ 상시평가 작성 (AI/수동)</Link>
         </div>
       </div>
     </div>

@@ -9,9 +9,9 @@ import {
 
 const MENU_ITEMS = [
   { href:'/risk/initial',   icon:FileSearch, color:'#1d4ed8', bg:'#eff6ff', title:'최초 위험성평가',   badge:'제15조 제1항', desc:'사업 성립일(실착공일)로부터 1개월 이내 실시 | 전체 작업 대상', highlight:false },
-  { href:'/risk/occasional',icon:RefreshCw,  color:'#dc2626', bg:'#fef2f2', title:'수시 위험성평가',   badge:'제15조 제2항', desc:'건설물 변경·설비 신규 도입·작업방법 변경·재해 발생 시 실시 | 사진 업로드 → AI 자동 분석', highlight:true  },
+  { href:'/risk/occasional',icon:RefreshCw,  color:'#dc2626', bg:'#fef2f2', title:'수시 위험성평가',   badge:'제15조 제2항', desc:'사진 업로드 AI 분석 + 수동입력 병행 | AI 결과에서 항목 선택 반영', highlight:true  },
   { href:'/risk/periodic',  icon:Calendar,   color:'#16a34a', bg:'#f0fdf4', title:'정기 위험성평가',   badge:'제15조 제3항', desc:'최초평가 후 매년 1회 전체 작업 재검토 | 설비 노후화·안전기준 변경 반영', highlight:false },
-  { href:'/risk/constant',  icon:Activity,   color:'#7c3aed', bg:'#f5f3ff', title:'상시 위험성평가',   badge:'제15조 제4항', desc:'매월 유해위험요인 발굴 · 매주 논의·공유 · 매일 TBM | 수시·정기 대체 가능', highlight:false },
+  { href:'/risk/constant',  icon:Activity,   color:'#7c3aed', bg:'#f5f3ff', title:'상시 위험성평가',   badge:'제15조 제4항', desc:'수동입력 + 이미지 AI 분석 지원 | AI 결과 선택 반영 후 상시평가 작성', highlight:false },
   { href:'/risk/tbm',       icon:UsersRound, color:'#6d28d9', bg:'#f5f3ff', title:'T.B.M',             badge:'작업 전 10분', desc:'위험성평가 핵심위험 자동 연계 | 사전 준비·실행·환류 체크 | 참석자 서명·출력', highlight:false },
   { href:'/risk/near-miss', icon:Lightbulb,  color:'#d97706', bg:'#fffbeb', title:'아차사고 보고',     badge:'제5조의2',     desc:'부상으로 이어질 뻔한 상황 기록 | 수시평가 트리거 | 위험성평가 자동 연계', highlight:false },
   { href:'/risk/regulation',icon:BookOpen,   color:'#0891b2', bg:'#ecfeff', title:'위험성평가 실시규정',badge:'제9조',        desc:'사전준비 단계 | 실시 범위·방법·주기·담당자 규정 | 근로자 참여 계획 수립', highlight:false },

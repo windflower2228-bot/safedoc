@@ -52,7 +52,7 @@ export default function OccasionalRiskPage() {
             <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <RefreshCw className="w-5 h-5 text-red-600" />
               수시 위험성평가
-              <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full font-medium">AI 사진 분석</span>
+              <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full font-medium">AI + 수동입력</span>
             </h1>
             <p className="text-sm text-gray-400 mt-0.5">
               지침 제15조제2항 | 특정 사유 발생 시 작업 착수 전 실시 의무

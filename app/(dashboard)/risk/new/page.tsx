@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   Save, ChevronRight, ChevronLeft, Plus, Trash2,
   Loader2, AlertTriangle, Link2, FileSpreadsheet,
+  Upload, X, Sparkles,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { riskAssessmentSchema, type RiskAssessmentFormData } from '@/lib/validators/schemas'
@@ -50,6 +51,44 @@ const LEVEL_STYLES = {
   low:    { label: '低', cls: 'badge-low' },
 }
 
+type HazardValue = typeof HAZARD_TYPES[number]['value']
+
+type AiSuggestion = {
+  work_content: string
+  hazard_factor: string
+  hazard_type: HazardValue
+  current_probability: number
+  current_severity: number
+  engineering_measure: string
+  admin_measure: string
+  ppe_measure: string
+  selected: boolean
+}
+
+function buildImageAnalysisPrompt(): string {
+  return `당신은 대한민국 건설현장 위험성평가 전문가입니다.
+업로드된 사진을 기준으로 「사업장 위험성평가에 관한 지침」에 맞게 위험요인 및 감소대책 초안을 작성하세요.
+
+반드시 JSON 배열만 출력하세요.
+[
+  {
+    "work_content": "작업 내용",
+    "hazard_factor": "유해·위험요인",
+    "hazard_type": "falling|tripping|crushed_overturned|struck_against|struck_by_object|collapse|caught_in|cut_stab|fire_explosion_rupture|overexertion|occupational_disease|other",
+    "current_probability": 1~5 숫자,
+    "current_severity": 1~5 숫자,
+    "engineering_measure": "공학적 대책",
+    "admin_measure": "관리적 대책",
+    "ppe_measure": "보호구 대책"
+  }
+]
+
+규칙:
+- 사진에서 직접 확인 가능한 내용 중심으로 작성
+- 위험요인과 감소대책은 구체적으로 작성
+- 최소 1개, 최대 10개 항목`
+}
+
 // ─── 기본 항목 ─────────────────────────────────────────────────────────────────
 
 const DEFAULT_ITEM = {
@@ -74,8 +113,13 @@ const DEFAULT_ITEM = {
 
 export default function NewRiskAssessmentPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const fileRef = useRef<HTMLInputElement | null>(null)
   const [step, setStep]         = useState(0)
   const [saving, setSaving]     = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [uploadedPhotos, setUploadedPhotos] = useState<{ file: File; preview: string }[]>([])
+  const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([])
   const [projects, setProjects] = useState<{ id: string; site_name: string }[]>([])
 
   const form = useForm<RiskAssessmentFormData>({
@@ -102,6 +146,14 @@ export default function NewRiskAssessmentPage() {
     fetch('/api/projects').then(r => r.json()).then(j => setProjects(j.data ?? []))
   }, [])
 
+  // 상시/수시 등 특정 평가유형으로 진입할 때 기본값 반영
+  useEffect(() => {
+    const evalType = searchParams.get('eval_type')
+    if (evalType && ['initial', 'periodic', 'special', 'always_on'].includes(evalType)) {
+      form.setValue('eval_type', evalType as any)
+    }
+  }, [searchParams, form])
+
   // 자동 저장 (임시)
   useEffect(() => {
     const timer = setInterval(() => {
@@ -112,6 +164,126 @@ export default function NewRiskAssessmentPage() {
     }, 30_000)
     return () => clearInterval(timer)
   }, [form])
+
+  function handleFiles(files: FileList | null) {
+    if (!files) return
+    const next = Array.from(files)
+      .filter(file => file.type.startsWith('image/'))
+      .slice(0, 10)
+      .map(file => ({ file, preview: URL.createObjectURL(file) }))
+    setUploadedPhotos(prev => [...prev, ...next].slice(0, 10))
+  }
+
+  function removePhoto(idx: number) {
+    setUploadedPhotos(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  function toggleSuggestion(idx: number, checked: boolean) {
+    setAiSuggestions(prev => prev.map((item, i) => i === idx ? { ...item, selected: checked } : item))
+  }
+
+  function toggleAllSuggestions(checked: boolean) {
+    setAiSuggestions(prev => prev.map(item => ({ ...item, selected: checked })))
+  }
+
+  function applySelectedSuggestions() {
+    const selected = aiSuggestions.filter(item => item.selected)
+    if (selected.length === 0) {
+      toast.error('반영할 분석 항목을 선택하세요.')
+      return
+    }
+
+    const start = form.getValues('items').length
+    append(selected.map((item, idx) => ({
+      ...DEFAULT_ITEM,
+      seq: start + idx + 1,
+      work_content: item.work_content,
+      hazard_factor: item.hazard_factor,
+      hazard_type: item.hazard_type,
+      current_probability: item.current_probability,
+      current_severity: item.current_severity,
+      engineering_measure: item.engineering_measure,
+      admin_measure: item.admin_measure,
+      ppe_measure: item.ppe_measure,
+    })))
+    setAiSuggestions(prev => prev.filter(item => !item.selected))
+    toast.success(`선택한 ${selected.length}개 항목을 반영했습니다.`)
+  }
+
+  async function analyzePhotos() {
+    if (uploadedPhotos.length === 0) {
+      toast.error('분석할 사진을 먼저 업로드하세요.')
+      return
+    }
+
+    setAnalyzing(true)
+    toast.info(`${uploadedPhotos.length}장 분석 중...`)
+
+    try {
+      const imageContents = await Promise.all(
+        uploadedPhotos.map(async photo => new Promise<{ type: 'image'; source: { type: 'base64'; media_type: string; data: string } }>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => {
+            const base64 = (reader.result as string).split(',')[1]
+            resolve({
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: photo.file.type as 'image/jpeg' | 'image/png' | 'image/webp',
+                data: base64,
+              },
+            })
+          }
+          reader.onerror = reject
+          reader.readAsDataURL(photo.file)
+        }))
+      )
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 4000,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                ...imageContents,
+                { type: 'text', text: buildImageAnalysisPrompt() },
+              ],
+            },
+          ],
+        }),
+      })
+
+      const data = await response.json()
+      const raw = data.content?.[0]?.text ?? ''
+      const jsonMatch = raw.match(/\[[\s\S]*\]/)
+      if (!jsonMatch) throw new Error('AI 응답에서 JSON을 찾을 수 없습니다.')
+
+      const allowed = new Set(HAZARD_TYPES.map(type => type.value))
+      const parsed = JSON.parse(jsonMatch[0]) as any[]
+      const nextSuggestions: AiSuggestion[] = parsed.map(item => ({
+        work_content: item.work_content ?? '',
+        hazard_factor: item.hazard_factor ?? '',
+        hazard_type: allowed.has(item.hazard_type) ? item.hazard_type : 'other',
+        current_probability: Math.min(5, Math.max(1, Number(item.current_probability) || 3)),
+        current_severity: Math.min(5, Math.max(1, Number(item.current_severity) || 3)),
+        engineering_measure: item.engineering_measure ?? '',
+        admin_measure: item.admin_measure ?? '',
+        ppe_measure: item.ppe_measure ?? '',
+        selected: true,
+      }))
+
+      setAiSuggestions(nextSuggestions)
+      toast.success(`분석 완료: ${nextSuggestions.length}개 항목 도출`)
+    } catch (error: any) {
+      toast.error(`AI 분석 실패: ${error.message ?? '알 수 없는 오류'}`)
+    } finally {
+      setAnalyzing(false)
+    }
+  }
 
   // ── 저장 ──────────────────────────────────────────────────────────────────────
   async function onSubmit(data: RiskAssessmentFormData) {
@@ -307,6 +479,115 @@ export default function NewRiskAssessmentPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700">
               위험요인 입력과 감소대책 작성을 한 화면에서 함께 진행합니다.
             </div>
+
+            {/* 이미지 분석 + 선택 반영 */}
+            <div className="card p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-violet-600" />
+                    이미지 분석 (선택)
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    사진 분석 결과를 확인한 뒤 필요한 항목만 선택 반영할 수 있습니다.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={analyzePhotos}
+                  disabled={analyzing || uploadedPhotos.length === 0}
+                  className="btn-primary text-sm"
+                  style={{ background: analyzing ? '#9ca3af' : 'linear-gradient(135deg, #2563eb, #7c3aed)' }}
+                >
+                  {analyzing
+                    ? <><Loader2 className="w-4 h-4 animate-spin" />분석 중...</>
+                    : <><Sparkles className="w-4 h-4" />AI 분석 실행</>}
+                </button>
+              </div>
+
+              <label
+                className="flex flex-col items-center gap-2 p-5 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50/20 transition-all"
+                onDragOver={e => { e.preventDefault(); e.stopPropagation() }}
+                onDrop={e => { e.preventDefault(); handleFiles(e.dataTransfer.files) }}
+              >
+                <Upload className="w-6 h-6 text-gray-400" />
+                <div className="text-sm text-gray-600">사진을 드래그하거나 클릭해서 업로드</div>
+                <div className="text-xs text-gray-400">JPG, PNG, WEBP · 최대 10장</div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => handleFiles(e.target.files)}
+                />
+              </label>
+
+              {uploadedPhotos.length > 0 && (
+                <div className="mt-3 grid grid-cols-6 gap-2">
+                  {uploadedPhotos.map((photo, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 group">
+                      <img src={photo.preview} alt="" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(idx)}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {aiSuggestions.length > 0 && (
+                <div className="mt-4 border border-violet-200 bg-violet-50/50 rounded-xl overflow-hidden">
+                  <div className="px-4 py-3 border-b border-violet-100 flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-semibold text-violet-800">AI 분석 결과</div>
+                      <div className="text-[11px] text-violet-600">필요한 항목만 선택해서 위험요인 목록에 반영하세요.</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => toggleAllSuggestions(true)} className="btn-secondary text-xs">전체 선택</button>
+                      <button type="button" onClick={() => toggleAllSuggestions(false)} className="btn-secondary text-xs">전체 해제</button>
+                      <button type="button" onClick={applySelectedSuggestions} className="btn-primary text-xs" style={{ background: '#7c3aed' }}>
+                        선택 항목 반영
+                      </button>
+                    </div>
+                  </div>
+                  <div className="divide-y divide-violet-100">
+                    {aiSuggestions.map((item, idx) => {
+                      const score = calcScore(item.current_probability, item.current_severity)
+                      const level = calcLevel(score)
+                      const style = LEVEL_STYLES[level]
+                      const hazardLabel = HAZARD_TYPES.find(h => h.value === item.hazard_type)?.label ?? '기타'
+                      return (
+                        <label key={`ai-suggestion-${idx}`} className="block px-4 py-3 cursor-pointer hover:bg-violet-100/40">
+                          <div className="flex items-start gap-3">
+                            <input
+                              type="checkbox"
+                              checked={item.selected}
+                              onChange={e => toggleSuggestion(idx, e.target.checked)}
+                              className="w-4 h-4 mt-0.5 accent-violet-600"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-white border border-violet-200 text-violet-700">{hazardLabel}</span>
+                                <span className={style.cls}>{style.label}</span>
+                                <span className="text-[11px] text-gray-500">{item.current_probability} × {item.current_severity} = {score}점</span>
+                              </div>
+                              <div className="text-xs text-gray-800"><strong>위험요인:</strong> {item.hazard_factor || '—'}</div>
+                              <div className="text-xs text-gray-600 mt-1"><strong>안전대책:</strong> {[item.engineering_measure, item.admin_measure, item.ppe_measure].filter(Boolean).join(' / ') || '—'}</div>
+                            </div>
+                          </div>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* 요약 카드 */}
             <div className="grid grid-cols-5 gap-3">
               {[

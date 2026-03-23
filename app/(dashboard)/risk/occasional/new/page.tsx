@@ -35,6 +35,10 @@ interface RiskItem {
   measure_done:        boolean
 }
 
+interface AnalysisSuggestion extends RiskItem {
+  selected: boolean
+}
+
 const HAZARD_TYPES = [
   '떨어짐',
   '넘어짐',
@@ -111,6 +115,7 @@ export default function NewOccasionalRiskPage() {
   const [saving,      setSaving]      = useState(false)
   const [analyzing,   setAnalyzing]   = useState(false)
   const [uploadedPhotos, setPhotos]   = useState<{ file: File; preview: string; url?: string }[]>([])
+  const [suggestions, setSuggestions] = useState<AnalysisSuggestion[]>([])
   const [riskItems,   setRiskItems]   = useState<RiskItem[]>([])
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
   const [form, setForm] = useState({
@@ -190,10 +195,10 @@ export default function NewOccasionalRiskPage() {
       if (!jsonMatch) throw new Error('AI 응답에서 JSON을 찾을 수 없습니다.')
 
       const parsed: any[] = JSON.parse(jsonMatch[0])
-      const newItems: RiskItem[] = parsed.map((item, i) => {
+      const analyzed: AnalysisSuggestion[] = parsed.map((item, i) => {
         const { score, level } = calcRisk(item.probability ?? 3, item.severity ?? 3)
         return {
-          seq:                i + 1 + riskItems.length,
+          seq:                i + 1,
           work_content:       item.work_content ?? '',
           hazard_factor:      item.hazard_factor ?? '',
           hazard_type:        item.hazard_type ?? '기타',
@@ -210,12 +215,11 @@ export default function NewOccasionalRiskPage() {
           measure_owner:       '',
           measure_due_date:    '',
           measure_done:        false,
+          selected:            true,
         }
       })
-
-      setRiskItems(prev => [...prev, ...newItems])
-      setExpandedIdx(riskItems.length) // 첫 번째 새 항목 펼침
-      toast.success(`AI 분석 완료! ${newItems.length}개 유해위험요인이 자동 입력되었습니다. 내용을 확인하고 수정하세요.`)
+      setSuggestions(analyzed)
+      toast.success(`AI 분석 완료! ${analyzed.length}개 항목이 도출되었습니다. 체크한 항목만 반영하세요.`)
     } catch (err: any) {
       toast.error('AI 분석 실패: ' + (err.message ?? '알 수 없는 오류'))
     } finally {
@@ -255,6 +259,36 @@ export default function NewOccasionalRiskPage() {
 
   function removeItem(idx: number) {
     setRiskItems(prev => prev.filter((_, i) => i !== idx).map((item, i) => ({ ...item, seq: i + 1 })))
+  }
+
+  function toggleSuggestion(idx: number, checked: boolean) {
+    setSuggestions(prev => prev.map((item, i) => i === idx ? { ...item, selected: checked } : item))
+  }
+
+  function toggleAllSuggestions(checked: boolean) {
+    setSuggestions(prev => prev.map(item => ({ ...item, selected: checked })))
+  }
+
+  function applySelectedSuggestions() {
+    const picked = suggestions.filter(item => item.selected)
+    if (picked.length === 0) {
+      toast.error('반영할 AI 분석 항목을 선택하세요.')
+      return
+    }
+
+    setRiskItems(prev => {
+      const start = prev.length
+      return [
+        ...prev,
+        ...picked.map((item, idx) => ({
+          ...item,
+          seq: start + idx + 1,
+        })),
+      ]
+    })
+    setExpandedIdx(riskItems.length)
+    setSuggestions(prev => prev.filter(item => !item.selected))
+    toast.success(`선택한 ${picked.length}개 항목을 위험요인 목록에 반영했습니다.`)
   }
 
   // ─── Supabase 파일 업로드 후 저장 ────────────────────────────
@@ -308,9 +342,9 @@ export default function NewOccasionalRiskPage() {
             <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <RefreshCw className="w-5 h-5 text-red-600" />
               수시 위험성평가 작성
-              <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">AI 사진 분석</span>
+              <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">AI 분석 + 수동입력</span>
             </h1>
-            <p className="text-xs text-gray-400 mt-0.5">지침 제15조제2항 | 사진 업로드 → AI 자동 분석 → 사용자 수정</p>
+            <p className="text-xs text-gray-400 mt-0.5">지침 제15조제2항 | 수동 작성 가능 + 사진 업로드 AI 분석 + 선택 반영</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -448,11 +482,58 @@ export default function NewOccasionalRiskPage() {
               </div>
             </div>
           )}
+
+          {suggestions.length > 0 && (
+            <div className="mt-4 border border-violet-200 bg-violet-50/50 rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-violet-100 flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-violet-800">AI 분석 결과 선택</div>
+                  <div className="text-[11px] text-violet-600 mt-0.5">도출된 유해위험요인/안전대책 중 필요한 항목만 체크해서 반영하세요.</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => toggleAllSuggestions(true)} className="btn-secondary text-xs">
+                    전체 선택
+                  </button>
+                  <button type="button" onClick={() => toggleAllSuggestions(false)} className="btn-secondary text-xs">
+                    전체 해제
+                  </button>
+                  <button type="button" onClick={applySelectedSuggestions}
+                    className="btn-primary text-xs" style={{ background: '#7c3aed' }}>
+                    선택 항목 반영
+                  </button>
+                </div>
+              </div>
+              <div className="divide-y divide-violet-100">
+                {suggestions.map((item, idx) => (
+                  <label key={`suggestion-${idx}`} className="block px-4 py-3 cursor-pointer hover:bg-violet-100/40">
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={item.selected}
+                        onChange={e => toggleSuggestion(idx, e.target.checked)}
+                        className="w-4 h-4 mt-0.5 accent-violet-600"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-white border border-violet-200 text-violet-700">{item.hazard_type}</span>
+                          <span className={clsx('text-[10px] px-2 py-0.5 rounded-full font-semibold', RISK_CFG[item.risk_level].cls)}>
+                            {RISK_CFG[item.risk_level].label} ({item.risk_score}점)
+                          </span>
+                          <span className="text-[10px] text-gray-500">가능성 {item.probability} × 중대성 {item.severity}</span>
+                        </div>
+                        <div className="text-xs text-gray-800"><strong>유해위험요인:</strong> {item.hazard_factor || '—'}</div>
+                        <div className="text-xs text-gray-600 mt-1"><strong>안전대책:</strong> {[item.measure_engineering, item.measure_admin, item.measure_ppe].filter(Boolean).join(' / ') || '—'}</div>
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* ③ 위험요인 목록 (AI 생성 + 사용자 수정 가능) */}
-        {riskItems.length > 0 && (
-          <div className="card overflow-hidden">
+        {/* ③ 위험요인 목록 (수동입력 + AI 선택 반영) */}
+        <div className="card overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 <h2 className="font-semibold text-gray-800">
@@ -481,11 +562,16 @@ export default function NewOccasionalRiskPage() {
               </div>
             </div>
 
-            <div className="divide-y divide-gray-100">
-              {riskItems.map((item, idx) => {
-                const rc = RISK_CFG[item.risk_level]
-                return (
-                  <div key={idx} className={clsx('border-l-4', item.risk_level === 'high' ? 'border-red-400' : item.risk_level === 'medium' ? 'border-amber-400' : 'border-green-400')}>
+            {riskItems.length === 0 ? (
+              <div className="px-5 py-10 text-center text-sm text-gray-400">
+                아직 입력된 위험요인이 없습니다. <strong className="text-gray-600">항목 추가</strong>로 수동 입력하거나, 위 AI 분석 결과에서 선택 반영하세요.
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {riskItems.map((item, idx) => {
+                  const rc = RISK_CFG[item.risk_level]
+                  return (
+                    <div key={idx} className={clsx('border-l-4', item.risk_level === 'high' ? 'border-red-400' : item.risk_level === 'medium' ? 'border-amber-400' : 'border-green-400')}>
                     {/* 항목 헤더 */}
                     <button
                       type="button"
@@ -625,10 +711,11 @@ export default function NewOccasionalRiskPage() {
                         </div>
                       </div>
                     )}
-                  </div>
-                )
-              })}
-            </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
 
             {/* 하단 추가 버튼 */}
             <div className="px-5 py-3 border-t border-gray-100">
@@ -637,21 +724,6 @@ export default function NewOccasionalRiskPage() {
               </button>
             </div>
           </div>
-        )}
-
-        {/* 항목이 없을 때 안내 */}
-        {riskItems.length === 0 && uploadedPhotos.length > 0 && !analyzing && (
-          <div className="card p-8 text-center border-dashed">
-            <Sparkles className="w-10 h-10 mx-auto mb-3 text-red-400" />
-            <div className="font-semibold text-gray-700 mb-1">사진이 준비됐습니다!</div>
-            <div className="text-sm text-gray-400 mb-4">위의 "AI 분석 실행" 버튼을 눌러 유해위험요인을 자동으로 분석하세요.</div>
-            <button onClick={analyzePhotos}
-              className="btn-primary text-sm gap-2 mx-auto"
-              style={{ background: 'linear-gradient(135deg, #dc2626, #7c3aed)' }}>
-              <Sparkles className="w-4 h-4" /> AI 분석 시작
-            </button>
-          </div>
-        )}
       </div>
     </div>
   )

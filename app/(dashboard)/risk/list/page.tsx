@@ -29,7 +29,7 @@ const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
 export default async function RiskListPage({
   searchParams,
 }: {
-  searchParams: { status?: string; q?: string; page?: string }
+  searchParams: { status?: string; q?: string; page?: string; type?: string }
 }) {
   const supabase = createClient()
   const page     = Number(searchParams.page ?? 1)
@@ -47,6 +47,7 @@ export default async function RiskListPage({
     .range((page - 1) * pageSize, page * pageSize - 1)
 
   if (searchParams.status) query = query.eq('status', searchParams.status)
+  if (searchParams.type)   query = query.eq('eval_type', searchParams.type)
   if (searchParams.q) {
     query = query.or(
       `title.ilike.%${searchParams.q}%,work_types.cs.{${searchParams.q}}`
@@ -109,7 +110,7 @@ export default async function RiskListPage({
           </select>
           <button type="submit" className="btn-secondary">검색</button>
           {(searchParams.q || searchParams.status) && (
-            <Link href="/risk" className="btn-secondary text-gray-400">초기화</Link>
+            <Link href={`/risk/list${searchParams.type ? `?type=${searchParams.type}` : ''}`} className="btn-secondary text-gray-400">초기화</Link>
           )}
         </form>
       </div>
@@ -233,7 +234,7 @@ export default async function RiskListPage({
           {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
             <Link
               key={p}
-              href={`/risk?page=${p}${searchParams.q ? `&q=${searchParams.q}` : ''}${searchParams.status ? `&status=${searchParams.status}` : ''}`}
+              href={`/risk/list?page=${p}${searchParams.q ? `&q=${searchParams.q}` : ''}${searchParams.status ? `&status=${searchParams.status}` : ''}${searchParams.type ? `&type=${searchParams.type}` : ''}`}
               className={`w-8 h-8 flex items-center justify-center text-sm rounded-lg transition-colors
                 ${p === page
                   ? 'bg-blue-600 text-white font-medium'
