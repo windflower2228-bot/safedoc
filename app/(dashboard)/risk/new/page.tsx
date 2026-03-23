@@ -14,7 +14,7 @@ import { riskAssessmentSchema, type RiskAssessmentFormData } from '@/lib/validat
 
 // ─── 상수 ─────────────────────────────────────────────────────────────────────
 
-const STEPS = ['기본정보', '위험요인 입력', '감소대책', '검토 및 저장']
+const STEPS = ['기본정보', '위험요인 및 감소대책', '검토 및 저장']
 
 const HAZARD_TYPES = [
   { value: 'fall',         label: '추락·전도' },
@@ -135,7 +135,6 @@ export default function NewRiskAssessmentPage() {
   async function nextStep() {
     const fieldsToValidate: (keyof RiskAssessmentFormData)[][] = [
       ['title', 'eval_type', 'eval_start_date', 'eval_end_date', 'work_types'],
-      ['items'],
       ['items'],
     ]
     const valid = await form.trigger(fieldsToValidate[step] as any)
@@ -298,9 +297,12 @@ export default function NewRiskAssessmentPage() {
           </div>
         )}
 
-        {/* ── STEP 1: 위험요인 입력 ────────────────────────────────────────────── */}
+        {/* ── STEP 1: 위험요인 및 감소대책 ─────────────────────────────────────── */}
         {step === 1 && (
           <div className="animate-fade-in space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700">
+              위험요인 입력과 감소대책 작성을 한 화면에서 함께 진행합니다.
+            </div>
             {/* 요약 카드 */}
             <div className="grid grid-cols-5 gap-3">
               {[
@@ -408,6 +410,83 @@ export default function NewRiskAssessmentPage() {
                         작업계획서 자동 연계
                       </label>
                     </div>
+
+                    {/* 감소대책 통합 입력 */}
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-semibold text-gray-700">위험성 감소대책</p>
+                        {level !== 'low' ? (
+                          <span className="text-[11px] text-amber-600">高/中 위험은 작성 권장</span>
+                        ) : (
+                          <span className="text-[11px] text-gray-400">低 위험은 선택 작성</span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="label-base">공학적 대책</label>
+                          <textarea
+                            {...form.register(`items.${idx}.engineering_measure`)}
+                            rows={3}
+                            placeholder="예: 안전난간 설치, 안전방망 설치"
+                            className="input-base resize-none text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="label-base">관리적 대책</label>
+                          <textarea
+                            {...form.register(`items.${idx}.admin_measure`)}
+                            rows={3}
+                            placeholder="예: 안전대 착용 의무화, TBM 실시"
+                            className="input-base resize-none text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="label-base">개인 보호구</label>
+                          <textarea
+                            {...form.register(`items.${idx}.ppe_measure`)}
+                            rows={3}
+                            placeholder="예: 안전대(Y형), 안전모, 안전화"
+                            className="input-base resize-none text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="label-base">담당자</label>
+                          <input
+                            {...form.register(`items.${idx}.measure_owner`)}
+                            placeholder="홍길동"
+                            className="input-base text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="label-base">완료 기한</label>
+                          <input
+                            {...form.register(`items.${idx}.measure_due_date`)}
+                            type="date"
+                            className="input-base text-sm"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="label-base">개선 후 가능성</label>
+                            <select
+                              {...form.register(`items.${idx}.residual_probability`, { valueAsNumber: true })}
+                              className="input-base text-sm"
+                            >
+                              {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="label-base">개선 후 중대성</label>
+                            <select
+                              {...form.register(`items.${idx}.residual_severity`, { valueAsNumber: true })}
+                              className="input-base text-sm"
+                            >
+                              {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )
               })}
@@ -424,95 +503,8 @@ export default function NewRiskAssessmentPage() {
           </div>
         )}
 
-        {/* ── STEP 2: 감소대책 ────────────────────────────────────────────────── */}
+        {/* ── STEP 2: 검토 및 저장 ─────────────────────────────────────────────── */}
         {step === 2 && (
-          <div className="animate-fade-in space-y-3">
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
-              ⚠ 高위험·中위험 항목의 감소대책을 작성하세요. 작성된 내용은 저장 후 작업계획서에 자동 반영됩니다.
-            </div>
-            {items.map((item, idx) => {
-              const score = calcScore(Number(item.current_probability), Number(item.current_severity))
-              const level = calcLevel(score)
-              if (level === 'low') return null  // 低위험은 선택사항
-              const lStyle = LEVEL_STYLES[level]
-              return (
-                <div key={idx} className="card overflow-hidden">
-                  <div className={clsx(
-                    'px-4 py-2.5 flex items-center gap-2 text-sm font-medium',
-                    level === 'high' ? 'bg-red-50 text-red-800' : 'bg-amber-50 text-amber-800'
-                  )}>
-                    <span className={lStyle.cls}>{lStyle.label}</span>
-                    {item.work_content || `항목 ${idx + 1}`}
-                    <span className="ml-auto text-xs opacity-60">점수: {score}점</span>
-                  </div>
-                  <div className="p-4 grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="label-base">공학적 대책</label>
-                      <textarea
-                        {...form.register(`items.${idx}.engineering_measure`)}
-                        rows={3}
-                        placeholder="예: 안전난간 설치, 안전방망 설치"
-                        className="input-base resize-none text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="label-base">관리적 대책</label>
-                      <textarea
-                        {...form.register(`items.${idx}.admin_measure`)}
-                        rows={3}
-                        placeholder="예: 안전대 착용 의무화, TBM 실시"
-                        className="input-base resize-none text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="label-base">개인 보호구</label>
-                      <textarea
-                        {...form.register(`items.${idx}.ppe_measure`)}
-                        rows={3}
-                        placeholder="예: 안전대(Y형), 안전모, 안전화"
-                        className="input-base resize-none text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="label-base">담당자</label>
-                      <input {...form.register(`items.${idx}.measure_owner`)} placeholder="홍길동" className="input-base text-sm" />
-                    </div>
-                    <div>
-                      <label className="label-base">완료 기한</label>
-                      <input {...form.register(`items.${idx}.measure_due_date`)} type="date" className="input-base text-sm" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="label-base">개선 후 가능성</label>
-                        <select {...form.register(`items.${idx}.residual_probability`, { valueAsNumber: true })} className="input-base text-sm">
-                          {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="label-base">개선 후 중대성</label>
-                        <select {...form.register(`items.${idx}.residual_severity`, { valueAsNumber: true })} className="input-base text-sm">
-                          {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-            {/* 低위험 항목 안내 */}
-            {lowCount > 0 && (
-              <div className="card p-4 border-dashed">
-                <p className="text-xs text-gray-400 text-center">
-                  低위험 항목 {lowCount}건은 감소대책 작성이 선택사항입니다.
-                  <button type="button" className="ml-2 text-blue-500 hover:underline" onClick={() => setStep(1)}>항목 보기</button>
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── STEP 3: 검토 및 저장 ─────────────────────────────────────────────── */}
-        {step === 3 && (
           <div className="animate-fade-in space-y-4">
             {/* 최종 요약 */}
             <div className="card p-5">
