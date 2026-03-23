@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
@@ -31,6 +31,207 @@ const LEVEL_STYLE: Record<string, { label: string; cls: string }> = {
 // ─── 단계 ──────────────────────────────────────────────────────
 const STEPS = ['교육 기본정보', '교육 항목', '참석자', '최종 확인']
 
+const LEGAL_CONTENT_BASIS = '산업안전보건법 시행규칙 [별표 5]'
+
+type MenuPreset = {
+  title: string
+  eduType: EduType
+  workerType: WorkerType
+  content: string
+  items: Array<{ work_content: string; hazard_factor: string; edu_point: string }>
+}
+
+const MENU_PRESETS: Record<string, MenuPreset> = {
+  'regular-worker': {
+    title: '근로자 정기안전보건교육',
+    eduType: 'regular',
+    workerType: 'regular_field',
+    content: `[법정 교육내용 자동입력 - ${LEGAL_CONTENT_BASIS}]
+1. 산업안전 및 사고 예방에 관한 사항
+2. 산업보건 및 직업병 예방에 관한 사항
+3. 건강증진 및 질병 예방에 관한 사항
+4. 유해·위험 작업환경 관리에 관한 사항
+5. 산업안전보건법령 및 일반관리사항
+6. 직무스트레스 예방 및 관리에 관한 사항
+7. 직장 내 괴롭힘, 고객의 폭언 등으로 인한 건강장해 예방 및 관리에 관한 사항`,
+    items: [
+      {
+        work_content: '정기안전보건교육 필수 이론',
+        hazard_factor: '상시 작업 중 발생 가능한 일반 위험요인',
+        edu_point: '산업안전·보건 기본원칙, 사고예방, 작업 전 점검 절차',
+      },
+      {
+        work_content: '정신건강 및 조직문화 예방교육',
+        hazard_factor: '직무스트레스, 괴롭힘, 고객응대 스트레스',
+        edu_point: '직무스트레스 관리, 괴롭힘·폭언 대응 및 건강장해 예방',
+      },
+    ],
+  },
+  'supervisor-regular': {
+    title: '관리감독자 정기안전보건교육',
+    eduType: 'regular',
+    workerType: 'supervisor',
+    content: `[법정 교육내용 자동입력 - ${LEGAL_CONTENT_BASIS}]
+1. 관리감독자의 역할과 임무에 관한 사항
+2. 산업안전 및 사고 예방에 관한 사항
+3. 산업보건 및 직업병 예방에 관한 사항
+4. 유해·위험 작업환경 관리에 관한 사항
+5. 산업안전보건법령 및 일반관리사항
+6. 직무스트레스 예방 및 관리에 관한 사항
+7. 직장 내 괴롭힘, 고객의 폭언 등으로 인한 건강장해 예방 및 관리에 관한 사항`,
+    items: [
+      {
+        work_content: '관리감독자 법정 직무 및 책임',
+        hazard_factor: '현장 지휘·감독 미흡으로 인한 중대재해 위험',
+        edu_point: '관리감독자 역할, 위험성평가 반영, 작업지휘·감독 기준',
+      },
+      {
+        work_content: '작업환경 및 근로자 건강관리',
+        hazard_factor: '유해환경 노출, 스트레스·괴롭힘 등 건강장해 위험',
+        edu_point: '유해환경 통제, 건강장해 예방, 조직문화 개선 관리요령',
+      },
+    ],
+  },
+  'special-worker': {
+    title: '근로자 특별안전보건교육',
+    eduType: 'special',
+    workerType: 'regular_field',
+    content: `[법정 교육내용 자동입력 - ${LEGAL_CONTENT_BASIS}]
+1. 특별교육 대상작업의 작업방법·작업절차에 관한 사항
+2. 특별교육 대상작업의 위험요인 및 안전·보건조치에 관한 사항
+3. 기계·기구·설비의 점검 및 이상 발견 시 조치에 관한 사항
+4. 개인보호구의 지급·착용 및 관리에 관한 사항
+5. 비상 시 대응 및 응급조치에 관한 사항
+6. 작업 전·중·후 안전점검과 사고사례 예방에 관한 사항`,
+    items: [
+      {
+        work_content: '특별교육 대상작업 사전 안전교육',
+        hazard_factor: '유해·위험 작업 투입 전 미숙련으로 인한 재해 위험',
+        edu_point: '작업절차, 위험요인 파악, 방호장치·작업허가 절차',
+      },
+      {
+        work_content: 'PPE·비상대응 집중교육',
+        hazard_factor: '고위험 작업 중 보호구 미착용 및 비상대응 미흡',
+        edu_point: '개인보호구 착용, 비상정지·대피·응급조치 훈련',
+      },
+    ],
+  },
+  'supervisor-special': {
+    title: '관리감독자 특별안전보건교육',
+    eduType: 'special',
+    workerType: 'supervisor',
+    content: `[법정 교육내용 자동입력 - ${LEGAL_CONTENT_BASIS}]
+1. 특별교육 대상작업의 관리감독 방법에 관한 사항
+2. 작업 공정별 유해·위험요인 통제에 관한 사항
+3. 안전작업허가 및 작업 전 점검·확인에 관한 사항
+4. 개인보호구 및 방호장치 운영 관리에 관한 사항
+5. 비상상황 대응체계 및 응급조치 지휘에 관한 사항
+6. 특별교육 대상작업 사고사례 및 재발방지 대책`,
+    items: [
+      {
+        work_content: '특별작업 관리감독 기준 교육',
+        hazard_factor: '고위험 작업 지휘·감독 부재로 인한 사고 위험',
+        edu_point: '작업허가, 위험요인 통제, 작업중지권·재개 기준',
+      },
+      {
+        work_content: '비상대응 및 재발방지 체계 교육',
+        hazard_factor: '사고 발생 시 초기대응·지휘 혼선 위험',
+        edu_point: '비상연락체계, 응급조치 지휘, 사고조사·재발방지',
+      },
+    ],
+  },
+  'new-hire': {
+    title: '신규 채용 시 교육',
+    eduType: 'onboarding',
+    workerType: 'regular_field',
+    content: `[법정 교육내용 자동입력 - ${LEGAL_CONTENT_BASIS}]
+1. 산업안전 및 산업재해 예방에 관한 사항(화재·폭발 시 대피 포함)
+2. 산업보건 및 건강장해 예방에 관한 사항
+3. 산업안전보건법령 및 산업재해보상보험 제도에 관한 사항
+4. 직무스트레스 예방 및 관리에 관한 사항
+5. 직장 내 괴롭힘, 고객의 폭언 등으로 인한 건강장해 예방 및 관리에 관한 사항
+6. 기계·기구의 위험성과 작업의 순서 및 동선에 관한 사항
+7. 작업 개시 전 점검에 관한 사항
+8. 정리정돈 및 청소에 관한 사항
+9. 사고 발생 시 긴급조치에 관한 사항
+10. 물질안전보건자료에 관한 사항`,
+    items: [
+      {
+        work_content: '신규입사자 기본 안전보건교육',
+        hazard_factor: '작업장 기본 위험 미인지에 따른 사고 위험',
+        edu_point: '현장 기본수칙, 작업 전 점검, 정리정돈, 비상조치',
+      },
+      {
+        work_content: '신규입사자 보건·MSDS 교육',
+        hazard_factor: '유해물질 노출 및 정신건강 저해 요인',
+        edu_point: '건강장해 예방, 직무스트레스 관리, MSDS 확인방법',
+      },
+    ],
+  },
+  'job-change': {
+    title: '작업내용 변경 시 교육',
+    eduType: 'job_specific',
+    workerType: 'regular_field',
+    content: `[법정 교육내용 자동입력 - ${LEGAL_CONTENT_BASIS}]
+1. 변경된 작업의 기계·기구 및 설비의 위험성과 작업 순서에 관한 사항
+2. 변경된 작업의 작업 개시 전 점검에 관한 사항
+3. 변경된 작업의 정리정돈 및 청소에 관한 사항
+4. 변경된 작업의 사고 발생 시 긴급조치에 관한 사항
+5. 변경된 작업의 물질안전보건자료에 관한 사항`,
+    items: [
+      {
+        work_content: '변경작업 절차 및 위험요인 교육',
+        hazard_factor: '작업 변경으로 인한 신규 위험요인 발생',
+        edu_point: '변경 공정의 작업절차, 위험요인, 사전점검 항목',
+      },
+      {
+        work_content: '변경작업 비상대응 교육',
+        hazard_factor: '변경 공정 중 사고·누출·충돌 등 비상상황',
+        edu_point: '긴급조치, 대피절차, MSDS 재확인 및 보호구 점검',
+      },
+    ],
+  },
+  'special-employment': {
+    title: '특수형태종사자 교육',
+    eduType: 'onboarding',
+    workerType: 'atypical',
+    content: `[법정 교육내용 자동입력 - ${LEGAL_CONTENT_BASIS}]
+1. 산업안전 및 산업재해 예방에 관한 사항
+2. 산업보건 및 건강장해 예방에 관한 사항
+3. 산업안전보건법령 및 일반관리사항
+4. 직무스트레스 예방 및 관리에 관한 사항
+5. 직장 내 괴롭힘, 고객의 폭언 등으로 인한 건강장해 예방 및 관리에 관한 사항
+6. 작업 개시 전 점검 및 사고 발생 시 긴급조치에 관한 사항
+7. 물질안전보건자료에 관한 사항`,
+    items: [
+      {
+        work_content: '특수형태종사자 최초 안전보건교육',
+        hazard_factor: '노무제공 초기 위험 미인지 및 보호구 미흡',
+        edu_point: '업무별 안전수칙, 작업 전 점검, 비상조치 기본',
+      },
+      {
+        work_content: '고객응대·건강보호 교육',
+        hazard_factor: '고객 폭언, 스트레스, 건강장해 발생 위험',
+        edu_point: '고객응대 보호절차, 스트레스 관리, 건강장해 예방',
+      },
+    ],
+  },
+}
+
+function buildPresetItems(items: MenuPreset['items']): EduItem[] {
+  return items.map((item, idx) => ({
+    seq: idx + 1,
+    source_risk_item_id: null,
+    work_content: item.work_content,
+    hazard_factor: item.hazard_factor,
+    hazard_type: 'other',
+    risk_level: 'medium',
+    edu_point: item.edu_point,
+    legal_basis: LEGAL_CONTENT_BASIS,
+    countermeasure: '',
+  }))
+}
+
 interface FormData {
   title:               string
   edu_type:            string
@@ -53,6 +254,8 @@ export default function NewEducationPage() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const fromRiskId   = searchParams.get('from')   // 위험성평가 연계
+  const menuType     = searchParams.get('edu_type')
+  const seededMenuRef = useRef<string | null>(null)
 
   const [step, setStep]           = useState(0)
   const [saving, setSaving]       = useState(false)
@@ -131,6 +334,28 @@ export default function NewEducationPage() {
   useEffect(() => {
     if (fromRiskId) generate(fromRiskId, false)
   }, [fromRiskId, generate])
+
+  // 안전보건교육 메뉴 진입 시 법정 교육내용 자동 입력
+  useEffect(() => {
+    if (fromRiskId || !menuType) return
+    if (seededMenuRef.current === menuType) return
+
+    const preset = MENU_PRESETS[menuType]
+    if (!preset) return
+
+    const current = form.getValues()
+    form.reset({
+      ...current,
+      title: current.title?.trim() ? current.title : `${preset.title} 교육일지`,
+      edu_type: preset.eduType,
+      worker_type: preset.workerType,
+      edu_duration_hours: getDefaultHours(preset.eduType, preset.workerType),
+      edu_content: current.edu_content?.trim() ? current.edu_content : preset.content,
+      edu_items: current.edu_items.length > 0 ? current.edu_items : buildPresetItems(preset.items),
+    })
+
+    seededMenuRef.current = menuType
+  }, [fromRiskId, menuType, form])
 
   // ── 시간 → 교육시간 자동 계산 ──────────────────────────────
   function calcDuration(start: string, end: string) {
