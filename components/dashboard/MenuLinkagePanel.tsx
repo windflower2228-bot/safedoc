@@ -82,12 +82,12 @@ const DIAGRAMS: Record<MenuKey, DiagramConfig> = {
     autoLinks: [
       { label: '안전보건교육일지', href: '/documents/education', desc: '유해위험요인 자동 반영', tone: 'right_warm' },
       { label: '작업계획서', href: '/documents/workplan', desc: '감소대책 자동 입력', tone: 'right_warm' },
-      { label: '순회점검일지', href: '/documents/inspection', desc: '위험요인 선제 삽입', tone: 'right_warm' },
-      { label: '협의체 회의록', href: '/documents/committee', desc: '안건·조치사항 연결', tone: 'right_warm' },
+      { label: '순회점검일지', href: '/documents/inspection', desc: '위험요인 선택 삽입', tone: 'right_warm' },
+      { label: '협의체 회의록', href: '/documents/committee', desc: '안건/조치사항 연결', tone: 'right_warm' },
     ],
     assistLinks: [
       { label: '작업일보 업로드', href: '/worklog', desc: '공종 키워드 자동 분석', tone: 'left_green' },
-      { label: 'MSDS 관리대장', href: '/health/msds', desc: '파일 업로드·공종 활용', tone: 'left_blue' },
+      { label: 'MSDS 관리대장', href: '/health/msds', desc: '파일 업로드·공동 활용', tone: 'left_blue' },
       { label: 'MSDS 교육일지', href: '/documents/education', desc: '초안 자동 생성', tone: 'left_blue' },
       { label: '지정서·선임서', href: '/documents/designation', desc: '직급별 자동 생성', tone: 'left_green' },
     ],
@@ -95,7 +95,7 @@ const DIAGRAMS: Record<MenuKey, DiagramConfig> = {
     bottomLink: {
       label: '안전보건활동계획표',
       href: '/plan',
-      desc: '이행 여부 자동 체크·알림',
+      desc: '이행여부 자동 체크·알림',
       tone: 'bottom_plan',
     },
   },
@@ -330,6 +330,14 @@ function createCurvePath(startX: number, startY: number, endX: number, endY: num
   return `M ${startX} ${startY} L ${aX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${bX} ${endY} L ${endX} ${endY}`
 }
 
+function createSmoothElbowCurvePath(startX: number, startY: number, endX: number, endY: number) {
+  const direction = endX >= startX ? 1 : -1
+  const horizontal = Math.abs(endX - startX)
+  const elbow = Math.max(24, Math.min(42, horizontal * 0.72))
+  const elbowX = startX + direction * elbow
+  return `M ${startX} ${startY} C ${elbowX} ${startY}, ${elbowX} ${endY}, ${endX} ${endY}`
+}
+
 function createBottomCurvePath(startX: number, startY: number, endX: number, endY: number) {
   const bend = Math.max(30, Math.min(64, Math.abs(endY - startY) * 0.36))
   return `M ${startX} ${startY} C ${startX} ${startY + bend}, ${endX} ${endY - bend}, ${endX} ${endY}`
@@ -338,11 +346,13 @@ function createBottomCurvePath(startX: number, startY: number, endX: number, end
 function FlowNode({
   node,
   tone,
+  riskStyled = false,
   wrapperRef,
   wrapperClassName,
 }: {
   node: LinkNode
   tone: 'left' | 'right' | 'center' | 'bottom'
+  riskStyled?: boolean
   wrapperRef?: (el: HTMLDivElement | null) => void
   wrapperClassName?: string
 }) {
@@ -378,21 +388,32 @@ function FlowNode({
             ? 'text-[#7a6237]'
             : 'text-[#5d4f9d]'
 
-  const widthClass =
-    tone === 'center'
+  const widthClass = riskStyled
+    ? tone === 'center'
+      ? 'lg:w-[164px] lg:h-16'
+      : tone === 'bottom'
+        ? 'lg:w-[300px] lg:h-12'
+        : 'lg:w-[175px] lg:h-12'
+    : tone === 'center'
       ? 'lg:w-[190px]'
       : tone === 'bottom'
         ? 'lg:w-[210px]'
         : 'lg:w-[220px]'
 
+  const bodyClass = riskStyled ? 'px-2.5 py-1.5' : 'px-3 py-2.5'
+  const titleClass = riskStyled ? 'text-[13px] font-medium leading-tight' : 'text-sm font-semibold leading-tight'
+  const descClass = riskStyled
+    ? `text-[11px] mt-0.5 ${accentClass}`
+    : 'text-[11px] text-gray-600 mt-1'
+
   return (
     <div ref={wrapperRef} className={`relative w-fit ${wrapperClassName ?? ''}`}>
       <Link
         href={node.href}
-        className={`relative z-10 block w-full ${widthClass} rounded-[12px] border px-3 py-2.5 hover:shadow-sm hover:-translate-y-0.5 transition-all ${toneClass}`}
+        className={`relative z-10 block w-full ${widthClass} rounded-[12px] border ${bodyClass} hover:shadow-sm hover:-translate-y-0.5 transition-all ${toneClass}`}
       >
-        <p className={`text-sm font-semibold leading-tight ${accentClass}`}>{node.label}</p>
-        {node.desc && <p className="text-[11px] text-gray-600 mt-1">{node.desc}</p>}
+        <p className={`${titleClass} ${accentClass}`}>{node.label}</p>
+        {node.desc && <p className={descClass}>{node.desc}</p>}
       </Link>
     </div>
   )
@@ -411,6 +432,7 @@ export default function MenuLinkagePanel() {
 
   const menuKey = useMemo(() => resolveMenuKey(pathname), [pathname])
   const diagram = DIAGRAMS[menuKey]
+  const isRiskDiagram = menuKey === 'risk'
 
   useLayoutEffect(() => {
     if (!open) {
@@ -429,6 +451,7 @@ export default function MenuLinkagePanel() {
       const centerRightX = centerRect.right - containerRect.left + CURVE_CARD_GAP
       const centerTopY = centerRect.top - containerRect.top + CURVE_PORT_EDGE_PADDING
       const centerBottomY = centerRect.bottom - containerRect.top - CURVE_PORT_EDGE_PADDING
+      const centerMidY = centerRect.top - containerRect.top + centerRect.height / 2
 
       const validLeftNodes = leftRefs.current
         .slice(0, diagram.assistLinks.length)
@@ -463,28 +486,44 @@ export default function MenuLinkagePanel() {
         })
         .sort((a, b) => a.midY - b.midY)
 
-      const leftPorts = createCardPorts(leftMetrics.length, centerTopY, centerBottomY)
-      const rightPorts = createCardPorts(rightMetrics.length, centerTopY, centerBottomY)
+      const isRiskDiagram = menuKey === 'risk'
+      const leftPorts = isRiskDiagram
+        ? Array.from({ length: leftMetrics.length }, () => centerMidY)
+        : createCardPorts(leftMetrics.length, centerTopY, centerBottomY)
+      const rightPorts = isRiskDiagram
+        ? Array.from({ length: rightMetrics.length }, () => centerMidY)
+        : createCardPorts(rightMetrics.length, centerTopY, centerBottomY)
 
       const leftPaths: CurveStroke[] = leftMetrics.map((metric, index) => {
-        const startX = metric.rightX + CURVE_CARD_GAP
+        const startX = metric.rightX + CURVE_CARD_GAP - (isRiskDiagram ? 1 : 0)
         const startY = metric.midY
         const endY = leftPorts[index]
-        const isRisk = menuKey === 'risk'
-        const stroke = isRisk
+        const stroke = isRiskDiagram
           ? index === 1 || index === 2
-            ? '#5f97c5'
-            : '#3c9f82'
+            ? '#378ADD'
+            : '#1D9E75'
           : '#c68c81'
-        return { d: createCurvePath(startX, startY, centerLeftX, endY), stroke }
+        const endX = centerLeftX + (isRiskDiagram ? 1 : 0)
+        return {
+          d: isRiskDiagram
+            ? createSmoothElbowCurvePath(startX, startY, endX, endY)
+            : createCurvePath(startX, startY, endX, endY),
+          stroke,
+        }
       })
 
       const rightPaths: CurveStroke[] = rightMetrics.map((metric, index) => {
-        const endX = metric.leftX - CURVE_CARD_GAP
+        const endX = metric.leftX - CURVE_CARD_GAP + (isRiskDiagram ? 1 : 0)
         const endY = metric.midY
         const startY = rightPorts[index]
-        const stroke = menuKey === 'risk' ? '#bd6f59' : '#c68c81'
-        return { d: createCurvePath(centerRightX, startY, endX, endY), stroke }
+        const startX = centerRightX - (isRiskDiagram ? 1 : 0)
+        const stroke = isRiskDiagram ? '#D85A30' : '#c68c81'
+        return {
+          d: isRiskDiagram
+            ? createSmoothElbowCurvePath(startX, startY, endX, endY)
+            : createCurvePath(startX, startY, endX, endY),
+          stroke,
+        }
       })
 
       let bottomPath: CurveStroke | null = null
@@ -495,21 +534,21 @@ export default function MenuLinkagePanel() {
         const endX = bottomRect.left - containerRect.left + bottomRect.width / 2
         const endY = bottomRect.top - containerRect.top - CURVE_CARD_GAP
         bottomPath = {
-          d: createBottomCurvePath(startX, startY, endX, endY),
-          stroke: menuKey === 'risk' ? '#b89a57' : '#c68c81',
-          dash: '6 5',
+          d: isRiskDiagram ? `M ${startX} ${startY} L ${endX} ${endY}` : createBottomCurvePath(startX, startY, endX, endY),
+          stroke: isRiskDiagram ? '#BA7517' : '#c68c81',
+          dash: '5 4',
         }
       }
 
       const assist: CurveStroke[] = []
-      if (menuKey === 'risk' && leftMetrics.length >= 3) {
+      if (isRiskDiagram && leftMetrics.length >= 3) {
         const msdsTop = leftMetrics[1]
         const msdsBottom = leftMetrics[2]
-        const x = Math.min(msdsTop.leftX, msdsBottom.leftX) + 8
+        const x = Math.min(msdsTop.leftX, msdsBottom.leftX) + 14
         assist.push({
-          d: `M ${x} ${msdsTop.bottomY - 2} L ${x} ${msdsBottom.topY + 2}`,
-          stroke: '#7aa6ca',
-          dash: '5 4',
+          d: `M ${x} ${msdsTop.bottomY} L ${x} ${msdsBottom.topY}`,
+          stroke: '#378ADD',
+          dash: '4 3',
         })
       }
 
@@ -533,7 +572,9 @@ export default function MenuLinkagePanel() {
   }, [open, menuKey, diagram.assistLinks.length, diagram.autoLinks.length, Boolean(diagram.bottomLink)])
 
   return (
-    <section className="card no-print border-[#dddcd7] bg-[#efefed]">
+    <section
+      className={`card no-print ${isRiskDiagram ? 'border-[#e8e5dd] bg-white shadow-sm' : 'border-[#dddcd7] bg-[#efefed]'}`}
+    >
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -553,28 +594,52 @@ export default function MenuLinkagePanel() {
         <div className="px-4 pb-4">
           <div className="lg:hidden space-y-2.5">
             {diagram.assistLinks.map((node) => (
-              <FlowNode key={`m-assist-${node.href}-${node.label}`} node={node} tone="left" />
+              <FlowNode key={`m-assist-${node.href}-${node.label}`} node={node} tone="left" riskStyled={isRiskDiagram} />
             ))}
             <FlowNode
               node={{ label: diagram.title, href: diagram.centerHref, desc: diagram.centerSub }}
               tone="center"
+              riskStyled={isRiskDiagram}
             />
             {diagram.autoLinks.map((node) => (
-              <FlowNode key={`m-auto-${node.href}-${node.label}`} node={node} tone="right" />
+              <FlowNode key={`m-auto-${node.href}-${node.label}`} node={node} tone="right" riskStyled={isRiskDiagram} />
             ))}
-            {diagram.bottomLink && <FlowNode node={diagram.bottomLink} tone="bottom" />}
+            {diagram.bottomLink && <FlowNode node={diagram.bottomLink} tone="bottom" riskStyled={isRiskDiagram} />}
           </div>
 
           <div ref={desktopRef} className="hidden lg:block relative rounded-2xl border border-[#d7d6d0] bg-[#f8f8f7] px-4 py-5">
             <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible z-0">
+              {isRiskDiagram && (
+                <defs>
+                  <marker
+                    id="diagram-arrow"
+                    viewBox="0 0 10 10"
+                    refX="8"
+                    refY="5"
+                    markerWidth="6"
+                    markerHeight="6"
+                    orient="auto-start-reverse"
+                  >
+                    <path
+                      d="M2 1L8 5L2 9"
+                      fill="none"
+                      stroke="context-stroke"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </marker>
+                </defs>
+              )}
               {curves.left.map((curve, idx) => (
                 <path
                   key={`left-curve-${idx}`}
                   d={curve.d}
                   fill="none"
                   stroke={curve.stroke}
-                  strokeOpacity="0.95"
-                  strokeWidth="2.2"
+                  strokeOpacity="0.96"
+                  strokeWidth={isRiskDiagram ? '1.2' : '2.2'}
+                  markerEnd={isRiskDiagram ? 'url(#diagram-arrow)' : undefined}
                   strokeLinecap="round"
                 />
               ))}
@@ -584,8 +649,9 @@ export default function MenuLinkagePanel() {
                   d={curve.d}
                   fill="none"
                   stroke={curve.stroke}
-                  strokeOpacity="0.95"
-                  strokeWidth="2.2"
+                  strokeOpacity="0.96"
+                  strokeWidth={isRiskDiagram ? '1.2' : '2.2'}
+                  markerEnd={isRiskDiagram ? 'url(#diagram-arrow)' : undefined}
                   strokeLinecap="round"
                 />
               ))}
@@ -595,9 +661,10 @@ export default function MenuLinkagePanel() {
                   d={curve.d}
                   fill="none"
                   stroke={curve.stroke}
-                  strokeOpacity="0.95"
-                  strokeWidth="1.7"
+                  strokeOpacity="0.96"
+                  strokeWidth={isRiskDiagram ? '1' : '1.7'}
                   strokeDasharray={curve.dash}
+                  markerEnd={isRiskDiagram ? 'url(#diagram-arrow)' : undefined}
                   strokeLinecap="round"
                 />
               ))}
@@ -606,16 +673,23 @@ export default function MenuLinkagePanel() {
                   d={curves.bottom.d}
                   fill="none"
                   stroke={curves.bottom.stroke}
-                  strokeOpacity="0.95"
-                  strokeWidth="2.2"
+                  strokeOpacity="0.96"
+                  strokeWidth={isRiskDiagram ? '1.2' : '2.2'}
                   strokeDasharray={curves.bottom.dash}
+                  markerEnd={isRiskDiagram ? 'url(#diagram-arrow)' : undefined}
                   strokeLinecap="round"
                 />
               )}
             </svg>
 
-            <div className="relative z-10 grid grid-cols-[1fr_190px_1fr] gap-12 items-center">
-              <div className="space-y-2.5">
+            <div
+              className={`relative z-10 grid items-center ${
+                isRiskDiagram
+                  ? 'grid-cols-[175px_164px_175px] justify-center gap-x-16'
+                  : 'grid-cols-[1fr_190px_1fr] gap-12'
+              }`}
+            >
+              <div className={isRiskDiagram ? 'space-y-8' : 'space-y-2.5'}>
                 {diagram.assistLinks.length === 0 && (
                   <div className="rounded-xl border border-dashed border-gray-300 bg-white/70 px-3 py-2 text-xs text-gray-500 lg:w-[220px]">
                     선행 연계 없음
@@ -626,6 +700,7 @@ export default function MenuLinkagePanel() {
                     key={`assist-${node.href}-${node.label}`}
                     node={node}
                     tone="left"
+                    riskStyled={isRiskDiagram}
                     wrapperRef={(el) => {
                       leftRefs.current[idx] = el
                     }}
@@ -637,6 +712,7 @@ export default function MenuLinkagePanel() {
                 <FlowNode
                   node={{ label: diagram.title, href: diagram.centerHref, desc: diagram.centerSub }}
                   tone="center"
+                  riskStyled={isRiskDiagram}
                   wrapperClassName="lg:mx-auto"
                   wrapperRef={(el) => {
                     centerRef.current = el
@@ -644,7 +720,7 @@ export default function MenuLinkagePanel() {
                 />
               </div>
 
-              <div className="space-y-2.5">
+              <div className={isRiskDiagram ? 'space-y-8' : 'space-y-2.5'}>
                 {diagram.autoLinks.length === 0 && (
                   <div className="rounded-xl border border-dashed border-gray-300 bg-white/70 px-3 py-2 text-xs text-gray-500 lg:w-[220px] ml-auto">
                     자동 연계 없음
@@ -655,6 +731,7 @@ export default function MenuLinkagePanel() {
                     key={`auto-${node.href}-${node.label}`}
                     node={node}
                     tone="right"
+                    riskStyled={isRiskDiagram}
                     wrapperClassName="lg:ml-auto"
                     wrapperRef={(el) => {
                       rightRefs.current[idx] = el
@@ -665,10 +742,11 @@ export default function MenuLinkagePanel() {
             </div>
 
             {diagram.bottomLink && (
-              <div className="relative z-10 flex justify-center mt-10">
+              <div className={`relative z-10 flex justify-center ${isRiskDiagram ? 'mt-11' : 'mt-10'}`}>
                 <FlowNode
                   node={diagram.bottomLink}
                   tone="bottom"
+                  riskStyled={isRiskDiagram}
                   wrapperRef={(el) => {
                     bottomRef.current = el
                   }}
@@ -693,7 +771,7 @@ export default function MenuLinkagePanel() {
                   </span>
                 </div>
                 <p className="text-[11px] text-gray-500 text-center">
-                  위험요인 체크(교육/작업계획)에 따라 연계 문서가 자동 반영됩니다.
+                  위험요인 체크[교육/작업계획]에 따라 연계 문서가 자동 반영됩니다.
                 </p>
               </div>
             )}
