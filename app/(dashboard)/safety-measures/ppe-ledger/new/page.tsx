@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { ArrowLeft, Save, Loader2, HardHat, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, HardHat, Plus, Trash2, Upload, Download, FileText } from 'lucide-react'
 
 // 산안법 제38조 / 안전보건규칙 제32조 기반 보호구 종류
 const PPE_TYPES = [
@@ -50,6 +50,8 @@ interface FormValues {
 export default function NewPpeLedgerPage() {
   const router  = useRouter()
   const [saving, setSaving] = useState(false)
+  const [files, setFiles] = useState<File[]>([])
+  const [fileInputKey, setFileInputKey] = useState(0)
 
   const form = useForm<FormValues>({
     defaultValues: {
@@ -68,6 +70,34 @@ export default function NewPpeLedgerPage() {
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: 'ppe_items' })
 
+  function formatFileSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes}B`
+    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)}KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
+  }
+
+  function downloadTemplateCsv() {
+    const today = new Date().toISOString().slice(0, 10)
+    const rows = [
+      ['지급일자', '근로자성명', '소속부서', '직위', '보호구종류', '규격형식', '수량', '상태', '지급일', '반납일', '관리번호', '비고'],
+      [today, '홍길동', '안전팀', '반장', '안전모 (추락·낙하물 위험)', 'ABS 재질, A형', '1', '신품', today, '', 'SN-001', ''],
+      [today, '홍길동', '안전팀', '반장', '안전화 (중·보통·저압)', '중작업용 270mm', '1', '신품', today, '', 'SN-002', ''],
+    ]
+    const csv = rows
+      .map((row) => row.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+
+    const bom = '\uFEFF'
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `보호구_지급대장_서식_${today}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('보호구 지급대장 서식을 다운로드했습니다.')
+  }
+
   async function onSubmit(data: FormValues) {
     if (!data.worker_name.trim()) { toast.error('근로자 성명을 입력하세요.'); return }
     if (data.ppe_items.length === 0) { toast.error('보호구 항목을 1개 이상 추가하세요.'); return }
@@ -80,10 +110,24 @@ export default function NewPpeLedgerPage() {
       }),
     })
     const json = await res.json()
+    if (res.ok && files.length > 0) {
+      const formData = new FormData()
+      files.forEach((file) => formData.append('files', file))
+      const uploadRes = await fetch(`/api/safety-measures/ppe-ledger/${json.data.id}/attachments`, {
+        method: 'POST',
+        body: formData,
+      })
+      const uploadJson = await uploadRes.json()
+      if (!uploadRes.ok) {
+        toast.warning(`대장은 저장됐지만 첨부 업로드에 실패했습니다. (${uploadJson.error ?? '알 수 없는 오류'})`)
+      }
+    }
     setSaving(false)
     if (!res.ok) { toast.error(json.error); return }
-    toast.success('보호구 지급대장이 등록되었습니다.')
-    router.push('/safety-measures/ppe-ledger')
+    toast.success(`보호구 지급대장이 등록되었습니다.${files.length ? ` (첨부 ${files.length}건 저장)` : ''}`)
+    setFiles([])
+    setFileInputKey((k) => k + 1)
+    router.push(`/safety-measures/ppe-ledger/${json.data.id}`)
   }
 
   return (
@@ -105,6 +149,10 @@ export default function NewPpeLedgerPage() {
           </div>
         </div>
         <div className="flex gap-2">
+          <button type="button" onClick={downloadTemplateCsv} className="btn-secondary gap-1">
+            <Download className="w-4 h-4" />
+            서식 다운로드
+          </button>
           <button onClick={() => router.back()} className="btn-secondary">취소</button>
           <button onClick={form.handleSubmit(onSubmit)} disabled={saving}
             className="btn-primary" style={{ background: '#2563eb' }}>
@@ -219,6 +267,45 @@ export default function NewPpeLedgerPage() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* 첨부 파일 */}
+        <div className="card p-5">
+          <h2 className="font-semibold text-gray-800 mb-3">첨부 (현장 사진 / PDF 스캔본)</h2>
+          <p className="text-xs text-gray-500 mb-3">
+            사진 또는 PDF를 첨부하면 대장 저장 시 함께 보관됩니다. (최대 10개, 파일당 20MB)
+          </p>
+          <label className="flex items-center gap-3 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50/10 transition-all">
+            <Upload className="w-5 h-5 text-gray-400" />
+            <div className="flex-1">
+              {files.length > 0 ? (
+                <span className="text-sm text-gray-700">{files.length}개 파일 선택됨</span>
+              ) : (
+                <span className="text-sm text-gray-400">사진 촬영본 또는 PDF 스캔본 선택</span>
+              )}
+            </div>
+            <input
+              key={fileInputKey}
+              type="file"
+              multiple
+              accept="image/*,.pdf,application/pdf"
+              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+              className="hidden"
+            />
+          </label>
+          {files.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {files.map((file, idx) => (
+                <div key={`${file.name}-${idx}`} className="flex items-center justify-between text-xs border border-gray-200 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileText className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <span className="truncate">{file.name}</span>
+                  </div>
+                  <span className="text-gray-400 ml-3 flex-shrink-0">{formatFileSize(file.size)}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* 비고 + 서명 */}
