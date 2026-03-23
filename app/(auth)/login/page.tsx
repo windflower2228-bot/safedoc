@@ -56,11 +56,11 @@ function LoginPageInner() {
         </div>
         <div>
           <h1 className="text-white text-4xl font-bold leading-tight mb-4">
-            산업안전보건<br />문서 통합관리 플랫폼
+            건설안전보건<br />문서 통합관리 플랫폼
           </h1>
-          <p className="text-blue-200 text-base leading-relaxed mb-8">
-            위험성평가를 허브로 삼아 교육일지·작업계획서·순회점검일지를<br />
-            자동으로 연계·생성하는 현장 실무 전용 서비스
+          <p className="text-blue-200 text-sm xl:text-base leading-relaxed mb-8 tracking-[-0.01em]">
+            <span className="block">위험성평가를 허브로 삼아 교육일지·작업계획서·순회점검일지를</span>
+            <span className="block">자동으로 연계·생성하는 현장 실무 전용 서비스</span>
           </p>
           <div className="grid grid-cols-3 gap-4">
             {[
@@ -75,7 +75,7 @@ function LoginPageInner() {
             ))}
           </div>
         </div>
-        <p className="text-blue-300 text-xs">© 2025 SafeDoc. All rights reserved.</p>
+        <p className="text-blue-300 text-xs">© 2026 SafeDoc. All rights reserved.</p>
       </div>
 
       {/* 우측 로그인 폼 */}
