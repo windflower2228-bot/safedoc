@@ -69,8 +69,14 @@ export const riskItemSchema = z.object({
   work_content: z.string().min(1, '작업 내용을 입력해주세요'),
   hazard_factor: z.string().min(1, '유해·위험요인을 입력해주세요'),
   hazard_type: z.enum([
+    // legacy values
     'fall', 'entanglement', 'collision', 'fire',
-    'hazmat', 'electrical', 'ergonomic', 'other'
+    'hazmat', 'electrical', 'ergonomic',
+    // new values
+    'falling', 'tripping', 'crushed_overturned', 'struck_against',
+    'struck_by_object', 'collapse', 'caught_in', 'cut_stab',
+    'fire_explosion_rupture', 'overexertion', 'occupational_disease',
+    'other'
   ]),
   current_probability: z.number().int().min(1).max(5),
   current_severity: z.number().int().min(1).max(5),

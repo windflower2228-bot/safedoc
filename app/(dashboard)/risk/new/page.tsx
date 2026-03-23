@@ -17,13 +17,17 @@ import { riskAssessmentSchema, type RiskAssessmentFormData } from '@/lib/validat
 const STEPS = ['기본정보', '위험요인 및 감소대책', '검토 및 저장']
 
 const HAZARD_TYPES = [
-  { value: 'fall',         label: '추락·전도' },
-  { value: 'entanglement', label: '끼임' },
-  { value: 'collision',    label: '충돌·협착' },
-  { value: 'fire',         label: '화재·폭발' },
-  { value: 'hazmat',       label: '유해물질' },
-  { value: 'electrical',   label: '감전' },
-  { value: 'ergonomic',    label: '근골격계' },
+  { value: 'falling',                label: '떨어짐' },
+  { value: 'tripping',               label: '넘어짐' },
+  { value: 'crushed_overturned',     label: '깔림/뒤집힘' },
+  { value: 'struck_against',         label: '부딪힘' },
+  { value: 'struck_by_object',       label: '물체에 맞음' },
+  { value: 'collapse',               label: '무너짐' },
+  { value: 'caught_in',              label: '끼임' },
+  { value: 'cut_stab',               label: '절단/베임/찔림' },
+  { value: 'fire_explosion_rupture', label: '화재/폭발/파열' },
+  { value: 'overexertion',           label: '무리한동작' },
+  { value: 'occupational_disease',   label: '업무상질병' },
   { value: 'other',        label: '기타' },
 ] as const
 
@@ -52,7 +56,7 @@ const DEFAULT_ITEM = {
   seq: 1,
   work_content: '',
   hazard_factor: '',
-  hazard_type: 'fall' as const,
+  hazard_type: 'falling' as const,
   current_probability: 3,
   current_severity: 3,
   engineering_measure: '',

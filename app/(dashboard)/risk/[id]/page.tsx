@@ -13,9 +13,23 @@ import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
 type Params = { params: { id: string } }
 
 const HAZARD_LABELS: Record<string, string> = {
+  // legacy
   fall: '추락·전도', entanglement: '끼임', collision: '충돌',
   fire: '화재·폭발', hazmat: '유해물질', electrical: '감전',
-  ergonomic: '근골격계', other: '기타',
+  ergonomic: '근골격계',
+  // new
+  falling: '떨어짐',
+  tripping: '넘어짐',
+  crushed_overturned: '깔림/뒤집힘',
+  struck_against: '부딪힘',
+  struck_by_object: '물체에 맞음',
+  collapse: '무너짐',
+  caught_in: '끼임',
+  cut_stab: '절단/베임/찔림',
+  fire_explosion_rupture: '화재/폭발/파열',
+  overexertion: '무리한동작',
+  occupational_disease: '업무상질병',
+  other: '기타',
 }
 const EVAL_TYPE_LABELS: Record<string, string> = {
   initial: '최초평가', periodic: '정기평가',

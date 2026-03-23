@@ -111,6 +111,7 @@ export interface RiskItem {
 }
 
 export type HazardType =
+  // legacy
   | 'fall'          // 추락·전도
   | 'entanglement'  // 끼임
   | 'collision'     // 충돌
@@ -118,6 +119,18 @@ export type HazardType =
   | 'hazmat'        // 유해물질
   | 'electrical'    // 감전
   | 'ergonomic'     // 근골격계
+  // new
+  | 'falling'                // 떨어짐
+  | 'tripping'               // 넘어짐
+  | 'crushed_overturned'     // 깔림/뒤집힘
+  | 'struck_against'         // 부딪힘
+  | 'struck_by_object'       // 물체에 맞음
+  | 'collapse'               // 무너짐
+  | 'caught_in'              // 끼임
+  | 'cut_stab'               // 절단/베임/찔림
+  | 'fire_explosion_rupture' // 화재/폭발/파열
+  | 'overexertion'           // 무리한동작
+  | 'occupational_disease'   // 업무상질병
   | 'other'         // 기타
 
 // ─── 문서 연계 ────────────────────────────────────────────────────────────────

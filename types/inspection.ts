@@ -15,8 +15,21 @@ export const CATEGORY_LABEL: Record<InspectionCategory,string> = {
   scaffolding:'비계·가설물', excavation:'굴착·토공', lifting:'양중·인양', other:'기타',
 }
 export const HAZARD_TO_CATEGORY: Record<string,InspectionCategory> = {
+  // legacy
   fall:'fall', entanglement:'equipment', collision:'lifting',
   fire:'fire', hazmat:'chemical', electrical:'electrical', ergonomic:'housekeeping', other:'other',
+  // new
+  falling:'fall',
+  tripping:'fall',
+  crushed_overturned:'equipment',
+  struck_against:'lifting',
+  struck_by_object:'lifting',
+  collapse:'scaffolding',
+  caught_in:'equipment',
+  cut_stab:'ppe',
+  fire_explosion_rupture:'fire',
+  overexertion:'housekeeping',
+  occupational_disease:'chemical',
 }
 
 export interface InspectionCheckItem {

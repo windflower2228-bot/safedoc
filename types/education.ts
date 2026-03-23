@@ -173,6 +173,7 @@ export interface EducationJournal {
 }
 
 export const HAZARD_LEGAL_BASIS: Record<string, string> = {
+  // legacy
   fall:         '산업안전보건기준에 관한 규칙 제42조 (추락에 의한 위험 방지)',
   entanglement: '산업안전보건기준에 관한 규칙 제87조 (끼임 위험 방지)',
   collision:    '산업안전보건기준에 관한 규칙 제98조 (충돌 위험 방지)',
@@ -180,6 +181,18 @@ export const HAZARD_LEGAL_BASIS: Record<string, string> = {
   hazmat:       '산업안전보건법 제114조 (물질안전보건자료의 비치 등)',
   electrical:   '산업안전보건기준에 관한 규칙 제301조 (감전 위험 방지)',
   ergonomic:    '산업안전보건기준에 관한 규칙 제657조 (근골격계 부담작업)',
+  // new
+  falling:                '산업안전보건기준에 관한 규칙 제42조 (추락에 의한 위험 방지)',
+  tripping:               '산업안전보건기준에 관한 규칙 제42조 (추락에 의한 위험 방지)',
+  crushed_overturned:     '산업안전보건기준에 관한 규칙 제98조 (차량계 하역운반기계 위험 방지)',
+  struck_against:         '산업안전보건기준에 관한 규칙 제98조 (충돌 위험 방지)',
+  struck_by_object:       '산업안전보건기준에 관한 규칙 제42조 (낙하물에 의한 위험 방지)',
+  collapse:               '산업안전보건기준에 관한 규칙 제340조 (굴착작업 시 위험 방지)',
+  caught_in:              '산업안전보건기준에 관한 규칙 제87조 (끼임 위험 방지)',
+  cut_stab:               '산업안전보건기준에 관한 규칙 제32조 (보호구의 지급 등)',
+  fire_explosion_rupture: '산업안전보건기준에 관한 규칙 제230조 (화재 위험)',
+  overexertion:           '산업안전보건기준에 관한 규칙 제657조 (근골격계 부담작업)',
+  occupational_disease:   '산업안전보건법 제39조 (보건조치)',
   other:        '산업안전보건법 제29조 (근로자에 대한 안전보건교육)',
 }
 
@@ -189,6 +202,7 @@ export function generateEduPoint(
   countermeasure: string
 ): string {
   const points: Record<string, string> = {
+    // legacy
     fall:         `추락·낙하 위험 인지 및 안전대 착용 방법\n안전난간·안전방망 점검 요령\n${hazardFactor} 대응 행동 요령`,
     entanglement: `회전체·끼임 위험부위 식별 방법\n잠금장치(LOTO) 사용 절차\n${hazardFactor} 예방 조치`,
     collision:    `충돌·협착 위험구역 접근 금지\n신호수 배치 및 유도 절차\n${hazardFactor} 대응 방법`,
@@ -196,6 +210,18 @@ export function generateEduPoint(
     hazmat:       `MSDS 확인 방법 및 주요 유해성\n개인보호구(방독마스크 등) 착용법\n${hazardFactor} 노출 시 응급처치`,
     electrical:   `감전 위험부위 식별 및 접근 금지\n절연장갑·절연화 착용 방법\n${hazardFactor} 발생 시 응급처치`,
     ergonomic:    `올바른 작업 자세 및 중량물 취급법\n근골격계 스트레칭 방법\n${hazardFactor} 예방 요령`,
+    // new
+    falling:                `떨어짐 위험 인지 및 작업발판 점검\n안전난간·안전대 착용 기준\n${hazardFactor} 대응 행동 요령`,
+    tripping:               `넘어짐 위험요인(통로·바닥상태) 점검\n정리정돈·미끄럼 방지 수칙\n${hazardFactor} 예방 조치`,
+    crushed_overturned:     `깔림·뒤집힘 위험구역 출입통제\n중장비 작업 반경 관리 수칙\n${hazardFactor} 대응 방법`,
+    struck_against:         `부딪힘 위험구역 동선 분리\n신호수 배치 및 유도 절차\n${hazardFactor} 대응 방법`,
+    struck_by_object:       `낙하·비래 위험물 관리 수칙\n상부 작업 시 하부 통제 절차\n${hazardFactor} 예방 조치`,
+    collapse:               `붕괴 위험요인(흙막이·가시설) 점검\n변위 발생 시 즉시 작업중지 절차\n${hazardFactor} 대응 방법`,
+    caught_in:              `끼임 위험부위 식별 방법\n잠금장치(LOTO) 사용 절차\n${hazardFactor} 예방 조치`,
+    cut_stab:               `절단·베임·찔림 위험 공구 사용수칙\n보호장갑 등 보호구 착용 방법\n${hazardFactor} 예방 조치`,
+    fire_explosion_rupture: `화재·폭발·파열 위험물 취급 주의사항\n소화기 사용법 및 대피 경로\n${hazardFactor} 대응 방법`,
+    overexertion:           `무리한동작 예방을 위한 작업자세 교육\n중량물 취급·스트레칭 수칙\n${hazardFactor} 예방 요령`,
+    occupational_disease:   `업무상질병 예방을 위한 노출관리 수칙\n환기·보호구·건강관리 절차\n${hazardFactor} 대응 방법`,
     other:        `작업 전 위험요인 확인(TBM)\n${hazardFactor} 관련 안전 수칙\n보호구 착용 및 점검 방법`,
   }
   const base = points[hazardType] ?? points.other

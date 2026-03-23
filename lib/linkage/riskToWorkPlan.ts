@@ -67,6 +67,7 @@ export interface WorkPlanLinkSummary {
 // 작업 유형 → WorkPlanType 매핑
 function hazardTypeToWorkPlanType(hazardType: string): WorkPlanType {
   const MAP: Record<string, WorkPlanType> = {
+    // legacy
     fall:         'height',
     entanglement: 'heavy_equip',
     collision:    'crane',
@@ -74,6 +75,18 @@ function hazardTypeToWorkPlanType(hazardType: string): WorkPlanType {
     hazmat:       'chemical',
     electrical:   'electrical',
     ergonomic:    'heavy_equip',
+    // new
+    falling:                'height',
+    tripping:               'height',
+    crushed_overturned:     'heavy_equip',
+    struck_against:         'crane',
+    struck_by_object:       'crane',
+    collapse:               'excavation',
+    caught_in:              'heavy_equip',
+    cut_stab:               'other',
+    fire_explosion_rupture: 'welding',
+    overexertion:           'heavy_equip',
+    occupational_disease:   'chemical',
     other:        'other',
   }
   return MAP[hazardType] ?? 'other'
