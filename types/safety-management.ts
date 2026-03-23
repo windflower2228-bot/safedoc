@@ -1,7 +1,8 @@
 // types/safety-management.ts — 안전보건관리체제 타입
 
 export type SafetyRoleId =
-  | 'responsibility_manager'  // 안전보건(총괄)관리책임자
+  | 'responsibility_manager'      // 안전보건관리책임자
+  | 'general_responsibility_manager' // 안전보건총괄책임자
   | 'supervisor'              // 관리감독자
   | 'safety_manager'          // 안전관리자
   | 'health_manager'          // 보건관리자
@@ -25,8 +26,8 @@ export interface SafetyRole {
 export const SAFETY_ROLES: Record<SafetyRoleId, SafetyRole> = {
   responsibility_manager: {
     id: 'responsibility_manager',
-    label: '안전보건(총괄)관리책임자',
-    legalBasis: '산업안전보건법 제15조(안전보건관리책임자), 제62조(도급인의 안전보건총괄책임자)',
+    label: '안전보건관리책임자',
+    legalBasis: '산업안전보건법 제15조(안전보건관리책임자)',
     docType: '지정서',
     href: '/safety-management/responsibility-manager',
     color: '#1d4ed8', bg: '#eff6ff',
@@ -41,6 +42,23 @@ export const SAFETY_ROLES: Record<SafetyRoleId, SafetyRole> = {
       '산업재해의 원인 조사 및 재발 방지대책 수립에 관한 사항',
       '산업재해에 관한 통계의 기록 및 유지에 관한 사항',
       '안전장치 및 보호구 구입 시 적격품 여부 확인에 관한 사항',
+    ],
+  },
+  general_responsibility_manager: {
+    id: 'general_responsibility_manager',
+    label: '안전보건총괄책임자',
+    legalBasis: '산업안전보건법 제62조(도급인의 안전보건총괄책임자), 시행령 제53조',
+    docType: '지정서',
+    href: '/safety-management/general-responsibility-manager',
+    color: '#0f766e', bg: '#ecfeff',
+    description: '도급인 사업주로서 관계수급인의 산업재해 예방 업무를 총괄 관리하는 책임자를 지정',
+    positions: ['대표이사', '사장', '부사장', '전무이사', '상무이사', '이사', '본부장', '현장소장', '부장'],
+    duties: [
+      '위험성평가의 실시에 관한 사항',
+      '작업의 중지에 관한 사항',
+      '도급 시 산업재해 예방조치에 관한 사항',
+      '산업안전보건관리비의 관계수급인 간 사용 협의·조정 및 집행 감독',
+      '안전인증대상기계등·자율안전확인대상기계등의 사용 여부 확인',
     ],
   },
   supervisor: {

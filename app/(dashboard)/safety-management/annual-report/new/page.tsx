@@ -6,13 +6,21 @@ import { toast } from 'sonner'
 import { ArrowLeft, Save, Loader2, Activity, Plus, Trash2 } from 'lucide-react'
 import { useForm, useFieldArray } from 'react-hook-form'
 
+const DEFAULT_AGENDA_ITEMS = [
+  { seq: 1, title: '안전 및 보건에 관한 경영방침', content: '', resolution: '' },
+  { seq: 2, title: '안전ㆍ보건관리 조직의 구성ㆍ인원 및 역할', content: '', resolution: '' },
+  { seq: 3, title: '안전ㆍ보건 관련 예산 및 시설 현황', content: '', resolution: '' },
+  { seq: 4, title: '안전 및 보건에 관한 전년도 활동실적 및 다음 연도 활동계획', content: '', resolution: '' },
+  { seq: 5, title: '기타', content: '', resolution: '' },
+]
+
 export default function NewBoardReportPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const form = useForm({ defaultValues: {
     report_year: new Date().getFullYear(), report_date: new Date().toISOString().slice(0,10),
     meeting_type: 'board', safety_plan_summary: '', investment_budget: '',
-    agenda_items: [{ seq:1, title:'안전보건계획 수립 및 보고', content:'', resolution:'' }],
+    agenda_items: DEFAULT_AGENDA_ITEMS,
   }})
   const { fields, append, remove } = useFieldArray({ control: form.control, name: 'agenda_items' })
 

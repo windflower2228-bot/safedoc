@@ -14,7 +14,7 @@ const MENU_ITEMS = [
   { href:'/risk/constant',  icon:Activity,   color:'#7c3aed', bg:'#f5f3ff', title:'상시 위험성평가',   badge:'제15조 제4항', desc:'수동입력 + 이미지 AI 분석 지원 | AI 결과 선택 반영 후 상시평가 작성', highlight:false },
   { href:'/risk/tbm',       icon:UsersRound, color:'#6d28d9', bg:'#f5f3ff', title:'T.B.M',             badge:'작업 전 10분', desc:'위험성평가 핵심위험 자동 연계 | 사전 준비·실행·환류 체크 | 참석자 서명·출력', highlight:false },
   { href:'/risk/near-miss', icon:Lightbulb,  color:'#d97706', bg:'#fffbeb', title:'아차사고 보고',     badge:'제5조의2',     desc:'부상으로 이어질 뻔한 상황 기록 | 수시평가 트리거 | 위험성평가 자동 연계', highlight:false },
-  { href:'/risk/regulation',icon:BookOpen,   color:'#0891b2', bg:'#ecfeff', title:'위험성평가 실시규정',badge:'제9조',        desc:'사전준비 단계 | 실시 범위·방법·주기·담당자 규정 | 근로자 참여 계획 수립', highlight:false },
+  { href:'/risk/regulation',icon:BookOpen,   color:'#0891b2', bg:'#ecfeff', title:'위험성평가 실시규정',badge:'제9조',        desc:'사전준비 단계 | 실시 범위·방법·주기·담당자 규정 + 평가방법 선택 통합', highlight:false },
 ]
 
 export default function RiskHubPage() {
@@ -44,7 +44,6 @@ export default function RiskHubPage() {
         <div className="mt-2 flex gap-3 text-[10px]">
           <Link href="/risk/list" className="text-blue-600 hover:underline">← 전체 위험성평가 목록 보기</Link>
           <Link href="/risk/new"  className="text-red-600 hover:underline">+ 새 위험성평가 작성 (빈도강도법)</Link>
-          <Link href="/risk/method" className="text-purple-600 hover:underline">📋 평가방법 선택 (4가지)</Link>
         </div>
       </div>
 

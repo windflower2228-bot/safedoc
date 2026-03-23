@@ -40,7 +40,16 @@ export async function POST(req: NextRequest) {
   const year = new Date().getFullYear()
   const { count } = await admin.from('safety_documents').select('*',{count:'exact',head:true})
     .eq('company_id',profile!.company_id).eq('role_id',body.role_id).gte('created_at',`${year}-01-01`)
-  const roleCode: Record<string,string> = { responsibility_manager:'안책', supervisor:'감독', safety_manager:'안관', health_manager:'보관', safety_health_officer:'안담', industrial_physician:'산보', honorary_inspector:'명예' }
+  const roleCode: Record<string,string> = {
+    responsibility_manager: '안책',
+    general_responsibility_manager: '총책',
+    supervisor: '감독',
+    safety_manager: '안관',
+    health_manager: '보관',
+    safety_health_officer: '안담',
+    industrial_physician: '산보',
+    honorary_inspector: '명예',
+  }
   const code = roleCode[body.role_id] ?? '기타'
   const docType = body.doc_type || '지정서'
   const prefix = docType === '선임서' ? '선임' : docType === '위촉서' ? '위촉' : '지정'

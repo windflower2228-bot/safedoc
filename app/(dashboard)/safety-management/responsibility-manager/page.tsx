@@ -31,14 +31,14 @@ export default function Page() {
           <div>
             <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <FileText className="w-5 h-5" style={{color:'#1d4ed8'}}/>
-              안전보건(총괄)관리책임자
+              {role?.label}
             </h1>
             <p className="text-sm text-gray-400 mt-0.5">{role?.legalBasis} | {role?.docType}</p>
           </div>
         </div>
         <Link href="/safety-management/responsibility-manager/new"
           className="btn-primary text-sm gap-1.5" style={{background:'#1d4ed8'}}>
-          <Plus className="w-4 h-4"/> 안전보건(총괄)관리책임자 작성
+          <Plus className="w-4 h-4"/> {role?.label} 작성
         </Link>
       </div>
 
@@ -53,7 +53,7 @@ export default function Page() {
         ) : items.length === 0 ? (
           <div className="py-14 text-center text-sm text-gray-400">
             <FileText className="w-10 h-10 mx-auto mb-3 opacity-20"/>
-            <p>안전보건(총괄)관리책임자 문서가 없습니다.</p>
+            <p>{role?.label} 문서가 없습니다.</p>
             <Link href="/safety-management/responsibility-manager/new" className="btn-primary mt-4 text-sm inline-flex" style={{background:'#1d4ed8'}}>
               <Plus className="w-4 h-4"/> 작성하기
             </Link>

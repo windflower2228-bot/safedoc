@@ -123,7 +123,7 @@ export default function DesignationForm({ roleId }: Props) {
     setSaving(false)
     if (!res.ok) { toast.error(json.error); return }
     toast.success(`${role.docType}가 작성되었습니다. (${json.data.doc_number})`)
-    router.push(`/safety-management/${roleId.replace('_','-')}`)
+    router.push(`/safety-management/${roleId.replace(/_/g, '-')}`)
   }
 
   // ─── 미리보기 렌더 ─────────────────────────────────────────

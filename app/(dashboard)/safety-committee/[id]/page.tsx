@@ -76,8 +76,8 @@ export default function SafetyCommitteeDetailPage({ params }: { params: { id: st
         <div className="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800 text-sm">참석자 명단</div>
         <div className="grid grid-cols-2 divide-x divide-gray-100">
           {[
-            { side:'management', title: '사용자위원', list:mgmtMembers },
-            { side:'labor', title: '근로자위원', list:laborMembers },
+            { side:'management', title: isCommittee ? '사용자위원' : '도급인', list:mgmtMembers },
+            { side:'labor', title: isCommittee ? '근로자위원' : '수급인', list:laborMembers },
           ].map(g => (
             <div key={g.side} className="p-4">
               <div className="text-xs font-semibold mb-2" style={{color}}>{g.title}</div>
@@ -111,13 +111,13 @@ export default function SafetyCommitteeDetailPage({ params }: { params: { id: st
               <div className="grid grid-cols-2 gap-4 ml-9">
                 {a.content && (
                   <div>
-                    <div className="text-[10px] text-gray-400 mb-1">심의내용</div>
+                    <div className="text-[10px] text-gray-400 mb-1">{isCommittee ? '심의내용' : '내용'}</div>
                     <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">{a.content}</p>
                   </div>
                 )}
                 {a.decision && (
                   <div>
-                    <div className="text-[10px] text-gray-400 mb-1">의결,결정사항</div>
+                    <div className="text-[10px] text-gray-400 mb-1">{isCommittee ? '의결,결정사항' : '심의·결정사항'}</div>
                     <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">{a.decision}</p>
                   </div>
                 )}

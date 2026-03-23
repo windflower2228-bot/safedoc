@@ -194,82 +194,134 @@ export default function SafetyCommitteeNewPage() {
 
         {/* 참석자 명단 */}
         <div className="card overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-gray-100">
-            <div>
-              <h2 className="font-semibold text-gray-800">참석자 명단</h2>
-              <p className="text-[10px] text-gray-400 mt-0.5">
-                좌측 사용자위원, 우측 근로자위원으로 구분하여 작성합니다.
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 divide-x divide-gray-100">
-            {[
-              { side: 'management' as const, title: '사용자위원', indexes: managementIndexes },
-              { side: 'labor' as const, title: '근로자위원', indexes: laborIndexes },
-            ].map((group) => (
-              <div key={group.side}>
-                <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
-                  <span className="text-xs font-semibold text-gray-600">{group.title}</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      addMember({
-                        seq: mFields.length + 1,
-                        name: '',
-                        position: '',
-                        affiliation: isCommittee ? '' : group.side === 'management' ? '도급인' : '수급인',
-                        side: group.side,
-                        is_present: true,
-                      })
-                    }
-                    className="btn-secondary text-xs gap-1"
-                  >
-                    <Plus className="w-3 h-3" /> 추가
-                  </button>
+          {isCommittee ? (
+            <>
+              <div className="px-5 py-3.5 border-b border-gray-100">
+                <div>
+                  <h2 className="font-semibold text-gray-800">참석자 명단</h2>
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    좌측 사용자위원, 우측 근로자위원으로 구분하여 작성합니다.
+                  </p>
                 </div>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100">
-                      {['성명', '직위', '소속', '참석', ''].map((h) => (
-                        <th key={h} className="px-3 py-2 text-left text-[10px] font-semibold text-gray-500">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {group.indexes.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="px-3 py-4 text-center text-xs text-gray-400">
-                          등록된 참석자가 없습니다.
-                        </td>
-                      </tr>
-                    )}
-                    {group.indexes.map((idx) => (
-                      <tr key={mFields[idx]?.id ?? idx}>
-                        <td className="px-3 py-2">
-                          <input {...form.register(`members.${idx}.name`)} placeholder="홍길동" className="input-base text-sm py-1.5" />
-                        </td>
-                        <td className="px-3 py-2">
-                          <input {...form.register(`members.${idx}.position`)} className="input-base text-sm py-1.5" />
-                        </td>
-                        <td className="px-3 py-2">
-                          <input {...form.register(`members.${idx}.affiliation`)} className="input-base text-sm py-1.5" />
-                          <input type="hidden" {...form.register(`members.${idx}.side`)} />
-                        </td>
-                        <td className="px-3 py-2 text-center">
-                          <input type="checkbox" {...form.register(`members.${idx}.is_present`)} className="w-4 h-4 accent-blue-600" />
-                        </td>
-                        <td className="px-2 py-2">
-                          <button type="button" onClick={() => removeMember(idx)} className="p-1 text-gray-300 hover:text-red-500 rounded">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
-            ))}
-          </div>
+              <div className="grid grid-cols-2 divide-x divide-gray-100">
+                {[
+                  { side: 'management' as const, title: '사용자위원', indexes: managementIndexes },
+                  { side: 'labor' as const, title: '근로자위원', indexes: laborIndexes },
+                ].map((group) => (
+                  <div key={group.side}>
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                      <span className="text-xs font-semibold text-gray-600">{group.title}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          addMember({
+                            seq: mFields.length + 1,
+                            name: '',
+                            position: '',
+                            affiliation: '',
+                            side: group.side,
+                            is_present: true,
+                          })
+                        }
+                        className="btn-secondary text-xs gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> 추가
+                      </button>
+                    </div>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-100">
+                          {['성명', '직위', '소속', '참석', ''].map((h) => (
+                            <th key={h} className="px-3 py-2 text-left text-[10px] font-semibold text-gray-500">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {group.indexes.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="px-3 py-4 text-center text-xs text-gray-400">
+                              등록된 참석자가 없습니다.
+                            </td>
+                          </tr>
+                        )}
+                        {group.indexes.map((idx) => (
+                          <tr key={mFields[idx]?.id ?? idx}>
+                            <td className="px-3 py-2">
+                              <input {...form.register(`members.${idx}.name`)} placeholder="홍길동" className="input-base text-sm py-1.5" />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input {...form.register(`members.${idx}.position`)} className="input-base text-sm py-1.5" />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input {...form.register(`members.${idx}.affiliation`)} className="input-base text-sm py-1.5" />
+                              <input type="hidden" {...form.register(`members.${idx}.side`)} />
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <input type="checkbox" {...form.register(`members.${idx}.is_present`)} className="w-4 h-4 accent-blue-600" />
+                            </td>
+                            <td className="px-2 py-2">
+                              <button type="button" onClick={() => removeMember(idx)} className="p-1 text-gray-300 hover:text-red-500 rounded">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+                <div>
+                  <h2 className="font-semibold text-gray-800">참석자 명단</h2>
+                  <p className="text-[10px] text-gray-400 mt-0.5">도급인/수급인 구분으로 참석자를 관리합니다.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => addMember({ seq:mFields.length+1, name:'', position:'', affiliation:'도급인', side:'management', is_present:true })}
+                  className="btn-secondary text-xs gap-1"
+                >
+                  <Plus className="w-3 h-3"/> 추가
+                </button>
+              </div>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    {['성명','직위','소속','구분(도급/수급)','참석',''].map((h) => (
+                      <th key={h} className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {mFields.map((f, idx) => (
+                    <tr key={f.id}>
+                      <td className="px-3 py-2"><input {...form.register(`members.${idx}.name`)} placeholder="홍길동" className="input-base text-sm py-1.5"/></td>
+                      <td className="px-3 py-2"><input {...form.register(`members.${idx}.position`)} className="input-base text-sm py-1.5"/></td>
+                      <td className="px-3 py-2"><input {...form.register(`members.${idx}.affiliation`)} className="input-base text-sm py-1.5"/></td>
+                      <td className="px-3 py-2">
+                        <select {...form.register(`members.${idx}.side`)} className="input-base text-sm py-1.5">
+                          <option value="management">도급인</option>
+                          <option value="labor">수급인</option>
+                        </select>
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <input type="checkbox" {...form.register(`members.${idx}.is_present`)} className="w-4 h-4 accent-blue-600"/>
+                      </td>
+                      <td className="px-2 py-2">
+                        <button type="button" onClick={() => removeMember(idx)} className="p-1 text-gray-300 hover:text-red-500 rounded">
+                          <Trash2 className="w-3.5 h-3.5"/>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
         </div>
 
         {/* 안건 */}
@@ -299,11 +351,11 @@ export default function SafetyCommitteeNewPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3 ml-9">
                   <div>
-                    <label className="label-base">심의내용</label>
+                    <label className="label-base">{isCommittee ? '심의내용' : '내용'}</label>
                     <textarea {...form.register(`agenda_items.${idx}.content`)} rows={3} className="input-base resize-none text-sm"/>
                   </div>
                   <div>
-                    <label className="label-base">의결,결정사항</label>
+                    <label className="label-base">{isCommittee ? '의결,결정사항' : '심의·결정사항'}</label>
                     <textarea {...form.register(`agenda_items.${idx}.decision`)} rows={3} className="input-base resize-none text-sm"/>
                   </div>
                 </div>

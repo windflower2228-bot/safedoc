@@ -34,7 +34,6 @@ const NAV: NavGroup[] = [
     href:'/risk',
     children:[
       { href:'/risk/regulation', label:'위험성평가 실시규정', icon:BookOpen    },
-      { href:'/risk/method',     label:'평가방법 선택',      icon:CheckSquare },
       { href:'/risk/initial',    label:'최초 위험성평가',   icon:FileSearch   },
       { href:'/risk/occasional', label:'수시 위험성평가',   icon:RefreshCw    },
       { href:'/risk/periodic',   label:'정기 위험성평가',   icon:Calendar     },
@@ -49,7 +48,8 @@ const NAV: NavGroup[] = [
     href:'/safety-management',
     children:[
       { href:'/safety-management/annual-report',         label:'연간 이사회 보고 및 승인',     icon:Activity   },
-      { href:'/safety-management/responsibility-manager',label:'안전보건(총괄)관리책임자',      icon:Stamp      },
+      { href:'/safety-management/responsibility-manager',label:'안전보건관리책임자',            icon:Stamp      },
+      { href:'/safety-management/general-responsibility-manager',label:'안전보건총괄책임자',      icon:Stamp      },
       { href:'/safety-management/supervisor',            label:'관리감독자',                   icon:Stamp      },
       { href:'/safety-management/safety-manager',        label:'안전관리자',                   icon:Stamp      },
       { href:'/safety-management/health-manager',        label:'보건관리자',                   icon:Stamp      },
