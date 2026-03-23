@@ -81,6 +81,7 @@ const DIAGRAMS: Record<MenuKey, DiagramConfig> = {
     centerSub: '핵심 허브 문서',
     autoLinks: [
       { label: '안전보건교육일지', href: '/documents/education', desc: '유해위험요인 자동 반영', tone: 'right_warm' },
+      { label: 'T.B.M', href: '/risk/tbm', desc: '작업 전 안전점검회의 연계', tone: 'right_warm' },
       { label: '작업계획서', href: '/documents/workplan', desc: '감소대책 자동 입력', tone: 'right_warm' },
       { label: '순회점검일지', href: '/documents/inspection', desc: '위험요인 선택 삽입', tone: 'right_warm' },
       { label: '협의체 회의록', href: '/documents/committee', desc: '안건/조치사항 연결', tone: 'right_warm' },
