@@ -585,7 +585,14 @@ export default function MenuLinkagePanel() {
             <span className="inline-block w-2 h-2 rounded-full bg-[#5d5ab8]" />
             현재 메뉴 연계도
           </span>
-          <span className="text-sm font-semibold text-gray-900">{diagram.title}</span>
+          {isRiskDiagram ? (
+            <>
+              <span className="text-xs text-[#d3d1c7]">·</span>
+              <span className="text-[13px] font-medium text-[#3d3d3a]">{diagram.title}</span>
+            </>
+          ) : (
+            <span className="text-sm font-semibold text-gray-900">{diagram.title}</span>
+          )}
         </div>
         {open ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
       </button>
