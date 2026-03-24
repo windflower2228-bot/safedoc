@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { ArrowLeft, Save, Loader2, BarChart3, Plus, Trash2 } from 'lucide-react'
 
-// 산안법 제61조 기반 평가 항목
+// 산안법 제61조 기반 기본 평가 항목(사용자 수정 가능)
 const DEFAULT_EVAL_ITEMS = [
   { category:'산재예방 실적', item:'최근 3년간 산업재해 발생 여부', max_score:20, score:0, note:'' },
   { category:'산재예방 실적', item:'산재예방 계획 수립 여부', max_score:10, score:0, note:'' },
@@ -17,7 +17,6 @@ const DEFAULT_EVAL_ITEMS = [
   { category:'서류·인증', item:'안전보건관리규정 보유 여부', max_score:10, score:0, note:'' },
   { category:'서류·인증', item:'위험성평가 실시 실적', max_score:10, score:0, note:'' },
 ]
-const MAX_TOTAL = DEFAULT_EVAL_ITEMS.reduce((s, i) => s + i.max_score, 0)
 
 export default function NewQualifiedVendorPage() {
   const router = useRouter()
@@ -29,16 +28,40 @@ export default function NewQualifiedVendorPage() {
     eval_items: DEFAULT_EVAL_ITEMS,
     evaluator_name:'', evaluator_position:'',
   }})
-  const { fields } = useFieldArray({ control: form.control, name:'eval_items' })
+  const { fields, append, remove } = useFieldArray({ control: form.control, name:'eval_items' })
   const items = form.watch('eval_items')
-  const total = items.reduce((s: number, i: any) => s + (Number(i.score) || 0), 0)
-  const qualified = total >= MAX_TOTAL * 0.6
+  const total = items.reduce((s: number, i: any) => s + (Number(i?.score) || 0), 0)
+  const maxTotal = items.reduce((s: number, i: any) => s + (Number(i?.max_score) || 0), 0)
+  const qualified = maxTotal > 0 && total >= maxTotal * 0.6
 
   async function onSubmit(data: any) {
     setSaving(true)
+    const normalizedItems = (data.eval_items ?? [])
+      .map((item: any) => {
+        const maxScore = Math.max(0, Number(item.max_score) || 0)
+        const score = Math.min(maxScore, Math.max(0, Number(item.score) || 0))
+        return {
+          category: String(item.category ?? '').trim(),
+          item: String(item.item ?? '').trim(),
+          max_score: maxScore,
+          score,
+          note: String(item.note ?? '').trim(),
+        }
+      })
+      .filter((item: any) => item.category || item.item || item.max_score || item.score || item.note)
+
+    const totalScore = normalizedItems.reduce((sum: number, item: any) => sum + (Number(item.score) || 0), 0)
+    const maxTotalScore = normalizedItems.reduce((sum: number, item: any) => sum + (Number(item.max_score) || 0), 0)
+    const isQualified = maxTotalScore > 0 && totalScore >= maxTotalScore * 0.6
+
     const res = await fetch('/api/subcontract/qualified-vendor', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ ...data, total_score: total, is_qualified: qualified }),
+      body: JSON.stringify({
+        ...data,
+        eval_items: normalizedItems,
+        total_score: totalScore,
+        is_qualified: isQualified,
+      }),
     })
     const json = await res.json()
     setSaving(false)
@@ -77,32 +100,61 @@ export default function NewQualifiedVendorPage() {
         <div className="card overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
             <div><h2 className="font-semibold text-gray-800">안전보건 능력 평가 항목</h2>
-              <p className="text-[10px] text-gray-400 mt-0.5">산안법 제61조 — 60점 이상 시 적격 (만점 {MAX_TOTAL}점)</p></div>
+              <p className="text-[10px] text-gray-400 mt-0.5">산안법 제61조 — 총 배점의 60% 이상 시 적격 (현재 만점 {maxTotal}점)</p></div>
             <div className="text-right">
               <div className="text-lg font-bold" style={{color: qualified?'#16a34a':'#dc2626'}}>{total}점</div>
-              <div className="text-[10px]" style={{color: qualified?'#16a34a':'#dc2626'}}>{qualified?'적격':`부적격 (60% 미만)`}</div>
+              <div className="text-[10px]" style={{color: qualified?'#16a34a':'#dc2626'}}>{qualified?'적격':`부적격 (기준 ${Math.ceil(maxTotal * 0.6)}점)`}</div>
             </div>
           </div>
           <table className="w-full text-xs">
             <thead><tr className="bg-gray-50 border-b border-gray-200">
-              {['분류','평가 항목','배점','취득점수','비고'].map(h => <th key={h} className="px-3 py-2.5 text-left font-semibold text-gray-500">{h}</th>)}
+              {['분류','평가 항목','배점','취득점수','비고','삭제'].map(h => <th key={h} className="px-3 py-2.5 text-left font-semibold text-gray-500">{h}</th>)}
             </tr></thead>
             <tbody className="divide-y divide-gray-100">
               {fields.map((f, idx) => (
                 <tr key={f.id}>
-                  <td className="px-3 py-2 text-gray-500">{items[idx]?.category}</td>
-                  <td className="px-3 py-2 text-gray-800">{items[idx]?.item}</td>
-                  <td className="px-3 py-2 text-center">{items[idx]?.max_score}점</td>
+                  <td className="px-3 py-2">
+                    <input {...form.register(`eval_items.${idx}.category`)} className="input-base py-1 text-xs"/>
+                  </td>
+                  <td className="px-3 py-2">
+                    <input {...form.register(`eval_items.${idx}.item`)} className="input-base py-1 text-xs"/>
+                  </td>
+                  <td className="px-3 py-2">
+                    <input {...form.register(`eval_items.${idx}.max_score`, { valueAsNumber:true })}
+                      type="number" min={0}
+                      className="input-base py-1 text-center w-20"/>
+                  </td>
                   <td className="px-3 py-2">
                     <input {...form.register(`eval_items.${idx}.score`, {valueAsNumber:true})}
-                      type="number" min={0} max={items[idx]?.max_score}
+                      type="number" min={0} max={Math.max(0, Number(items[idx]?.max_score) || 0)}
                       className="input-base py-1 text-center w-20"/>
                   </td>
                   <td className="px-3 py-2"><input {...form.register(`eval_items.${idx}.note`)} className="input-base py-1 text-xs"/></td>
+                  <td className="px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => remove(idx)}
+                      disabled={fields.length === 1}
+                      className="p-1 text-gray-400 hover:text-red-600 disabled:opacity-40"
+                      title="항목 삭제"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <div className="px-5 py-3 border-t border-gray-100 bg-gray-50">
+            <button
+              type="button"
+              onClick={() => append({ category:'', item:'', max_score:0, score:0, note:'' })}
+              className="btn-secondary text-xs px-2.5 py-1.5 gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              평가항목 추가
+            </button>
+          </div>
         </div>
 
         <div className="card p-5">
