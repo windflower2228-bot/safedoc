@@ -12,11 +12,13 @@ import {
 import { clsx } from 'clsx'
 import {
   WORK_PLAN_TYPE_LABELS, WORK_PLAN_LEGAL_BASIS,
-  type WorkPlanRiskItem, type WorkPlanWorker, type WorkPlanType,
+  ANNEX4_WORK_LABELS, ANNEX4_WORK_TO_PLAN_TYPE,
+  type WorkPlanRiskItem, type WorkPlanWorker, type WorkPlanType, type Annex4WorkKey,
 } from '@/types/workplan'
 
 const STEPS = ['기본정보', '위험요인·감소대책', '작업 방법', '작업 인원', '최종 확인']
 const PLAN_TYPES = Object.entries(WORK_PLAN_TYPE_LABELS) as [WorkPlanType, string][]
+const ANNEX4_WORKS = Object.entries(ANNEX4_WORK_LABELS) as [Annex4WorkKey, string][]
 const LEVEL_STYLE: Record<string, { label: string; cls: string }> = {
   high:   { label: '高', cls: 'badge-high' },
   medium: { label: '中', cls: 'badge-medium' },
@@ -26,6 +28,8 @@ const WORKER_ROLES = ['작업 책임자', '작업반장', '작업원', '안전�
 
 interface FormData {
   title:               string
+  annex4_work_key:     Annex4WorkKey
+  plan_round:          number
   plan_type:           WorkPlanType
   work_location:       string
   work_start_date:     string
@@ -56,7 +60,10 @@ export default function NewWorkPlanPage() {
 
   const form = useForm<FormData>({
     defaultValues: {
-      title: '', plan_type: 'other',
+      title: '',
+      annex4_work_key: 'tower_crane_install',
+      plan_round: 1,
+      plan_type: ANNEX4_WORK_TO_PLAN_TYPE.tower_crane_install,
       work_location: '',
       work_start_date: new Date().toISOString().slice(0, 10),
       work_end_date: '',
@@ -121,17 +128,74 @@ export default function NewWorkPlanPage() {
     if (fromRiskId) generate(fromRiskId, false)
   }, [fromRiskId, generate])
 
+  function buildAutoTitle(workKey: Annex4WorkKey, round: number) {
+    return `${ANNEX4_WORK_LABELS[workKey]} 작업계획서 (${round}차)`
+  }
+
+  function buildAnnex4MetaScope(originalScope: string, workKey: Annex4WorkKey, round: number) {
+    const cleanScope = (originalScope ?? '').trim()
+    const body = cleanScope
+      .split('\n')
+      .filter((line) => !line.startsWith('[별표4 대상작업]') && !line.startsWith('[계획서 회차]'))
+      .join('\n')
+      .trim()
+
+    return [
+      `[별표4 대상작업] ${ANNEX4_WORK_LABELS[workKey]}`,
+      `[계획서 회차] ${round}차`,
+      body,
+    ].filter(Boolean).join('\n')
+  }
+
+  useEffect(() => {
+    const key = form.getValues('annex4_work_key')
+    const round = Number(form.getValues('plan_round') || 1)
+    if (!form.getValues('title')) {
+      form.setValue('title', buildAutoTitle(key, round))
+    }
+    if (!form.getValues('legal_basis')) {
+      form.setValue(
+        'legal_basis',
+        `산업안전보건기준에 관한 규칙 제38조 및 [별표 4] / ${WORK_PLAN_LEGAL_BASIS[ANNEX4_WORK_TO_PLAN_TYPE[key]]}`
+      )
+    }
+  }, [form])
+
   async function onSave(status: 'draft' | 'approved') {
     const v = form.getValues()
-    if (!v.title)          { toast.error('작업계획서 제목을 입력해주세요.'); setStep(0); return }
     if (!v.work_location)  { toast.error('작업 장소를 입력해주세요.');       setStep(0); return }
     if (!v.risk_items.length) { toast.error('작업 항목을 1개 이상 입력해주세요.'); setStep(1); return }
+
+    const autoTitle = buildAutoTitle(v.annex4_work_key, Number(v.plan_round) || 1)
+    const finalTitle = (v.title ?? '').trim() || autoTitle
+    const finalScope = buildAnnex4MetaScope(v.work_scope ?? '', v.annex4_work_key, Number(v.plan_round) || 1)
+    const finalLegal = (v.legal_basis ?? '').trim()
+      || `산업안전보건기준에 관한 규칙 제38조 및 [별표 4] / ${WORK_PLAN_LEGAL_BASIS[v.plan_type]}`
 
     setSaving(true)
     const res = await fetch('/api/documents/workplan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...v, source_risk_id: sourceRisk?.id, status }),
+      body: JSON.stringify({
+        source_risk_id: sourceRisk?.id,
+        project_id: undefined,
+        title: finalTitle,
+        plan_type: v.plan_type,
+        work_location: v.work_location,
+        work_start_date: v.work_start_date,
+        work_end_date: v.work_end_date,
+        work_start_time: v.work_start_time,
+        work_end_time: v.work_end_time,
+        work_scope: finalScope,
+        legal_basis: finalLegal,
+        supervisor_name: v.supervisor_name,
+        supervisor_position: v.supervisor_position,
+        supervisor_phone: v.supervisor_phone,
+        safety_summary: v.safety_summary,
+        risk_items: v.risk_items,
+        workers: v.workers,
+        status,
+      }),
     })
     const json = await res.json()
     setSaving(false)
@@ -241,6 +305,49 @@ export default function NewWorkPlanPage() {
               <label className="label-base">작업계획서 제목 *</label>
               <input {...form.register('title')} placeholder="예: 고소 철골 조립 작업계획서"
                 className="input-base" />
+            </div>
+            <div className="col-span-2">
+              <label className="label-base">별표 4 대상작업 선택 *</label>
+              <select
+                {...form.register('annex4_work_key')}
+                onChange={(e) => {
+                  const key = e.target.value as Annex4WorkKey
+                  form.setValue('annex4_work_key', key)
+                  form.setValue('plan_type', ANNEX4_WORK_TO_PLAN_TYPE[key])
+                  const round = Number(form.getValues('plan_round') || 1)
+                  const title = form.getValues('title')
+                  if (!title || title.includes('작업계획서')) {
+                    form.setValue('title', buildAutoTitle(key, round))
+                  }
+                  form.setValue(
+                    'legal_basis',
+                    `산업안전보건기준에 관한 규칙 제38조 및 [별표 4] / ${WORK_PLAN_LEGAL_BASIS[ANNEX4_WORK_TO_PLAN_TYPE[key]]}`
+                  )
+                }}
+                className="input-base"
+              >
+                {ANNEX4_WORKS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+              </select>
+              <p className="text-[11px] text-green-700 mt-1">별표 4 대상작업을 선택하면 작업종류·관계법령이 자동 반영됩니다.</p>
+            </div>
+            <div>
+              <label className="label-base">계획서 회차 *</label>
+              <input
+                {...form.register('plan_round', { valueAsNumber: true })}
+                type="number"
+                min={1}
+                className="input-base"
+                onChange={(e) => {
+                  const round = Number(e.target.value || 1)
+                  form.setValue('plan_round', round)
+                  const key = form.getValues('annex4_work_key')
+                  const title = form.getValues('title')
+                  if (!title || title.includes('작업계획서')) {
+                    form.setValue('title', buildAutoTitle(key, round))
+                  }
+                }}
+              />
+              <p className="text-[11px] text-gray-500 mt-1">동일 작업에 대해 1차/2차 등 여러 계획서를 작성할 수 있습니다.</p>
             </div>
             <div>
               <label className="label-base">작업 종류 *</label>
@@ -571,6 +678,8 @@ export default function NewWorkPlanPage() {
             <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
               {[
                 ['제목',     form.watch('title')],
+                ['별표4 대상작업', ANNEX4_WORK_LABELS[form.watch('annex4_work_key')]],
+                ['계획서 회차', `${form.watch('plan_round')}차`],
                 ['작업 종류', WORK_PLAN_TYPE_LABELS[form.watch('plan_type')]],
                 ['작업 장소', form.watch('work_location')],
                 ['작업 기간', `${form.watch('work_start_date')} ~ ${form.watch('work_end_date')}`],

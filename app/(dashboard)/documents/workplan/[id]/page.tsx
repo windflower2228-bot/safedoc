@@ -16,6 +16,24 @@ const LEVEL_STYLE: Record<string, { label: string; bg: string; text: string }> =
   low:    { label: '低', bg: 'bg-green-50', text: 'text-green-700' },
 }
 
+function extractMeta(scope?: string | null) {
+  const text = scope ?? ''
+  const workLine = text.split('\n').find((line) => line.startsWith('[별표4 대상작업]'))
+  const roundLine = text.split('\n').find((line) => line.startsWith('[계획서 회차]'))
+  return {
+    annex4Work: workLine ? workLine.replace('[별표4 대상작업]', '').trim() : '-',
+    round: roundLine ? roundLine.replace('[계획서 회차]', '').trim() : '-',
+  }
+}
+
+function cleanScope(scope?: string | null) {
+  return (scope ?? '')
+    .split('\n')
+    .filter((line) => !line.startsWith('[별표4 대상작업]') && !line.startsWith('[계획서 회차]'))
+    .join('\n')
+    .trim()
+}
+
 export default async function WorkPlanDetailPage({ params }: Params) {
   const supabase = createClient()
   const { data: wp, error } = await supabase
@@ -43,6 +61,8 @@ export default async function WorkPlanDetailPage({ params }: Params) {
 
   const highItems   = riskItems.filter(i => i.risk_level === 'high')
   const totalWorkers = riskItems.reduce((s, i) => s + (i.worker_count || 0), 0)
+  const meta = extractMeta(doc.work_scope)
+  const displayScope = cleanScope(doc.work_scope)
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -120,6 +140,12 @@ export default async function WorkPlanDetailPage({ params }: Params) {
               <td className="border border-gray-400 px-3 py-2">{doc.work_location}</td>
             </tr>
             <tr>
+              <td className="border border-gray-400 bg-gray-100 font-semibold px-3 py-2 text-center">별표4 대상작업</td>
+              <td className="border border-gray-400 px-3 py-2">{meta.annex4Work}</td>
+              <td className="border border-gray-400 bg-gray-100 font-semibold px-3 py-2 text-center">계획서 회차</td>
+              <td className="border border-gray-400 px-3 py-2">{meta.round}</td>
+            </tr>
+            <tr>
               <td className="border border-gray-400 bg-gray-100 font-semibold px-3 py-2 text-center">작업 책임자</td>
               <td className="border border-gray-400 px-3 py-2">
                 {doc.supervisor_name || '—'}
@@ -141,11 +167,11 @@ export default async function WorkPlanDetailPage({ params }: Params) {
               <td className="border border-gray-400 bg-gray-100 font-semibold px-3 py-2 text-center">관계 법령</td>
               <td className="border border-gray-400 px-3 py-2 text-xs text-gray-600" colSpan={3}>{doc.legal_basis || '—'}</td>
             </tr>
-            {doc.work_scope && (
+            {displayScope && (
               <tr>
                 <td className="border border-gray-400 bg-gray-100 font-semibold px-3 py-2 text-center align-top">작업 개요</td>
                 <td className="border border-gray-400 px-3 py-2 whitespace-pre-wrap text-xs leading-relaxed" colSpan={3}>
-                  {doc.work_scope}
+                  {displayScope}
                 </td>
               </tr>
             )}

@@ -70,6 +70,7 @@ export async function GET(req: NextRequest) {
       id, title, plan_type, work_location,
       work_start_date, work_end_date, status,
       link_type, source_risk_id,
+      work_scope,
       supervisor_name, created_at, updated_at,
       author:user_profiles!author_id(name),
       project:projects(site_name),
@@ -78,7 +79,7 @@ export async function GET(req: NextRequest) {
     .order('work_start_date', { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1)
 
-  if (q)        query = query.ilike('title', `%${q}%`)
+  if (q)        query = query.or(`title.ilike.%${q}%,work_scope.ilike.%${q}%`)
   if (status)   query = query.eq('status', status)
   if (planType) query = query.eq('plan_type', planType)
 

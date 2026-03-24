@@ -21,12 +21,23 @@ type WorkPlanRow = {
   title: string
   plan_type: keyof typeof WORK_PLAN_TYPE_LABELS
   work_location: string
+  work_scope?: string | null
   work_start_date: string
   work_end_date: string
   status: 'draft' | 'approved' | 'archived'
   link_type: 'auto_from_risk' | 'manual'
   supervisor_name?: string | null
   source_risk?: { title?: string | null } | null
+}
+
+function extractMeta(scope?: string | null) {
+  const text = scope ?? ''
+  const workLine = text.split('\n').find((line) => line.startsWith('[별표4 대상작업]'))
+  const roundLine = text.split('\n').find((line) => line.startsWith('[계획서 회차]'))
+  return {
+    annex4Work: workLine ? workLine.replace('[별표4 대상작업]', '').trim() : '-',
+    round: roundLine ? roundLine.replace('[계획서 회차]', '').trim() : '-',
+  }
 }
 
 export default function WorkPlanListPage() {
@@ -95,7 +106,7 @@ export default function WorkPlanListPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                {['문서명', '작업 종류', '작업 기간', '작업 장소', '연계', '상태', ''].map((h) => (
+                {['문서명', '별표4 대상작업', '회차', '작업 종류', '작업 기간', '작업 장소', '연계', '상태', ''].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500">
                     {h}
                   </th>
@@ -106,12 +117,15 @@ export default function WorkPlanListPage() {
               {items.map((item) => {
                 const sc = STATUS_CFG[item.status] ?? STATUS_CFG.draft
                 const Icon = sc.icon
+                const meta = extractMeta(item.work_scope)
                 return (
                   <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-900">{item.title}</div>
                       <div className="text-xs text-gray-400">{item.supervisor_name || '담당자 미입력'}</div>
                     </td>
+                    <td className="px-4 py-3 text-xs text-gray-600">{meta.annex4Work}</td>
+                    <td className="px-4 py-3 text-xs text-gray-600">{meta.round}</td>
                     <td className="px-4 py-3 text-xs text-gray-600">
                       {WORK_PLAN_TYPE_LABELS[item.plan_type] ?? item.plan_type}
                     </td>
