@@ -6,15 +6,15 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { ArrowLeft, Save, Loader2, FileText, Plus, Trash2 } from 'lucide-react'
 
-// 산안법 시행규칙 제79조 기반 제공 정보 항목
+// 산안법 시행규칙 제83조 기반 제공 정보 항목
 const DEFAULT_INFO_ITEMS = [
-  { category:'작업환경 정보', item:'작업장 내 화학물질 종류 및 취급 방법', content:'', doc_attached:false },
-  { category:'작업환경 정보', item:'작업장 내 유해인자 종류 및 노출기준', content:'', doc_attached:false },
-  { category:'안전보건 정보', item:'작업 중 발생할 수 있는 위험요인 및 안전조치', content:'', doc_attached:false },
-  { category:'안전보건 정보', item:'비상시 대피방법 및 비상연락망', content:'', doc_attached:false },
-  { category:'설비·장비 정보', item:'공동 사용 기계·기구 취급 방법 및 안전기준', content:'', doc_attached:false },
-  { category:'설비·장비 정보', item:'작업장 출입구·피난구 위치', content:'', doc_attached:false },
-  { category:'규정·지침', item:'도급인의 안전보건관리규정 및 작업수칙', content:'', doc_attached:false },
+  { category:'유해·위험요인', item:'작업 공정별 유해·위험요인 및 재해예방대책', content:'', doc_attached:false },
+  { category:'화학물질 정보', item:'사용 화학물질의 명칭·유해성/위험성·취급상 주의사항(MSDS 포함)', content:'', doc_attached:false },
+  { category:'설비·장비', item:'사용 기계·기구·설비의 안전수칙 및 점검 상태', content:'', doc_attached:false },
+  { category:'작업방법', item:'작업 절차·작업허가 기준 및 출입통제 사항', content:'', doc_attached:false },
+  { category:'보호구', item:'필요 보호구의 종류·착용 기준·비치 위치', content:'', doc_attached:false },
+  { category:'비상조치', item:'비상상황 대응 절차(대피·응급조치·비상연락망)', content:'', doc_attached:false },
+  { category:'기타', item:'작업 특성상 추가로 제공이 필요한 안전·보건 정보', content:'', doc_attached:false },
 ]
 
 export default function NewSafetyInfoPage() {
@@ -66,7 +66,7 @@ export default function NewSafetyInfoPage() {
         <div className="card overflow-hidden">
           <div className="px-5 py-3.5 border-b border-gray-100">
             <h2 className="font-semibold text-gray-800">제공 정보 항목</h2>
-            <p className="text-[10px] text-gray-400 mt-0.5">산안법 시행규칙 제79조 기반 — 내용 입력 후 저장</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">산안법 시행규칙 제83조 기준 기본항목 — 내용 입력 후 저장</p>
           </div>
           <div className="divide-y divide-gray-100">
             {fields.map((f, idx) => (

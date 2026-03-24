@@ -1380,7 +1380,7 @@ create table public.subcontract_safety_info (
   vendor_name      text not null default '',
   provision_date   date not null,
   work_type        text not null default '',
-  -- 제공 정보 항목 (산안법 시행규칙 제79조)
+  -- 제공 정보 항목 (산안법 시행규칙 제83조)
   info_items       jsonb not null default '[]',
   -- [{ category, item, content, doc_attached }]
   receiver_name    text,    -- 수령자 (수급인 대표)

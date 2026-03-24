@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, FileText, Loader2, Printer } from 'lucide-react'
 import { clsx } from 'clsx'
 import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
@@ -9,6 +10,8 @@ import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
 export default function SafetyInfoDetailPage({ params }: { params: { id: string } }) {
   const [doc, setDoc] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const searchParams = useSearchParams()
+  const shouldAutoPrint = searchParams.get('print') === '1'
 
   useEffect(() => {
     fetch(`/api/subcontract/safety-info/${params.id}`)
@@ -18,6 +21,12 @@ export default function SafetyInfoDetailPage({ params }: { params: { id: string 
         setLoading(false)
       })
   }, [params.id])
+
+  useEffect(() => {
+    if (!loading && doc && shouldAutoPrint) {
+      setTimeout(() => window.print(), 250)
+    }
+  }, [loading, doc, shouldAutoPrint])
 
   if (loading) {
     return (
