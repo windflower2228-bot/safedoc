@@ -8,6 +8,29 @@ import { Save, Loader2, Link2, Plus, Trash2, ClipboardCheck } from 'lucide-react
 import { RESULT_LABEL, type InspectionCheckItem, type InspectionResult } from '@/types/inspection'
 
 const RESULTS = Object.entries(RESULT_LABEL) as [InspectionResult, string][]
+const SITE_TEMPLATE_LABEL = {
+  building: '건축현장 표준서식',
+  civil: '토목현장 표준서식',
+} as const
+type SiteTemplateType = keyof typeof SITE_TEMPLATE_LABEL
+
+const BUILDING_TEMPLATE_ITEMS = [
+  '가설통로/작업발판 설치 상태 확인',
+  '개구부 덮개·안전난간 설치 상태 확인',
+  '비계·동바리·거푸집 변형/이완 여부 확인',
+  '양중작업(타워크레인·호이스트) 작업반경 통제 상태 확인',
+  '전기·용접 작업 화재예방 조치 확인',
+  '보호구(안전모·안전화·안전대) 착용 상태 확인',
+]
+
+const CIVIL_TEMPLATE_ITEMS = [
+  '굴착면 사면 안정 및 붕괴방지 상태 확인',
+  '흙막이 가시설(버팀대·앵커) 변형/이탈 여부 확인',
+  '중장비 작업구역 분리 및 유도자 배치 상태 확인',
+  '토사·자재 적치 및 차량 동선 관리 상태 확인',
+  '가시설 통로·출입통제 및 추락방호 상태 확인',
+  '우천·배수·침수 대비 안전조치 이행 상태 확인',
+]
 
 interface FormData {
   inspection_type: string
@@ -29,12 +52,13 @@ export default function InspectionNewPage() {
   const [saving, setSaving] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [riskInfo, setRiskInfo] = useState<{ id: string; title: string } | null>(null)
-  const [checkItems, setCheckItems] = useState<EditableItem[]>([
-    {
+  const [siteTemplateType, setSiteTemplateType] = useState<SiteTemplateType>('building')
+  const [checkItems, setCheckItems] = useState<EditableItem[]>(() =>
+    BUILDING_TEMPLATE_ITEMS.map((checkContent, idx) => ({
       _lid: newId(),
-      seq: 1,
+      seq: idx + 1,
       category: 'other',
-      check_content: '',
+      check_content: checkContent,
       result: 'pass',
       defect_detail: '',
       action_required: '',
@@ -42,8 +66,8 @@ export default function InspectionNewPage() {
       action_owner: '',
       is_resolved: false,
       source_risk_item_id: null,
-    },
-  ])
+    }))
+  )
 
   const form = useForm<FormData>({
     defaultValues: {
@@ -53,6 +77,28 @@ export default function InspectionNewPage() {
       overall_opinion: '',
     },
   })
+
+  function buildItemsFromTemplate(type: SiteTemplateType): EditableItem[] {
+    const items = type === 'civil' ? CIVIL_TEMPLATE_ITEMS : BUILDING_TEMPLATE_ITEMS
+    return items.map((checkContent, idx) => ({
+      _lid: newId(),
+      seq: idx + 1,
+      category: 'other',
+      check_content: checkContent,
+      result: 'pass' as InspectionResult,
+      defect_detail: '',
+      action_required: '',
+      action_deadline: '',
+      action_owner: '',
+      is_resolved: false,
+      source_risk_item_id: null,
+    }))
+  }
+
+  function applySiteTemplate(type: SiteTemplateType) {
+    setCheckItems(buildItemsFromTemplate(type))
+    toast.success(`${SITE_TEMPLATE_LABEL[type]}을(를) 불러왔습니다. 필요시 항목을 수정해 사용하세요.`)
+  }
 
   useEffect(() => {
     if (!riskId) return
@@ -227,7 +273,7 @@ export default function InspectionNewPage() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="card p-5">
           <h2 className="font-semibold text-gray-800 mb-4">점검 기본정보</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="label-base">점검 일자 *</label>
               <input {...form.register('inspection_date')} type="date" className="input-base" />
@@ -235,6 +281,23 @@ export default function InspectionNewPage() {
             <div>
               <label className="label-base">점검자 성명 *</label>
               <input {...form.register('inspector_name', { required: true })} placeholder="홍길동" className="input-base" />
+            </div>
+            <div>
+              <label className="label-base">표준서식 선택</label>
+              <div className="flex gap-2 items-center">
+                <select
+                  value={siteTemplateType}
+                  onChange={(e) => {
+                    const nextType = e.target.value as SiteTemplateType
+                    setSiteTemplateType(nextType)
+                    applySiteTemplate(nextType)
+                  }}
+                  className="input-base"
+                >
+                  <option value="building">건축현장</option>
+                  <option value="civil">토목현장</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
