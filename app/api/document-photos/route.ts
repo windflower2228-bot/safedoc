@@ -14,6 +14,7 @@ const ALLOWED_CATEGORIES = new Set([
   'risk_occasional',
   'risk_near_miss',
   'safety_committee',
+  'joint_inspection',
   'education_journal',
   'subcontract_pre_work',
   'subcontract_safety_info',

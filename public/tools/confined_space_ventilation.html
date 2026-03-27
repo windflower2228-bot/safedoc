@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>밀폐공간 환기량 산정 시스템</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ================================================================
+     CSS VARIABLES & RESET
+     SafeDoc 라이트 테마
+  ================================================================ */
+  :root {
+    --bg-primary:    #f8fafc;
+    --bg-secondary:  #ffffff;
+    --bg-card:       #ffffff;
+    --bg-input:      #f8fafc;
+    --border:        #e2e8f0;
+    --border-bright: #cbd5e1;
+    --amber:         #7c3aed;
+    --amber-light:   #8b5cf6;
+    --amber-dim:     #c4b5fd;
+    --cyan:          #0891b2;
+    --cyan-dim:      #cffafe;
+    --red:           #dc2626;
+    --red-dim:       #fee2e2;
+    --green:         #059669;
+    --green-dim:     #d1fae5;
+    --text-primary:  #0f172a;
+    --text-secondary:#475569;
+    --text-muted:    #64748b;
+    --shadow:        0 8px 24px rgba(15, 23, 42, 0.06);
+    --radius:        6px;
+    --radius-lg:     10px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'IBM Plex Sans KR', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+    background-image:
+      radial-gradient(ellipse at 10% 0%, rgba(124,58,237,0.08) 0%, transparent 52%),
+      radial-gradient(ellipse at 90% 100%, rgba(8,145,178,0.05) 0%, transparent 50%);
+  }
+
+  /* ================================================================
+     HEADER
+  ================================================================ */
+  header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--amber), #6d28d9);
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    box-shadow: 0 8px 20px rgba(124,58,237,0.25);
+  }
+  .header-text h1 {
+    font-size: 16px; font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+  }
+  .header-text p {
+    font-size: 11px; color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.3px;
+  }
+  .header-badge {
+    margin-left: auto;
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--amber);
+    border: 1px solid var(--amber-dim);
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ================================================================
+     LAYOUT
+  ================================================================ */
+  .main-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .main-container { grid-template-columns: 1fr; }
+  }
+
+  /* ================================================================
+     CARDS & SECTIONS
+  ================================================================ */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .card-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(124,58,237,0.03);
+  }
+  .card-header-icon {
+    width: 28px; height: 28px;
+    background: rgba(245,158,11,0.15);
+    border: 1px solid var(--amber-dim);
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+  }
+  .card-subtitle {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-left: auto;
+  }
+  .card-body {
+    padding: 20px;
+  }
+
+  /* ================================================================
+     FORM SECTIONS
+  ================================================================ */
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--amber);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .form-section { margin-bottom: 24px; }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-row.cols-1 { grid-template-columns: 1fr; }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+
+  label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+  label .unit {
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+  }
+
+  input[type="number"], input[type="text"], select {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-family: 'IBM Plex Sans KR', sans-serif;
+    width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input[type="number"]:focus, input[type="text"]:focus, select:focus {
+    outline: none;
+    border-color: var(--amber);
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+  }
+  input[type="number"]::placeholder { color: var(--text-muted); }
+
+  select option { background: var(--bg-secondary); color: var(--text-primary); }
+
+  /* Checkbox Group */
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .checkbox-item:hover { border-color: var(--border-bright); }
+  .checkbox-item input[type="checkbox"] { display: none; }
+  .checkbox-item .check-box {
+    width: 16px; height: 16px;
+    border: 1px solid var(--border-bright);
+    border-radius: 3px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .checkbox-item input:checked ~ .check-box {
+    background: var(--amber);
+    border-color: var(--amber);
+  }
+  .checkbox-item input:checked ~ .check-box::after { content: '✓'; font-size: 10px; color: #000; font-weight: 700; }
+  .checkbox-item .check-label { font-size: 11px; color: var(--text-secondary); line-height: 1.3; }
+  .checkbox-item input:checked ~ .check-label { color: var(--text-primary); }
+
+  /* Factor inputs */
+  .factor-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .factor-row:last-child { border-bottom: none; }
+  .factor-name { font-size: 11px; color: var(--text-secondary); flex: 1; }
+  .factor-input {
+    width: 70px !important;
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-size: 13px !important;
+    padding: 5px 8px !important;
+  }
+  .factor-badge {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    width: 80px;
+    text-align: right;
+  }
+
+  /* ================================================================
+     BUTTONS
+  ================================================================ */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--amber), #d97706);
+    color: #000;
+    border: none;
+    padding: 13px 24px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    font-family: 'IBM Plex Sans KR', sans-serif;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(245,158,11,0.25);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(245,158,11,0.4);
+  }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.4s;
+  }
+  .btn-primary:hover::before { left: 100%; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    padding: 9px 16px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans KR', sans-serif;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--border-bright); color: var(--text-primary); }
+
+  /* ================================================================
+     RESULT PANEL
+  ================================================================ */
+  #result-panel {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Metric Cards */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .metric-card {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--amber);
+  }
+  .metric-card.cyan::before { background: var(--cyan); }
+  .metric-card.green::before { background: var(--green); }
+  .metric-card.red::before { background: var(--red); }
+  .metric-label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 6px; font-family: 'IBM Plex Mono', monospace; }
+  .metric-value { font-size: 22px; font-weight: 700; color: var(--amber); font-family: 'IBM Plex Mono', monospace; line-height: 1.1; }
+  .metric-card.cyan .metric-value { color: var(--cyan); }
+  .metric-card.green .metric-value { color: var(--green); }
+  .metric-card.red .metric-value { color: var(--red); }
+  .metric-unit { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .metric-sub { font-size: 10px; color: var(--text-secondary); margin-top: 4px; font-family: 'IBM Plex Mono', monospace; }
+
+  /* Formula Box */
+  .formula-box {
+    background: rgba(245,158,11,0.05);
+    border: 1px solid var(--amber-dim);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--amber-light);
+    line-height: 1.8;
+  }
+  .formula-box .formula-title {
+    font-size: 10px;
+    color: var(--amber);
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  /* Result Table */
+  .result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-bottom: 14px;
+  }
+  .result-table th {
+    background: rgba(245,158,11,0.1);
+    color: var(--amber);
+    font-weight: 600;
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+    vertical-align: middle;
+  }
+  .result-table tr:last-child td { border-bottom: none; }
+  .result-table td:first-child { color: var(--text-secondary); font-size: 11px; }
+  .result-table td.val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--cyan);
+  }
+  .result-table td.note { font-size: 10px; color: var(--text-muted); }
+
+  /* Equipment Cards */
+  .equip-grid { display: grid; gap: 10px; margin-bottom: 14px; }
+  .equip-card {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .equip-icon {
+    width: 36px; height: 36px;
+    background: rgba(34,211,238,0.1);
+    border: 1px solid var(--cyan-dim);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .equip-info { flex: 1; }
+  .equip-name { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+  .equip-spec { font-size: 11px; color: var(--text-secondary); font-family: 'IBM Plex Mono', monospace; }
+  .equip-qty {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--cyan);
+    font-family: 'IBM Plex Mono', monospace;
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .equip-qty small { font-size: 10px; color: var(--text-muted); display: block; font-weight: 400; }
+
+  /* Placement diagram */
+  .placement-box {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .placement-diagram {
+    width: 100%;
+    height: 180px;
+    position: relative;
+    margin-bottom: 12px;
+  }
+  .placement-diagram svg { width: 100%; height: 100%; }
+  .placement-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+  }
+  .placement-desc li {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 4px;
+    list-style: none;
+  }
+  .placement-desc li::before { content: '→'; color: var(--amber); flex-shrink: 0; }
+
+  /* Warning Boxes */
+  .warning-section { display: flex; flex-direction: column; gap: 8px; }
+  .warning-box {
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  .warning-box.danger { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+  .warning-box.caution { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.3); color: #fcd34d; }
+  .warning-box.info { background: rgba(34,211,238,0.06); border: 1px solid rgba(34,211,238,0.2); color: #67e8f9; }
+  .warning-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* Summary text */
+  .summary-text {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    border-radius: var(--radius);
+    padding: 14px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.9;
+    margin-bottom: 14px;
+  }
+  .summary-text strong { color: var(--green); }
+
+  /* Pre-ventilation time */
+  .pre-vent-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16,185,129,0.1);
+    border: 1px solid var(--green-dim);
+    color: var(--green);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+
+  /* Sample Buttons */
+  .sample-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .sample-btn {
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans KR', sans-serif;
+    transition: all 0.2s;
+  }
+  .sample-btn:hover { background: rgba(245,158,11,0.1); border-color: var(--amber); color: var(--amber); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  /* Step indicator */
+  .step-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    background: var(--amber);
+    color: #000;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* Risk Level Indicator */
+  .risk-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .risk-low { background: rgba(16,185,129,0.1); border: 1px solid var(--green-dim); color: var(--green); }
+  .risk-med { background: rgba(245,158,11,0.1); border: 1px solid var(--amber-dim); color: var(--amber); }
+  .risk-high { background: rgba(239,68,68,0.1); border: 1px solid var(--red-dim); color: var(--red); }
+
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .form-row.cols-3 { grid-template-columns: 1fr; }
+    .metrics-grid { grid-template-columns: 1fr; }
+    .checkbox-grid { grid-template-columns: 1fr; }
+    header { padding: 12px 16px; }
+    .card-body { padding: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER
+============================================================ -->
+<header>
+  <div class="header-icon">🏭</div>
+  <div class="header-text">
+    <h1>밀폐공간 환기량 자동 산정 시스템</h1>
+    <p>CONFINED SPACE VENTILATION CALCULATOR · MVP v1.0</p>
+  </div>
+  <div class="header-badge">산업안전보건법 기준</div>
+</header>
+
+<!-- ============================================================
+     MAIN LAYOUT
+============================================================ -->
+<div class="main-container">
+
+  <!-- ==================================================
+       LEFT PANEL: INPUT FORM
+  ================================================== -->
+  <div>
+
+    <!-- 샘플 입력 -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">
+        <div class="card-header-icon">📋</div>
+        <span class="card-title">샘플 데이터 불러오기</span>
+      </div>
+      <div class="card-body" style="padding:14px 20px;">
+        <div class="sample-buttons">
+          <button class="sample-btn" onclick="loadSample(1)">① 지하 맨홀 오수작업</button>
+          <button class="sample-btn" onclick="loadSample(2)">② 탱크 내부 도장작업</button>
+          <button class="sample-btn" onclick="loadSample(3)">③ 보일러실 용접작업</button>
+        </div>
+        <p style="font-size:10px;color:var(--text-muted);">샘플을 선택하면 아래 입력값이 자동으로 채워집니다.</p>
+      </div>
+    </div>
+
+    <!-- ① 공간 정보 -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">
+        <div class="step-tag">1</div>
+        <span class="card-title">공간 정보 입력</span>
+        <span class="card-subtitle">SPACE GEOMETRY</span>
+      </div>
+      <div class="card-body">
+
+        <div class="form-section">
+          <div class="section-label">공간 형태</div>
+          <div class="form-row cols-1">
+            <div class="form-group">
+              <label>공간 형태 선택</label>
+              <select id="spaceType" onchange="toggleSpaceInputs()">
+                <option value="rect">직육면체 (창고, 피트, 탱크 등)</option>
+                <option value="cyl">원통형 (사일로, 드럼, 원형 탱크)</option>
+                <option value="irr">불규칙형 (체적 직접 입력)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 직육면체 입력 -->
+        <div id="rectInputs" class="form-section">
+          <div class="section-label">치수 입력</div>
+          <div class="form-row cols-3">
+            <div class="form-group">
+              <label>가로 <span class="unit">(m)</span></label>
+              <input type="number" id="width" placeholder="예: 3.0" step="0.1" min="0">
+            </div>
+            <div class="form-group">
+              <label>세로 <span class="unit">(m)</span></label>
+              <input type="number" id="depth" placeholder="예: 4.0" step="0.1" min="0">
+            </div>
+            <div class="form-group">
+              <label>높이 <span class="unit">(m)</span></label>
+              <input type="number" id="height" placeholder="예: 2.5" step="0.1" min="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- 원통형 입력 -->
+        <div id="cylInputs" class="form-section" style="display:none;">
+          <div class="section-label">치수 입력</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>반지름 <span class="unit">(m)</span></label>
+              <input type="number" id="radius" placeholder="예: 1.5" step="0.1" min="0">
+            </div>
+            <div class="form-group">
+              <label>높이(깊이) <span class="unit">(m)</span></label>
+              <input type="number" id="cylHeight" placeholder="예: 5.0" step="0.1" min="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- 불규칙형 입력 -->
+        <div id="irrInputs" class="form-section" style="display:none;">
+          <div class="section-label">직접 입력</div>
+          <div class="form-row cols-1">
+            <div class="form-group">
+              <label>밀폐공간 체적 <span class="unit">(m³)</span></label>
+              <input type="number" id="directVolume" placeholder="예: 25.0" step="0.1" min="0">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ② 작업 조건 -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">
+        <div class="step-tag">2</div>
+        <span class="card-title">작업 조건</span>
+        <span class="card-subtitle">WORK CONDITIONS</span>
+      </div>
+      <div class="card-body">
+
+        <div class="form-section">
+          <div class="section-label">기본 작업 정보</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>작업 인원 수 <span class="unit">(명)</span></label>
+              <input type="number" id="workers" placeholder="예: 2" min="1" max="50">
+            </div>
+            <div class="form-group">
+              <label>작업 예상 시간 <span class="unit">(분)</span></label>
+              <input type="number" id="workTime" placeholder="예: 120" min="1">
+            </div>
+          </div>
+          <div class="form-row cols-1">
+            <div class="form-group">
+              <label>작업 종류</label>
+              <select id="workType">
+                <option value="inspection">일반 점검 / 단순 출입</option>
+                <option value="cleaning">청소 / 유지보수</option>
+                <option value="sewage">오수·맨홀 작업</option>
+                <option value="painting">도장 작업</option>
+                <option value="welding">용접 / 절단 작업</option>
+                <option value="chemical">화학물질 취급 작업</option>
+                <option value="hot">고온 환경 작업</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>출입구 개수</label>
+              <select id="entrances">
+                <option value="1">1개 (단일 출입구)</option>
+                <option value="2">2개</option>
+                <option value="3">3개 이상</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>환기 방식 기준</label>
+              <select id="ventMethod">
+                <option value="ach">시간당 공기교환횟수 (ACH)</option>
+                <option value="cmm">분당 환기량 기준 (m³/min)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-label">위험 조건 (해당 항목 모두 선택)</div>
+          <div class="checkbox-grid">
+            <label class="checkbox-item">
+              <input type="checkbox" id="riskOxygen">
+              <div class="check-box"></div>
+              <span class="check-label">🫁 산소결핍 위험<br>(18% 미만 우려)</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="riskGas">
+              <div class="check-box"></div>
+              <span class="check-label">☁️ 유해가스 발생<br>가능성</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="riskExplosion">
+              <div class="check-box"></div>
+              <span class="check-label">💥 인화성·폭발성<br>가스 위험</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="riskHeat">
+              <div class="check-box"></div>
+              <span class="check-label">🌡️ 내부 고온<br>(35°C 이상)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-section" style="margin-bottom:0;">
+          <div class="section-label">설비 조건</div>
+          <div class="checkbox-grid">
+            <label class="checkbox-item">
+              <input type="checkbox" id="hasDuct" checked>
+              <div class="check-box"></div>
+              <span class="check-label">🔧 덕트 설치<br>가능</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="hasPower" checked>
+              <div class="check-box"></div>
+              <span class="check-label">⚡ 외부 전원<br>사용 가능</span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ③ 안전계수 설정 (관리자용) -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">
+        <div class="step-tag">3</div>
+        <span class="card-title">안전계수 설정</span>
+        <span class="card-subtitle">SAFETY FACTORS (관리자 수정 가능)</span>
+      </div>
+      <div class="card-body">
+        <div class="factor-row">
+          <span class="factor-name">유해가스 발생 위험</span>
+          <input type="number" class="factor-input" id="factorGas" value="1.3" step="0.1" min="1.0" max="3.0">
+          <span class="factor-badge">권장: 1.2~1.5</span>
+        </div>
+        <div class="factor-row">
+          <span class="factor-name">산소결핍 위험</span>
+          <input type="number" class="factor-input" id="factorOxygen" value="1.2" step="0.1" min="1.0" max="3.0">
+          <span class="factor-badge">권장: 1.2 이상</span>
+        </div>
+        <div class="factor-row">
+          <span class="factor-name">인화성·폭발성 위험</span>
+          <input type="number" class="factor-input" id="factorExplosion" value="1.5" step="0.1" min="1.0" max="3.0">
+          <span class="factor-badge">권장: 1.5 이상</span>
+        </div>
+        <div class="factor-row">
+          <span class="factor-name">고온 작업 환경</span>
+          <input type="number" class="factor-input" id="factorHeat" value="1.2" step="0.1" min="1.0" max="3.0">
+          <span class="factor-badge">권장: 1.1~1.3</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 계산 버튼 -->
+    <button class="btn-primary" onclick="calculate()">
+      ⚙️ 환기량 계산 및 장비 추천 실행
+    </button>
+    <div style="text-align:center;margin-top:10px;">
+      <button class="btn-secondary" onclick="resetForm()">입력값 초기화</button>
+    </div>
+
+  </div>
+
+  <!-- ==================================================
+       RIGHT PANEL: RESULTS
+  ================================================== -->
+  <div>
+    <!-- 결과 패널 (초기 숨김) -->
+    <div id="result-panel">
+
+      <!-- 위험 수준 -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <div class="card-header-icon">⚠️</div>
+          <span class="card-title">위험 수준 평가</span>
+        </div>
+        <div class="card-body">
+          <div id="riskIndicator"></div>
+          <div id="summaryText" class="summary-text"></div>
+          <div id="preVentTime" class="pre-vent-badge"></div>
+        </div>
+      </div>
+
+      <!-- 계산 결과 핵심 수치 -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <div class="card-header-icon">📐</div>
+          <span class="card-title">계산 결과 핵심 수치</span>
+        </div>
+        <div class="card-body">
+          <div class="metrics-grid" id="metricsGrid"></div>
+          <div class="formula-box" id="formulaBox"></div>
+          <table class="result-table" id="resultTable">
+            <thead>
+              <tr>
+                <th>항목</th>
+                <th>값</th>
+                <th>단위</th>
+                <th>비고</th>
+              </tr>
+            </thead>
+            <tbody id="resultTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 추천 환기장치 -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <div class="card-header-icon">🌀</div>
+          <span class="card-title">추천 환기장치</span>
+          <span class="card-subtitle">EQUIPMENT RECOMMENDATION</span>
+        </div>
+        <div class="card-body">
+          <div class="equip-grid" id="equipGrid"></div>
+        </div>
+      </div>
+
+      <!-- 배치 권장안 -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <div class="card-header-icon">🗺️</div>
+          <span class="card-title">환기장치 배치 권장안</span>
+          <span class="card-subtitle">PLACEMENT GUIDE</span>
+        </div>
+        <div class="card-body">
+          <div class="placement-box">
+            <div class="placement-diagram" id="placementDiagram"></div>
+            <ul class="placement-desc" id="placementDesc"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 경고 및 주의문구 -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <div class="card-header-icon">🚨</div>
+          <span class="card-title">안전 경고 및 주의사항</span>
+          <span class="card-subtitle">SAFETY WARNINGS</span>
+        </div>
+        <div class="card-body">
+          <div class="warning-section" id="warningSection"></div>
+          <hr class="divider">
+          <div class="warning-box info">
+            <span class="warning-icon">ℹ️</span>
+            <span>본 프로그램의 계산 결과는 <strong>참고용 추천</strong>입니다. 실제 작업 시에는 산업안전보건법 및 관련 기준에 따라 <strong>자격 있는 관리자가 최종 판단</strong>해야 하며, 현장 측정 결과를 우선합니다.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 초기 안내 (결과 없을 때) -->
+    <div id="empty-state" class="card">
+      <div class="card-body" style="text-align:center;padding:60px 20px;">
+        <div style="font-size:60px;margin-bottom:16px;opacity:0.3;">🏭</div>
+        <p style="color:var(--text-secondary);font-size:14px;margin-bottom:8px;">좌측에 밀폐공간 정보를 입력하고</p>
+        <p style="color:var(--text-muted);font-size:12px;margin-bottom:20px;line-height:1.8;">
+          [환기량 계산 및 장비 추천 실행] 버튼을 누르면<br>
+          체적, 환기량, 추천 장비, 배치안이 자동으로 산출됩니다.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:6px;max-width:260px;margin:0 auto;text-align:left;">
+          <div style="font-size:11px;color:var(--text-muted);display:flex;gap:8px;align-items:center;">
+            <span style="color:var(--amber);">✓</span> 체적 자동 계산 (직육면체/원통형/불규칙)
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);display:flex;gap:8px;align-items:center;">
+            <span style="color:var(--amber);">✓</span> 작업 종류별 권장 ACH/CMM 자동 적용
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);display:flex;gap:8px;align-items:center;">
+            <span style="color:var(--amber);">✓</span> 위험 조건별 안전계수 가중 적용
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);display:flex;gap:8px;align-items:center;">
+            <span style="color:var(--amber);">✓</span> 송풍기/배풍기 수량 및 덕트 추천
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);display:flex;gap:8px;align-items:center;">
+            <span style="color:var(--amber);">✓</span> 급기/배기 위치 배치 가이드
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   밀폐공간 환기량 산정 계산 엔진
+   Confined Space Ventilation Calculator - Core Logic
+   
+   기준: 산업안전보건기준에 관한 규칙, ACGIH, OSHA 29 CFR 1910.146
+================================================================ */
+
+/* ================================================================
+   1. 작업 종류별 기준 환기횟수(ACH) 데이터베이스
+      - 출처: 산업안전보건법, OSHA, ACGIH 가이드라인 참고
+      - ach: 시간당 공기교환횟수 (Air Changes per Hour)
+      - cmm_per_worker: 작업자 1인당 분당 환기량 (m³/min)
+      - label: 표시명
+================================================================ */
+const WORK_TYPE_DB = {
+  inspection: {
+    label: '일반 점검 / 단순 출입',
+    ach: 10,               // 시간당 10회 교환 (최소 기준)
+    cmm_per_worker: 0.15,  // 1인당 0.15 m³/min
+    riskLevel: 'low',
+    note: 'OSHA 최소 기준 적용'
+  },
+  cleaning: {
+    label: '청소 / 유지보수',
+    ach: 15,
+    cmm_per_worker: 0.25,
+    riskLevel: 'low',
+    note: '일반 청소 기준'
+  },
+  sewage: {
+    label: '오수·맨홀 작업',
+    ach: 20,
+    cmm_per_worker: 0.35,
+    riskLevel: 'med',
+    note: '황화수소(H₂S), 메탄(CH₄) 발생 위험 반영'
+  },
+  painting: {
+    label: '도장 작업',
+    ach: 30,
+    cmm_per_worker: 0.5,
+    riskLevel: 'high',
+    note: '유기용제 증기 발생, ACGIH TLV 기준 강화 적용'
+  },
+  welding: {
+    label: '용접 / 절단 작업',
+    ach: 25,
+    cmm_per_worker: 0.45,
+    riskLevel: 'high',
+    note: '용접 흄, 금속 산화물, CO 발생 고려'
+  },
+  chemical: {
+    label: '화학물질 취급 작업',
+    ach: 30,
+    cmm_per_worker: 0.5,
+    riskLevel: 'high',
+    note: '물질별 TLV 기준, 높은 기준 적용'
+  },
+  hot: {
+    label: '고온 환경 작업',
+    ach: 20,
+    cmm_per_worker: 0.35,
+    riskLevel: 'med',
+    note: '열 스트레스 저감을 위한 추가 환기 포함'
+  }
+};
+
+/* ================================================================
+   2. 환기장치 장비 데이터베이스
+      - cmm: 정격 풍량 (m³/min)
+      - type: supply(급기) / exhaust(배기) / both(겸용)
+================================================================ */
+const EQUIPMENT_DB = [
+  { id: 'portable_sm',  name: '소형 휴대용 송풍기',   cmm: 8,   icon: '🌀', type: 'supply',  duct_dia: '200mm', note: '협소 공간·맨홀 적합, 방폭형 옵션 있음' },
+  { id: 'portable_md',  name: '중형 휴대용 송풍기',   cmm: 20,  icon: '🌀', type: 'supply',  duct_dia: '300mm', note: '일반 탱크·지하실 적합' },
+  { id: 'portable_lg',  name: '대형 휴대용 송풍기',   cmm: 40,  icon: '🌀', type: 'supply',  duct_dia: '400mm', note: '대형 저장조·선박 창고 적합' },
+  { id: 'exhaust_sm',   name: '소형 배풍기(배기팬)',  cmm: 10,  icon: '💨', type: 'exhaust', duct_dia: '200mm', note: '유해가스 배출, 역류 방지 댐퍼 권장' },
+  { id: 'exhaust_md',   name: '중형 배풍기(배기팬)',  cmm: 25,  icon: '💨', type: 'exhaust', duct_dia: '300mm', note: '도장·용접 현장 배기 적합' },
+  { id: 'expproof_sm',  name: '방폭형 소형 송풍기',   cmm: 8,   icon: '🔴', type: 'supply',  duct_dia: '200mm', note: '인화성·폭발성 가스 현장 필수 사용' },
+  { id: 'expproof_md',  name: '방폭형 중형 송풍기',   cmm: 20,  icon: '🔴', type: 'supply',  duct_dia: '300mm', note: 'ATEX/KCS 인증, 도장·화학물질 작업 적합' },
+  { id: 'axial_fan',    name: '축류팬(급배기 겸용)',  cmm: 15,  icon: '🔄', type: 'both',    duct_dia: '250mm', note: '출입구 1개 시 전환식 운용 가능' },
+];
+
+/* ================================================================
+   3. 공간 형태 전환 함수
+================================================================ */
+function toggleSpaceInputs() {
+  const type = document.getElementById('spaceType').value;
+  document.getElementById('rectInputs').style.display = type === 'rect' ? '' : 'none';
+  document.getElementById('cylInputs').style.display  = type === 'cyl'  ? '' : 'none';
+  document.getElementById('irrInputs').style.display  = type === 'irr'  ? '' : 'none';
+}
+
+/* ================================================================
+   4. 체적 계산 함수
+   @returns {Object} { volume: number, formula: string }
+================================================================ */
+function calcVolume() {
+  const type = document.getElementById('spaceType').value;
+  let volume = 0, formula = '';
+
+  if (type === 'rect') {
+    const w = parseFloat(document.getElementById('width').value)  || 0;
+    const d = parseFloat(document.getElementById('depth').value)  || 0;
+    const h = parseFloat(document.getElementById('height').value) || 0;
+    volume  = w * d * h;
+    formula = `V = 가로(${w}m) × 세로(${d}m) × 높이(${h}m) = ${volume.toFixed(2)} m³`;
+  } else if (type === 'cyl') {
+    const r = parseFloat(document.getElementById('radius').value)    || 0;
+    const h = parseFloat(document.getElementById('cylHeight').value) || 0;
+    volume  = Math.PI * r * r * h;
+    formula = `V = π × r²(${r}m) × h(${h}m) = 3.14159 × ${(r*r).toFixed(2)} × ${h} = ${volume.toFixed(2)} m³`;
+  } else {
+    volume  = parseFloat(document.getElementById('directVolume').value) || 0;
+    formula = `V = 직접 입력 = ${volume.toFixed(2)} m³`;
+  }
+
+  return { volume, formula };
+}
+
+/* ================================================================
+   5. 기본 환기량 계산 함수
+   @param {number} volume - 체적 (m³)
+   @param {string} workType - 작업 종류
+   @param {number} workers - 작업 인원
+   @param {string} method - 'ach' 또는 'cmm'
+   @returns {Object} 환기량 계산 상세
+================================================================ */
+function calcBaseVentilation(volume, workType, workers, method) {
+  const db = WORK_TYPE_DB[workType];
+
+  let baseVent_cmm = 0; // 기본 필요 환기량 (m³/min)
+  let achUsed = db.ach;
+  let formulaText = '';
+
+  if (method === 'ach') {
+    // ACH 기준: Q(m³/h) = V × ACH → Q(m³/min) = V × ACH / 60
+    const q_hour = volume * achUsed;
+    baseVent_cmm  = q_hour / 60;
+    formulaText   = `ACH 기준: Q = V(${volume.toFixed(1)}m³) × ACH(${achUsed}회/h) ÷ 60 = ${baseVent_cmm.toFixed(2)} m³/min`;
+  } else {
+    // 인원 기준: Q = 작업자 수 × 1인당 환기량
+    const workerVent = workers * db.cmm_per_worker;
+    // ACH 기준 최솟값도 확인하여 더 큰 값 적용
+    const achVent    = (volume * achUsed) / 60;
+    baseVent_cmm     = Math.max(workerVent, achVent);
+    formulaText      = `인원 기준: ${workers}명 × ${db.cmm_per_worker} m³/min = ${workerVent.toFixed(2)} m³/min\n`;
+    formulaText     += `ACH 기준: ${volume.toFixed(1)} × ${achUsed} ÷ 60 = ${achVent.toFixed(2)} m³/min\n`;
+    formulaText     += `적용값 (큰 값 선택): ${baseVent_cmm.toFixed(2)} m³/min`;
+  }
+
+  return {
+    baseVent_cmm,
+    achUsed,
+    formulaText,
+    workLabel: db.label,
+    riskLevel: db.riskLevel,
+    note: db.note
+  };
+}
+
+/* ================================================================
+   6. 안전계수 적용 함수
+   @returns {Object} { totalFactor, breakdown, finalVent_cmm }
+================================================================ */
+function applyFactors(baseVent_cmm) {
+  const riskOxygen    = document.getElementById('riskOxygen').checked;
+  const riskGas       = document.getElementById('riskGas').checked;
+  const riskExplosion = document.getElementById('riskExplosion').checked;
+  const riskHeat      = document.getElementById('riskHeat').checked;
+
+  const fGas      = parseFloat(document.getElementById('factorGas').value)      || 1.0;
+  const fOxygen   = parseFloat(document.getElementById('factorOxygen').value)   || 1.0;
+  const fExplosion= parseFloat(document.getElementById('factorExplosion').value) || 1.0;
+  const fHeat     = parseFloat(document.getElementById('factorHeat').value)     || 1.0;
+
+  // 독립 안전계수를 곱셈이 아닌 최대값+누적 방식으로 적용
+  // (곱셈 적용 시 과도하게 증가할 수 있으므로 최대값 기준으로 주 계수 적용 후 나머지 합산)
+  let factors = [];
+  let totalFactor = 1.0;
+
+  if (riskGas) {
+    factors.push({ label: '유해가스 위험', factor: fGas });
+    totalFactor = Math.max(totalFactor, fGas);
+  }
+  if (riskOxygen) {
+    factors.push({ label: '산소결핍 위험', factor: fOxygen });
+    totalFactor = Math.max(totalFactor, fOxygen);
+  }
+  if (riskExplosion) {
+    factors.push({ label: '인화성·폭발성 위험', factor: fExplosion });
+    totalFactor = Math.max(totalFactor, fExplosion);
+  }
+  if (riskHeat) {
+    factors.push({ label: '고온 환경', factor: fHeat });
+    totalFactor = Math.max(totalFactor, fHeat);
+  }
+
+  // 2개 이상 위험 요인: 추가 0.1 보정
+  if (factors.length >= 2) totalFactor += (factors.length - 1) * 0.1;
+  // 최대 상한 3.0
+  totalFactor = Math.min(totalFactor, 3.0);
+  // 소수점 2자리
+  totalFactor = Math.round(totalFactor * 100) / 100;
+
+  const finalVent_cmm = baseVent_cmm * totalFactor;
+
+  return { totalFactor, factors, finalVent_cmm };
+}
+
+/* ================================================================
+   7. 환기장치 추천 함수
+   @param {number} finalVent_cmm - 최종 필요 환기량 (m³/min)
+   @param {boolean} needExplosionProof - 방폭형 필요 여부
+   @param {boolean} hasDuct - 덕트 설치 가능 여부
+   @param {number} entrances - 출입구 개수
+   @returns {Array} 추천 장비 목록
+================================================================ */
+function recommendEquipment(finalVent_cmm, needExplosionProof, hasDuct, entrances) {
+  let recommendations = [];
+
+  if (needExplosionProof) {
+    // 방폭형 장비 선택
+    const exppool = EQUIPMENT_DB.filter(e => e.id.startsWith('expproof'));
+    // 필요 대수 계산
+    const baseEquip = exppool[1]; // 중형 기준
+    const qty = Math.ceil(finalVent_cmm / baseEquip.cmm);
+    recommendations.push({
+      ...baseEquip,
+      qty,
+      role: '급기 (방폭형 필수)',
+      totalCMM: baseEquip.cmm * qty,
+      ductLen: hasDuct ? '5~10m (용도에 따라 조정)' : '덕트 없이 출입구 설치'
+    });
+  } else if (finalVent_cmm <= 10) {
+    // 소규모: 소형 1대
+    const e = EQUIPMENT_DB.find(x => x.id === 'portable_sm');
+    recommendations.push({ ...e, qty: 1, role: '급기', totalCMM: e.cmm, ductLen: hasDuct ? '3~8m' : '직접 설치' });
+    if (entrances >= 2) {
+      const ex = EQUIPMENT_DB.find(x => x.id === 'exhaust_sm');
+      recommendations.push({ ...ex, qty: 1, role: '배기', totalCMM: ex.cmm, ductLen: hasDuct ? '2~5m' : '출구 설치' });
+    }
+  } else if (finalVent_cmm <= 25) {
+    // 중규모
+    const supply = EQUIPMENT_DB.find(x => x.id === 'portable_md');
+    const exhaust = EQUIPMENT_DB.find(x => x.id === 'exhaust_sm');
+    recommendations.push({ ...supply, qty: 1, role: '급기', totalCMM: supply.cmm, ductLen: hasDuct ? '5~15m' : '출입구 설치' });
+    if (entrances >= 2) {
+      recommendations.push({ ...exhaust, qty: 1, role: '배기', totalCMM: exhaust.cmm, ductLen: hasDuct ? '3~8m' : '출구 설치' });
+    } else {
+      // 출입구 1개: 축류팬 전환식 또는 에어튜브 방식
+      const axial = EQUIPMENT_DB.find(x => x.id === 'axial_fan');
+      recommendations.push({ ...axial, qty: 1, role: '급배기 전환 운용', totalCMM: axial.cmm, ductLen: '출입구에 직접 설치 (에어튜브 권장)' });
+    }
+  } else if (finalVent_cmm <= 50) {
+    // 대규모
+    const supply  = EQUIPMENT_DB.find(x => x.id === 'portable_lg');
+    const exhaust = EQUIPMENT_DB.find(x => x.id === 'exhaust_md');
+    const sQty = Math.ceil(finalVent_cmm / supply.cmm);
+    const eQty = Math.ceil(finalVent_cmm / exhaust.cmm);
+    recommendations.push({ ...supply,  qty: sQty, role: '급기', totalCMM: supply.cmm * sQty,   ductLen: hasDuct ? '10~20m' : '출입구 설치' });
+    recommendations.push({ ...exhaust, qty: eQty, role: '배기', totalCMM: exhaust.cmm * eQty,  ductLen: hasDuct ? '5~15m' : '출구 설치' });
+  } else {
+    // 초대형: 복수 대형 장비
+    const supply  = EQUIPMENT_DB.find(x => x.id === 'portable_lg');
+    const exhaust = EQUIPMENT_DB.find(x => x.id === 'exhaust_md');
+    const sQty = Math.ceil(finalVent_cmm / supply.cmm);
+    const eQty = Math.ceil(finalVent_cmm / exhaust.cmm);
+    recommendations.push({ ...supply,  qty: sQty, role: '급기', totalCMM: supply.cmm * sQty,   ductLen: hasDuct ? '15~30m (구간별 분배)' : '출입구 설치' });
+    recommendations.push({ ...exhaust, qty: eQty, role: '배기', totalCMM: exhaust.cmm * eQty,  ductLen: hasDuct ? '10~20m' : '다점 배기' });
+  }
+
+  return recommendations;
+}
+
+/* ================================================================
+   8. 사전 환기 시간 계산
+   작업 전 최소 3회 이상 교환에 필요한 시간
+================================================================ */
+function calcPreVentTime(volume, finalVent_cmm) {
+  // 작업 전 최소 3회 공기교환 기준 (고위험: 5회)
+  const minExchanges = 3;
+  const minTime = (volume * minExchanges) / finalVent_cmm; // 분
+  return Math.ceil(minTime);
+}
+
+/* ================================================================
+   9. 배치 다이어그램 SVG 생성 함수
+================================================================ */
+function buildPlacementSVG(entrances, workType) {
+  const isHighRisk = ['painting','welding','chemical','sewage'].includes(workType);
+
+  return `
+  <svg viewBox="0 0 420 170" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+    <!-- 배경 -->
+    <rect width="420" height="170" fill="none"/>
+    <!-- 밀폐공간 외곽 -->
+    <rect x="80" y="20" width="260" height="120" rx="4"
+          fill="rgba(26,34,53,0.8)" stroke="#2a3a55" stroke-width="2"/>
+    <text x="210" y="38" text-anchor="middle" fill="#4a5568" font-size="9" letter-spacing="1">CONFINED SPACE</text>
+
+    <!-- 작업자 -->
+    <text x="210" y="100" text-anchor="middle" font-size="22">🧑‍🔧</text>
+    <text x="210" y="115" text-anchor="middle" fill="#94a3b8" font-size="8">작업자</text>
+
+    ${entrances === 1 ? `
+    <!-- 출입구 1개: 좌측 -->
+    <rect x="78" y="68" width="4" height="34" fill="#f59e0b" rx="1"/>
+    <text x="40" y="82" text-anchor="middle" fill="#f59e0b" font-size="8">출입구</text>
+    <text x="40" y="93" text-anchor="middle" fill="#f59e0b" font-size="8">1개소</text>
+
+    <!-- 급기 아이콘 (좌측 상단) -->
+    <text x="18" y="50" font-size="16">🌀</text>
+    <text x="28" y="62" text-anchor="middle" fill="#22d3ee" font-size="8">급기</text>
+    <path d="M 55 48 Q 65 48 78 72" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+
+    <!-- 배기 (같은 출입구 상부) -->
+    <text x="18" y="112" font-size="16">💨</text>
+    <text x="28" y="124" text-anchor="middle" fill="#ef4444" font-size="8">배기</text>
+    <path d="M 78 96 Q 65 100 55 110" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2" marker-end="url(#arr2)"/>
+
+    <text x="210" y="155" text-anchor="middle" fill="#92400e" font-size="8">※ 출입구 1개: 급기·배기 겸용 또는 에어튜브 방식 적용</text>
+    ` : `
+    <!-- 출입구 2개: 좌·우 -->
+    <rect x="78" y="68" width="4" height="34" fill="#f59e0b" rx="1"/>
+    <rect x="338" y="68" width="4" height="34" fill="#f59e0b" rx="1"/>
+
+    <!-- 급기 (좌측) -->
+    <text x="18" y="78" font-size="16">🌀</text>
+    <text x="28" y="90" text-anchor="middle" fill="#22d3ee" font-size="8">급기</text>
+    <path d="M 52 76 L 78 80" fill="none" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- 배기 (우측) -->
+    <text x="382" y="78" font-size="16">💨</text>
+    <text x="392" y="90" text-anchor="middle" fill="#ef4444" font-size="8">배기</text>
+    <path d="M 342 80 L 370 76" fill="none" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+    <!-- 공기흐름 화살표 -->
+    <path d="M 100 85 L 145 85" fill="none" stroke="#22d3ee" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arr)"/>
+    <path d="M 275 85 L 320 85" fill="none" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arr2)"/>
+    <text x="210" y="155" text-anchor="middle" fill="#22d3ee" font-size="8">신선한 공기 흐름 →                          ← 오염 공기 배출</text>
+    `}
+
+    <!-- 고위험 마커 -->
+    ${isHighRisk ? `
+    <rect x="150" y="52" width="120" height="16" rx="3" fill="rgba(239,68,68,0.1)" stroke="rgba(239,68,68,0.3)"/>
+    <text x="210" y="63" text-anchor="middle" fill="#ef4444" font-size="8">⚠ 유해물질 발생 구역 - 환기 강화</text>
+    ` : ''}
+
+    <!-- 화살표 마커 정의 -->
+    <defs>
+      <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#22d3ee"/>
+      </marker>
+      <marker id="arr2" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#ef4444"/>
+      </marker>
+    </defs>
+  </svg>`;
+}
+
+/* ================================================================
+   10. 메인 계산 실행 함수
+================================================================ */
+function calculate() {
+  /* --- 입력값 수집 --- */
+  const workType  = document.getElementById('workType').value;
+  const workers   = parseInt(document.getElementById('workers').value)  || 1;
+  const workTime  = parseInt(document.getElementById('workTime').value) || 60;
+  const method    = document.getElementById('ventMethod').value;
+  const entrances = parseInt(document.getElementById('entrances').value);
+  const hasDuct   = document.getElementById('hasDuct').checked;
+  const hasPower  = document.getElementById('hasPower').checked;
+  const riskExplosion = document.getElementById('riskExplosion').checked;
+
+  /* --- 체적 계산 --- */
+  const { volume, formula: volFormula } = calcVolume();
+  if (volume <= 0) {
+    alert('밀폐공간 체적을 올바르게 입력해주세요.');
+    return;
+  }
+
+  /* --- 기본 환기량 계산 --- */
+  const baseResult = calcBaseVentilation(volume, workType, workers, method);
+
+  /* --- 안전계수 적용 --- */
+  const factorResult = applyFactors(baseResult.baseVent_cmm);
+
+  /* --- 단위 변환 --- */
+  const finalCMM = factorResult.finalVent_cmm;
+  const finalCMH = finalCMM * 60;       // m³/h
+  const finalCFS = finalCMM / 1.699;    // ft³/s (참고용)
+
+  /* --- 사전 환기 시간 --- */
+  const preVentMin = calcPreVentTime(volume, finalCMM);
+
+  /* --- 장비 추천 --- */
+  const equips = recommendEquipment(finalCMM, riskExplosion, hasDuct, entrances);
+
+  /* --- 위험 수준 판정 --- */
+  const riskFactors = [
+    document.getElementById('riskOxygen').checked,
+    document.getElementById('riskGas').checked,
+    riskExplosion,
+    document.getElementById('riskHeat').checked
+  ].filter(Boolean).length;
+
+  let riskClass = 'risk-low', riskText = '🟢 저위험 — 일반적인 환기 조치 적용';
+  if (baseResult.riskLevel === 'high' || riskFactors >= 2) {
+    riskClass = 'risk-high'; riskText = '🔴 고위험 — 강화된 환기 + 보호구 검토 필요';
+  } else if (baseResult.riskLevel === 'med' || riskFactors >= 1) {
+    riskClass = 'risk-med'; riskText = '🟡 중위험 — 지속 모니터링 및 안전계수 적용 환기';
+  }
+
+  /* ================================================================
+     UI 렌더링
+  ================================================================ */
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('result-panel').style.display = 'block';
+
+  /* 위험 수준 */
+  document.getElementById('riskIndicator').innerHTML =
+    `<div class="risk-indicator ${riskClass}">${riskText}</div>`;
+
+  /* 요약 문장 */
+  document.getElementById('summaryText').innerHTML = `
+    <strong>작업 개요:</strong> ${baseResult.workLabel} / 작업 인원 ${workers}명 / 예상 작업시간 ${workTime}분<br>
+    <strong>밀폐공간 체적:</strong> ${volume.toFixed(2)} m³<br>
+    <strong>적용 환기기준:</strong> 시간당 ${baseResult.achUsed}회 공기교환 (ACH ${baseResult.achUsed})<br>
+    <strong>기본 환기량:</strong> ${baseResult.baseVent_cmm.toFixed(2)} m³/min<br>
+    <strong>안전계수 합산:</strong> ×${factorResult.totalFactor} ${factorResult.factors.length > 0 ? '(' + factorResult.factors.map(f=>f.label).join(', ') + ')' : '(위험요인 없음)'}<br>
+    <strong>최종 필요 환기량:</strong> ${finalCMM.toFixed(2)} m³/min = ${finalCMH.toFixed(1)} m³/h
+  `;
+
+  /* 작업 전 환기 시간 */
+  document.getElementById('preVentTime').innerHTML =
+    `⏱ 작업 전 사전 환기 권장시간: 최소 ${preVentMin}분 이상 (공기 3회 교환 기준)`;
+
+  /* 핵심 수치 카드 */
+  document.getElementById('metricsGrid').innerHTML = `
+    <div class="metric-card">
+      <div class="metric-label">VOLUME · 공간 체적</div>
+      <div class="metric-value">${volume.toFixed(1)}</div>
+      <div class="metric-unit">m³</div>
+    </div>
+    <div class="metric-card cyan">
+      <div class="metric-label">BASE FLOW · 기본 환기량</div>
+      <div class="metric-value">${baseResult.baseVent_cmm.toFixed(1)}</div>
+      <div class="metric-unit">m³/min</div>
+      <div class="metric-sub">ACH ${baseResult.achUsed} 기준</div>
+    </div>
+    <div class="metric-card red">
+      <div class="metric-label">SAFETY FACTOR · 안전계수</div>
+      <div class="metric-value">×${factorResult.totalFactor}</div>
+      <div class="metric-unit">${factorResult.factors.length}개 위험 요인 반영</div>
+    </div>
+    <div class="metric-card green">
+      <div class="metric-label">FINAL FLOW · 최종 환기량</div>
+      <div class="metric-value">${finalCMM.toFixed(1)}</div>
+      <div class="metric-unit">m³/min · ${finalCMH.toFixed(0)} m³/h</div>
+    </div>
+  `;
+
+  /* 계산식 표시 */
+  document.getElementById('formulaBox').innerHTML = `
+    <span class="formula-title">📐 계산 과정 (CALCULATION FORMULA)</span>
+    ${volFormula}<br>
+    ${baseResult.formulaText}<br>
+    최종 Q = ${baseResult.baseVent_cmm.toFixed(2)} × ${factorResult.totalFactor}(안전계수) = <strong>${finalCMM.toFixed(2)} m³/min</strong>
+  `;
+
+  /* 결과 상세 표 */
+  const rows = [
+    ['밀폐공간 체적', volume.toFixed(2), 'm³', ''],
+    ['작업종류 기준 ACH', baseResult.achUsed, '회/h', baseResult.note],
+    ['기본 필요 환기량', baseResult.baseVent_cmm.toFixed(2), 'm³/min', `= ${(baseResult.baseVent_cmm*60).toFixed(1)} m³/h`],
+    ['종합 안전계수', factorResult.totalFactor, '배', factorResult.factors.map(f=>`${f.label}(×${f.factor})`).join(', ') || '적용 없음'],
+    ['최종 필요 환기량', finalCMM.toFixed(2), 'm³/min', `= ${finalCMH.toFixed(1)} m³/h`],
+    ['사전 환기 필요시간', preVentMin, '분 이상', '작업 전 최소 3회 공기교환 기준'],
+    ['총 작업시간 환기량', (finalCMM * workTime).toFixed(0), 'm³', `${workTime}분 × ${finalCMM.toFixed(2)} m³/min`],
+  ];
+
+  document.getElementById('resultTableBody').innerHTML = rows.map(([label, val, unit, note]) => `
+    <tr>
+      <td>${label}</td>
+      <td class="val">${val}</td>
+      <td>${unit}</td>
+      <td class="note">${note}</td>
+    </tr>
+  `).join('');
+
+  /* 추천 장비 카드 */
+  document.getElementById('equipGrid').innerHTML = equips.map(e => `
+    <div class="equip-card">
+      <div class="equip-icon">${e.icon}</div>
+      <div class="equip-info">
+        <div class="equip-name">${e.name} <span style="color:var(--amber);font-size:11px;">[${e.role}]</span></div>
+        <div class="equip-spec">
+          정격: ${e.cmm} m³/min · 덕트: ${e.duct_dia}<br>
+          덕트길이: ${e.ductLen}<br>
+          ${e.note}
+        </div>
+      </div>
+      <div class="equip-qty">
+        ${e.qty}<small>대</small>
+      </div>
+    </div>
+  `).join('');
+
+  /* 배치 다이어그램 */
+  document.getElementById('placementDiagram').innerHTML =
+    buildPlacementSVG(entrances, workType);
+
+  const placementItems = [];
+  if (entrances >= 2) {
+    placementItems.push('신선한 공기는 <strong style="color:var(--cyan)">급기팬</strong>을 통해 작업자 측 출입구(후방)에서 공급');
+    placementItems.push('<strong style="color:var(--red)">배기팬</strong>은 반대편 출입구 또는 하부에 설치하여 오염공기를 강제 배출');
+    placementItems.push('급기 덕트는 작업자 호흡 높이(약 1~1.5m)로 향하게 배치');
+    placementItems.push('배기는 도장·용접 오염원 근처 하부 또는 상부에서 포집');
+  } else {
+    placementItems.push('출입구 1개: <strong style="color:var(--amber)">에어튜브 방식</strong> 또는 급배기 전환식 축류팬 권장');
+    placementItems.push('급기 덕트를 출입구에서 공간 내부 깊숙이 삽입 (작업자 위치까지)');
+    placementItems.push('충분히 환기 후 작업 시작, 작업 중에도 지속 가동 유지');
+    placementItems.push('가능하면 임시 개구부(맨홀, 뚜껑 등)를 추가 확보하여 급배기 분리');
+  }
+
+  document.getElementById('placementDesc').innerHTML =
+    placementItems.map(item => `<li><span>${item}</span></li>`).join('');
+
+  /* 경고문구 생성 */
+  const warnings = [];
+
+  // 항상 포함되는 경고
+  warnings.push({ type: 'caution', icon: '📊',
+    text: '작업 전 반드시 산소농도(18~23.5%), 황화수소(H₂S), 일산화탄소(CO), 가연성 가스 농도를 측정하십시오. 측정기는 교정된 것을 사용하고, 작업 중에도 지속 모니터링이 필요합니다.' });
+
+  if (riskExplosion) {
+    warnings.push({ type: 'danger', icon: '💥',
+      text: '인화성·폭발성 가스 위험 — 반드시 방폭형(ATEX/KCS 인증) 환기장비를 사용하십시오. 일반 전동기는 스파크를 발생시켜 폭발의 원인이 될 수 있습니다.' });
+  }
+
+  if (document.getElementById('riskOxygen').checked) {
+    warnings.push({ type: 'danger', icon: '🫁',
+      text: '산소결핍 위험 공간 — 산소농도 18% 미만 또는 확인이 불가능한 경우 공기호흡기(SCBA) 또는 송기마스크를 착용해야 합니다. 환기만으로는 불충분할 수 있습니다.' });
+  }
+
+  if (['painting','chemical','welding'].includes(workType)) {
+    warnings.push({ type: 'danger', icon: '☁️',
+      text: '고농도 유해물질 발생 작업 — 환기량이 충분하더라도 방독마스크 또는 호흡보호구를 반드시 착용하고, 작업시간을 최소화하십시오.' });
+  }
+
+  if (!hasPower) {
+    warnings.push({ type: 'caution', icon: '⚡',
+      text: '전원 사용 불가 환경 — 에어구동식(압축공기) 또는 가솔린 구동 방폭형 환기장치를 검토하십시오. 가솔린 엔진은 반드시 공간 외부에서 가동하십시오.' });
+  }
+
+  warnings.push({ type: 'caution', icon: '👷',
+    text: '감시인 배치 필수 — 밀폐공간 작업 중 외부에 감시인을 배치하고, 이상 징후 발생 시 즉시 대피 신호를 보낼 수 있도록 통신 수단을 확보하십시오.' });
+
+  document.getElementById('warningSection').innerHTML =
+    warnings.map(w => `
+      <div class="warning-box ${w.type}">
+        <span class="warning-icon">${w.icon}</span>
+        <span>${w.text}</span>
+      </div>
+    `).join('');
+
+  /* 스크롤 (모바일) */
+  if (window.innerWidth <= 900) {
+    document.getElementById('result-panel').scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+/* ================================================================
+   11. 샘플 데이터 로드 함수
+================================================================ */
+const SAMPLES = {
+  1: {
+    // 지하 맨홀 오수작업
+    spaceType: 'cyl', radius: 0.8, cylHeight: 3.5,
+    workers: 1, workTime: 90,
+    workType: 'sewage', entrances: 1, ventMethod: 'ach',
+    riskOxygen: true, riskGas: true, riskExplosion: false, riskHeat: false,
+    hasDuct: true, hasPower: true,
+    factorGas: 1.3, factorOxygen: 1.2, factorExplosion: 1.5, factorHeat: 1.2,
+    label: '샘플 ①: 지하 맨홀 오수작업 (반지름 0.8m, 깊이 3.5m)'
+  },
+  2: {
+    // 탱크 도장작업
+    spaceType: 'rect', width: 5, depth: 4, height: 3,
+    workers: 2, workTime: 180,
+    workType: 'painting', entrances: 1, ventMethod: 'ach',
+    riskOxygen: false, riskGas: true, riskExplosion: true, riskHeat: false,
+    hasDuct: true, hasPower: true,
+    factorGas: 1.4, factorOxygen: 1.2, factorExplosion: 1.5, factorHeat: 1.2,
+    label: '샘플 ②: 탱크 내부 도장작업 (5×4×3m, 인화성 위험)'
+  },
+  3: {
+    // 보일러실 용접작업
+    spaceType: 'rect', width: 8, depth: 6, height: 3.5,
+    workers: 3, workTime: 240,
+    workType: 'welding', entrances: 2, ventMethod: 'cmm',
+    riskOxygen: false, riskGas: true, riskExplosion: false, riskHeat: true,
+    hasDuct: true, hasPower: true,
+    factorGas: 1.3, factorOxygen: 1.2, factorExplosion: 1.5, factorHeat: 1.2,
+    label: '샘플 ③: 보일러실 용접작업 (8×6×3.5m, 고온 환경)'
+  }
+};
+
+function loadSample(n) {
+  const s = SAMPLES[n];
+  // 공간 형태
+  document.getElementById('spaceType').value = s.spaceType;
+  toggleSpaceInputs();
+
+  if (s.spaceType === 'rect') {
+    document.getElementById('width').value  = s.width;
+    document.getElementById('depth').value  = s.depth;
+    document.getElementById('height').value = s.height;
+  } else if (s.spaceType === 'cyl') {
+    document.getElementById('radius').value    = s.radius;
+    document.getElementById('cylHeight').value = s.cylHeight;
+  }
+
+  document.getElementById('workers').value    = s.workers;
+  document.getElementById('workTime').value   = s.workTime;
+  document.getElementById('workType').value   = s.workType;
+  document.getElementById('entrances').value  = s.entrances;
+  document.getElementById('ventMethod').value = s.ventMethod;
+
+  document.getElementById('riskOxygen').checked    = s.riskOxygen;
+  document.getElementById('riskGas').checked       = s.riskGas;
+  document.getElementById('riskExplosion').checked = s.riskExplosion;
+  document.getElementById('riskHeat').checked      = s.riskHeat;
+
+  document.getElementById('hasDuct').checked  = s.hasDuct;
+  document.getElementById('hasPower').checked = s.hasPower;
+
+  document.getElementById('factorGas').value      = s.factorGas;
+  document.getElementById('factorOxygen').value   = s.factorOxygen;
+  document.getElementById('factorExplosion').value= s.factorExplosion;
+  document.getElementById('factorHeat').value     = s.factorHeat;
+
+  // 자동 계산
+  calculate();
+}
+
+/* ================================================================
+   12. 폼 초기화
+================================================================ */
+function resetForm() {
+  document.querySelectorAll('input[type="number"], input[type="text"]')
+    .forEach(el => { el.value = ''; });
+  document.querySelectorAll('input[type="checkbox"]')
+    .forEach(el => { el.checked = false; });
+  document.getElementById('hasDuct').checked  = true;
+  document.getElementById('hasPower').checked = true;
+  document.getElementById('spaceType').value  = 'rect';
+  document.getElementById('workType').value   = 'inspection';
+  document.getElementById('ventMethod').value = 'ach';
+  document.getElementById('entrances').value  = '1';
+  document.getElementById('factorGas').value       = '1.3';
+  document.getElementById('factorOxygen').value    = '1.2';
+  document.getElementById('factorExplosion').value = '1.5';
+  document.getElementById('factorHeat').value      = '1.2';
+  toggleSpaceInputs();
+  document.getElementById('result-panel').style.display = 'none';
+  document.getElementById('empty-state').style.display  = '';
+}
+
+/* 초기 실행 */
+toggleSpaceInputs();
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Plus, Wind, ArrowLeft, Loader2 } from 'lucide-react'
+import { Plus, Wind, ArrowLeft, Loader2, Calculator } from 'lucide-react'
 import { clsx } from 'clsx'
 export default function Page() {
   const [items, setItems] = useState<any[]>([])
@@ -20,9 +20,14 @@ export default function Page() {
             <p className="text-sm text-gray-400 mt-0.5">안전보건규칙 제619조 | 밀폐공간 보유 사업장 의무 수립</p>
           </div>
         </div>
-        <Link href="/health-programs/confined-space/new" className="btn-primary text-sm gap-1.5" style={{background:'#7c3aed'}}>
-          <Plus className="w-4 h-4"/> 프로그램 수립
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/health-programs/confined-space/calculator" className="btn-secondary text-sm gap-1.5">
+            <Calculator className="w-4 h-4"/> 자동계산기
+          </Link>
+          <Link href="/health-programs/confined-space/new" className="btn-primary text-sm gap-1.5" style={{background:'#7c3aed'}}>
+            <Plus className="w-4 h-4"/> 프로그램 수립
+          </Link>
+        </div>
       </div>
       <div className="card p-4 mb-4 bg-purple-50/30 border-purple-100 text-xs text-purple-700 leading-relaxed rounded-xl">
         산업안전보건기준에 관한 규칙 제619조: 사업주가 밀폐공간에서 근로자에게 작업을 하도록 하는 경우 ① 밀폐공간 위치 파악 및 관리 ② 유해위험요인 파악 및 관리 ③ 작업 전 확인 절차 ④ 교육훈련 ⑤ 긴급구조계획이 포함된 프로그램을 수립·시행해야 합니다.

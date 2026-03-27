@@ -11,13 +11,11 @@ import {
 import { clsx } from 'clsx'
 import {
   CATEGORY_LABEL, RESULT_LABEL, RESULT_COLOR, DEFAULT_CHECK_ITEMS,
-  PARTICIPANT_ROLE_LABEL,
   type InspectionCheckItem, type InspectionCategory, type InspectionResult,
 } from '@/types/inspection'
 import { generateJointInspectionFromRisk } from '@/lib/linkage/riskToInspection'
 
 const CATEGORIES = Object.entries(CATEGORY_LABEL) as [InspectionCategory, string][]
-const ROLES = Object.entries(PARTICIPANT_ROLE_LABEL)
 
 let _seq = 0
 const uid = () => _seq++
@@ -31,7 +29,7 @@ export default function JointInspectionNewPage() {
   const [generating, setGenerating] = useState(false)
   const [riskInfo,   setRiskInfo]   = useState<{ id: string; title: string } | null>(null)
   const [riskSummary,setRiskSummary]= useState<any>(null)
-  const [checkItems, setCheckItems] = useState<(InspectionCheckItem & { _lid: number })[]>([])
+  const [checkItems, setCheckItems] = useState<(InspectionCheckItem & { _lid: number; _fromTemplate?: boolean })[]>([])
   const [expandedCat,setExpanded]   = useState<string | null>(null)
 
   const form = useForm<any>({
@@ -41,9 +39,9 @@ export default function JointInspectionNewPage() {
       overall_opinion:  '',
       follow_up_date:   '',
       participants: [
-        { seq:1, name:'', position:'안전보건관리책임자', affiliation:'', role:'leader'      },
-        { seq:2, name:'', position:'안전관리자',         affiliation:'', role:'member'      },
-        { seq:3, name:'', position:'근로자 대표',         affiliation:'', role:'worker_rep' },
+        { seq:1, name:'', position:'안전보건관리책임자', affiliation:'', role:'leader', side:'management' },
+        { seq:2, name:'', position:'안전관리자',         affiliation:'', role:'member', side:'management' },
+        { seq:3, name:'', position:'근로자 대표',         affiliation:'', role:'worker_rep', side:'labor'  },
       ],
       improvement_items: [],
     },
@@ -65,9 +63,15 @@ export default function JointInspectionNewPage() {
         form.setValue('inspection_date',  draft.inspection_date)
         form.setValue('inspection_area',  draft.inspection_area)
         form.setValue('overall_opinion',  draft.overall_opinion)
-        form.setValue('participants',     draft.participants)
+        form.setValue(
+          'participants',
+          draft.participants.map((p: any) => ({
+            ...p,
+            side: p.side ?? (p.role === 'worker_rep' ? 'labor' : 'management'),
+          }))
+        )
         form.setValue('improvement_items', draft.improvement_items)
-        setCheckItems(draft.check_items.map(i => ({ ...i, _lid: uid() })))
+        setCheckItems(draft.check_items.map(i => ({ ...i, _lid: uid(), _fromTemplate: false })))
         setRiskInfo({ id: riskId, title: j.data.title })
         setRiskSummary(draft.risk_summary)
         toast.success(`위험성평가 연계 완료 — 점검 항목 ${draft.check_items.length}건 자동 생성`)
@@ -81,15 +85,38 @@ export default function JointInspectionNewPage() {
     setCheckItems(prev => prev.filter(i => i._lid !== lid).map((i, idx) => ({ ...i, seq: idx + 1 })))
   }
   function addDefaultItems(cat: InspectionCategory) {
+    const hasTemplateItems = checkItems.some(i => i.category === cat && i._fromTemplate)
+    if (hasTemplateItems) {
+      setCheckItems(prev =>
+        prev
+          .filter(i => !(i.category === cat && i._fromTemplate))
+          .map((i, idx) => ({ ...i, seq: idx + 1 }))
+      )
+      return
+    }
+
     const templates = DEFAULT_CHECK_ITEMS[cat] ?? []
     const newItems = templates.map(t => ({
       _lid: uid(), seq: 0, category: cat, check_content: t,
       result: 'pass' as InspectionResult, defect_detail: '',
       action_required: '', action_deadline: '', action_owner: '',
       is_resolved: false, source_risk_item_id: null,
+      _fromTemplate: true,
     }))
     setCheckItems(prev => [...prev, ...newItems].map((i, idx) => ({ ...i, seq: idx + 1 })))
   }
+
+  const participants = form.watch('participants') ?? []
+  const managementIndexes = participants.reduce((acc: number[], participant: any, idx: number) => {
+    const side = participant?.side ?? (participant?.role === 'worker_rep' ? 'labor' : 'management')
+    if (side === 'management') acc.push(idx)
+    return acc
+  }, [])
+  const laborIndexes = participants.reduce((acc: number[], participant: any, idx: number) => {
+    const side = participant?.side ?? (participant?.role === 'worker_rep' ? 'labor' : 'management')
+    if (side === 'labor') acc.push(idx)
+    return acc
+  }, [])
 
   const grouped = CATEGORIES.map(([cat, label]) => ({
     cat, label,
@@ -104,8 +131,12 @@ export default function JointInspectionNewPage() {
       ...data,
       source_risk_id:   riskId ?? null,
       risk_summary:     riskSummary,
-      check_items:      checkItems.map(({ _lid, ...rest }) => rest),
-      participants:     data.participants.map((p: any, i: number) => ({ ...p, seq: i + 1 })),
+      check_items:      checkItems.map(({ _lid, _fromTemplate, ...rest }) => rest),
+      participants:     data.participants.map((p: any, i: number) => ({
+        ...p,
+        seq: i + 1,
+        side: p.side ?? (p.role === 'worker_rep' ? 'labor' : 'management'),
+      })),
       improvement_items:data.improvement_items.map((m: any, i: number) => ({ ...m, seq: i + 1 })),
     }
     const res  = await fetch('/api/documents/joint-inspection', {
@@ -193,47 +224,78 @@ export default function JointInspectionNewPage() {
 
         {/* 점검단 구성 */}
         <div className="card overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+          <div className="px-5 py-3.5 border-b border-gray-100">
             <h2 className="font-semibold text-gray-800">점검단 구성</h2>
-            <button type="button"
-              onClick={() => addPart({ seq: partFields.length+1, name:'', position:'', affiliation:'', role:'member' })}
-              className="btn-secondary text-xs gap-1">
-              <Plus className="w-3 h-3" /> 추가
-            </button>
+            <p className="text-[10px] text-gray-400 mt-0.5">
+              좌측 사업주, 우측 근로자로 구분하여 작성합니다.
+            </p>
           </div>
-          <table className="w-full text-sm">
-            <thead><tr className="bg-gray-50 border-b border-gray-100">
-              {['성명','직위','소속','역할',''].map(h => (
-                <th key={h} className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500">{h}</th>
-              ))}
-            </tr></thead>
-            <tbody className="divide-y divide-gray-50">
-              {partFields.map((f, idx) => (
-                <tr key={f.id}>
-                  <td className="px-4 py-2">
-                    <input {...form.register(`participants.${idx}.name`)} placeholder="홍길동" className="input-base text-sm py-1.5" />
-                  </td>
-                  <td className="px-4 py-2">
-                    <input {...form.register(`participants.${idx}.position`)} className="input-base text-sm py-1.5" />
-                  </td>
-                  <td className="px-4 py-2">
-                    <input {...form.register(`participants.${idx}.affiliation`)} placeholder="(주)건설" className="input-base text-sm py-1.5" />
-                  </td>
-                  <td className="px-4 py-2">
-                    <select {...form.register(`participants.${idx}.role`)} className="input-base text-sm py-1.5">
-                      {ROLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2">
-                    <button type="button" onClick={() => removePart(idx)}
-                      className="p-1 text-gray-300 hover:text-red-500 rounded">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x divide-gray-100">
+            {[
+              { side: 'management' as const, title: '사업주', indexes: managementIndexes },
+              { side: 'labor' as const, title: '근로자', indexes: laborIndexes },
+            ].map((group) => (
+              <div key={group.side}>
+                <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                  <span className="text-xs font-semibold text-gray-600">{group.title}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      addPart({
+                        seq: partFields.length + 1,
+                        name: '',
+                        position: '',
+                        affiliation: '',
+                        role: group.side === 'labor' ? 'worker_rep' : 'member',
+                        side: group.side,
+                      })
+                    }
+                    className="btn-secondary text-xs gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> 추가
+                  </button>
+                </div>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-100">
+                      {['성명', '직위', '소속', ''].map((h) => (
+                        <th key={h} className="px-3 py-2 text-left text-[10px] font-semibold text-gray-500">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {group.indexes.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-3 py-4 text-center text-xs text-gray-400">
+                          등록된 점검단이 없습니다.
+                        </td>
+                      </tr>
+                    )}
+                    {group.indexes.map((idx) => (
+                      <tr key={partFields[idx]?.id ?? idx}>
+                        <td className="px-3 py-2">
+                          <input {...form.register(`participants.${idx}.name`)} placeholder="홍길동" className="input-base text-sm py-1.5" />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input {...form.register(`participants.${idx}.position`)} className="input-base text-sm py-1.5" />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input {...form.register(`participants.${idx}.affiliation`)} placeholder="(주)건설" className="input-base text-sm py-1.5" />
+                          <input type="hidden" {...form.register(`participants.${idx}.side`)} />
+                          <input type="hidden" {...form.register(`participants.${idx}.role`)} />
+                        </td>
+                        <td className="px-2 py-2">
+                          <button type="button" onClick={() => removePart(idx)} className="p-1 text-gray-300 hover:text-red-500 rounded">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* 점검 항목 */}
@@ -249,7 +311,12 @@ export default function JointInspectionNewPage() {
             <div className="flex flex-wrap gap-1.5">
               {CATEGORIES.slice(0, 5).map(([cat, label]) => (
                 <button key={cat} type="button" onClick={() => addDefaultItems(cat)}
-                  className="text-xs px-2 py-1 bg-gray-50 text-gray-600 rounded-lg border border-gray-200 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-700 transition-all">
+                  className={clsx(
+                    'text-xs px-2 py-1 rounded-lg border transition-all',
+                    checkItems.some(i => i.category === cat && i._fromTemplate)
+                      ? 'bg-orange-100 text-orange-700 border-orange-300'
+                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-700'
+                  )}>
                   + {label}
                 </button>
               ))}

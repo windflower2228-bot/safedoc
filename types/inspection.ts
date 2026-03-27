@@ -82,7 +82,8 @@ export const INSPECTION_TYPE_LABEL: Record<string,string> = {
 // ─── 합동안전보건점검 ─────────────────────────────────────────
 export interface JointParticipant {
   seq:number; name:string; position:string; affiliation:string
-  role:'leader'|'member'|'worker_rep'|'mgmt_rep'
+  role?:'leader'|'member'|'worker_rep'|'mgmt_rep'
+  side?:'management'|'labor'
 }
 export const PARTICIPANT_ROLE_LABEL: Record<string,string> = {
   leader:'점검단장', member:'점검위원', worker_rep:'근로자 대표', mgmt_rep:'사용자 대표',

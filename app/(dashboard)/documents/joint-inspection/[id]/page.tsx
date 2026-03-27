@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ArrowLeft, Shield, Loader2, Link2, CheckCircle2, BarChart3 } from 'lucide-react'
 import { clsx } from 'clsx'
-import { RESULT_COLOR, RESULT_LABEL, PARTICIPANT_ROLE_LABEL } from '@/types/inspection'
+import DocumentPhotoSection from '@/components/common/DocumentPhotoSection'
 
 export default function JointInspectionDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -37,6 +37,14 @@ export default function JointInspectionDetailPage({ params }: { params: { id: st
   const checkItems    = doc.check_items   ?? []
   const improvements  = doc.improvement_items ?? []
   const failItems     = checkItems.filter((i: any) => i.result === 'fail')
+  const managementParticipants = participants.filter((participant: any) => {
+    const side = participant?.side ?? (participant?.role === 'worker_rep' ? 'labor' : 'management')
+    return side === 'management'
+  })
+  const laborParticipants = participants.filter((participant: any) => {
+    const side = participant?.side ?? (participant?.role === 'worker_rep' ? 'labor' : 'management')
+    return side === 'labor'
+  })
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -105,26 +113,29 @@ export default function JointInspectionDetailPage({ params }: { params: { id: st
 
       {/* 점검단 구성 */}
       <div className="card overflow-hidden mb-4">
-        <div className="ch px-5 py-3.5 border-b border-gray-100"><span className="font-semibold text-gray-800">점검단 구성</span></div>
-        <table className="w-full text-sm">
-          <thead><tr className="bg-gray-50 border-b border-gray-100">
-            {['성명','직위','소속','역할'].map(h => <th key={h} className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500">{h}</th>)}
-          </tr></thead>
-          <tbody className="divide-y divide-gray-50">
-            {participants.map((p: any) => (
-              <tr key={p.seq}>
-                <td className="px-4 py-2.5">{p.name || '—'}</td>
-                <td className="px-4 py-2.5 text-gray-600">{p.position}</td>
-                <td className="px-4 py-2.5 text-gray-500">{p.affiliation || '—'}</td>
-                <td className="px-4 py-2.5">
-                  <span className="text-xs bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full">
-                    {PARTICIPANT_ROLE_LABEL[p.role] ?? p.role}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800 text-sm">점검단 구성</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x divide-gray-100">
+          {[
+            { side: 'management', title: '사업주', list: managementParticipants },
+            { side: 'labor', title: '근로자', list: laborParticipants },
+          ].map((group) => (
+            <div key={group.side} className="p-4">
+              <div className="text-xs font-semibold text-orange-700 mb-2">{group.title}</div>
+              <div className="space-y-1.5">
+                {group.list.length === 0 && (
+                  <div className="text-xs text-gray-400">등록된 점검단이 없습니다.</div>
+                )}
+                {group.list.map((participant: any, index: number) => (
+                  <div key={`${group.side}-${participant.seq ?? index}`} className="flex items-center gap-2 text-xs">
+                    <span className="font-medium">{participant.name || '—'}</span>
+                    <span className="text-gray-500">{participant.position || '—'}</span>
+                    {participant.affiliation && <span className="text-gray-400">({participant.affiliation})</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* 점검 결과 요약 */}
@@ -173,6 +184,12 @@ export default function JointInspectionDetailPage({ params }: { params: { id: st
           <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{doc.overall_opinion}</p>
         </div>
       )}
+
+      <DocumentPhotoSection
+        category="joint_inspection"
+        docId={doc.id}
+        title="합동안전보건점검 첨부 사진"
+      />
     </div>
   )
 }

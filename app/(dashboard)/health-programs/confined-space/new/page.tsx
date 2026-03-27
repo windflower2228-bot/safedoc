@@ -3,7 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { ArrowLeft, Save, Loader2, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Plus, Trash2, Calculator } from 'lucide-react'
 export default function NewPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
@@ -22,16 +22,25 @@ export default function NewPage() {
     router.push('/health-programs/confined-space')
   }
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Link href="/health-programs/confined-space" className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"><ArrowLeft className="w-4 h-4"/></Link>
           <div><h1 className="text-xl font-bold text-gray-900">밀폐공간작업프로그램 수립</h1>
           <p className="text-xs text-gray-400 mt-0.5">안전보건규칙 제619조</p></div>
         </div>
-        <button onClick={save} disabled={saving} className="btn-primary" style={{background:'#7c3aed'}}>
-          {saving?<Loader2 className="w-4 h-4 animate-spin"/>:<Save className="w-4 h-4"/>}저장
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/health-programs/confined-space/calculator"
+            className="btn-secondary gap-1.5 text-sm"
+          >
+            <Calculator className="w-4 h-4" />
+            자동계산기
+          </Link>
+          <button onClick={save} disabled={saving} className="btn-primary" style={{background:'#7c3aed'}}>
+            {saving?<Loader2 className="w-4 h-4 animate-spin"/>:<Save className="w-4 h-4"/>}저장
+          </button>
+        </div>
       </div>
       <div className="space-y-4">
         <div className="card p-5">
@@ -41,6 +50,17 @@ export default function NewPage() {
             <div><label className="label-base">시행일</label><input type="date" value={data.effective_date} onChange={e=>setData((d: any)=>({...d,effective_date:e.target.value}))} className="input-base"/></div>
             <div><label className="label-base">담당자</label><input value={data.responsible||''} onChange={e=>setData((d: any)=>({...d,responsible:e.target.value}))} className="input-base"/></div>
           </div>
+        </div>
+        <div className="card overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-gray-100">
+            <h2 className="font-semibold text-gray-800">밀폐공간 자동계산</h2>
+            <p className="text-[11px] text-gray-500 mt-0.5">이 메뉴에서 환기량 자동계산 코드가 바로 실행됩니다.</p>
+          </div>
+          <iframe
+            src="/tools/confined_space_ventilation.html"
+            title="밀폐공간 자동계산기"
+            className="w-full h-[980px] border-0"
+          />
         </div>
         <div className="card overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
