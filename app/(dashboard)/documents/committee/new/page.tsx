@@ -5,11 +5,8 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Save, Loader2, Plus, Trash2, Users, Link2, BarChart3 } from 'lucide-react'
-import { clsx } from 'clsx'
-import { COMMITTEE_ROLE_LABEL, type RiskPerformance } from '@/types/inspection'
+import { type RiskPerformance } from '@/types/inspection'
 import { buildRiskPerformance, getDefaultAgendaItems } from '@/lib/linkage/riskToCommittee'
-
-const ROLES = Object.entries(COMMITTEE_ROLE_LABEL)
 
 export default function CommitteeNewPage() {
   const router      = useRouter()
@@ -18,7 +15,6 @@ export default function CommitteeNewPage() {
 
   const [saving,   setSaving]   = useState(false)
   const [riskPerf, setRiskPerf] = useState<RiskPerformance | null>(null)
-  const [riskTitle,setRiskTitle]= useState<string>('')
 
   const form = useForm<any>({
     defaultValues: {
@@ -27,22 +23,36 @@ export default function CommitteeNewPage() {
       meeting_place:  '회의실', meeting_type: 'regular',
       resolution: '', next_meeting_date: '',
       members: [
-        { seq:1, name:'', position:'안전보건관리책임자', affiliation:'', role:'chair',       is_present:true },
-        { seq:2, name:'', position:'안전관리자',         affiliation:'', role:'member',      is_present:true },
-        { seq:3, name:'', position:'근로자 대표',         affiliation:'', role:'worker_rep', is_present:true },
-        { seq:4, name:'', position:'사용자 대표',         affiliation:'', role:'mgmt_rep',   is_present:true },
+        { seq:1, name:'', position:'사용자측 대표', affiliation:'', role:'mgmt_rep', side:'management', is_present:true },
+        { seq:2, name:'', position:'근로자측 대표', affiliation:'', role:'worker_rep', side:'labor', is_present:true },
       ],
-      agenda_items: [
-        { seq:1, title:'위험성평가 운영 실적 보고', content:'', decision:'', owner:'안전관리자', deadline:'' },
-        { seq:2, title:'안전보건 활동 추진 실적',   content:'', decision:'', owner:'안전관리자', deadline:'' },
-        { seq:3, title:'안전보건 활동 계획 수립',   content:'', decision:'', owner:'안전관리자', deadline:'' },
-        { seq:4, title:'근로자 의견 청취',           content:'', decision:'', owner:'근로자 대표', deadline:'' },
-      ],
+      agenda_items: getDefaultAgendaItems(false),
     },
   })
 
   const { fields: memberFields, append: addMember, remove: removeMember } = useFieldArray({ control: form.control, name: 'members' })
   const { fields: agendaFields, append: addAgenda, remove: removeAgenda } = useFieldArray({ control: form.control, name: 'agenda_items' })
+  const members = form.watch('members') ?? []
+  const managementIndexes = members.reduce((acc: number[], m: any, idx: number) => {
+    if ((m.side ?? '') === 'management' || ((m.side ?? '') === '' && (m.role ?? '') !== 'worker_rep')) acc.push(idx)
+    return acc
+  }, [])
+  const laborIndexes = members.reduce((acc: number[], m: any, idx: number) => {
+    if ((m.side ?? '') === 'labor' || (m.role ?? '') === 'worker_rep') acc.push(idx)
+    return acc
+  }, [])
+
+  function addMemberBySide(side: 'management' | 'labor') {
+    addMember({
+      seq: memberFields.length + 1,
+      name: '',
+      position: side === 'management' ? '사용자측 위원' : '근로자측 위원',
+      affiliation: '',
+      role: side === 'management' ? 'mgmt_rep' : 'worker_rep',
+      side,
+      is_present: true,
+    })
+  }
 
   // 위험성평가 운영 실적 자동 연계
   useEffect(() => {
@@ -52,7 +62,6 @@ export default function CommitteeNewPage() {
       const raList = j.data ?? []
       const perf   = buildRiskPerformance(raList)
       setRiskPerf(perf)
-      if (raList[0]) setRiskTitle(raList[0].title)
 
       // 의안 1번에 운영 실적 자동 입력
       const agendas = getDefaultAgendaItems(true, perf)
@@ -69,7 +78,12 @@ export default function CommitteeNewPage() {
     const payload = {
       ...data,
       risk_performance: riskPerf,
-      members:      data.members.map((m:any,i:number) => ({ ...m, seq: i+1 })),
+      members: data.members.map((m: any, i: number) => ({
+        ...m,
+        seq: i + 1,
+        side: m.side ?? (m.role === 'worker_rep' ? 'labor' : 'management'),
+        role: m.role ?? (m.side === 'labor' ? 'worker_rep' : 'mgmt_rep'),
+      })),
       agenda_items: data.agenda_items.map((a:any,i:number) => ({ ...a, seq: i+1 })),
     }
     const res  = await fetch('/api/documents/committee', {
@@ -114,7 +128,7 @@ export default function CommitteeNewPage() {
           <div className="card p-4 border-purple-200 bg-purple-50/30">
             <h3 className="text-xs font-semibold text-purple-700 mb-3 flex items-center gap-1.5">
               <BarChart3 className="w-3.5 h-3.5"/>
-              위험성평가 운영 실적 요약 (의안 1번 자동 반영)
+              위험성평가 운영 실적 요약 (제79조 안건 중 "위험성평가 실시에 관한 사항" 자동 반영)
             </h3>
             <div className="grid grid-cols-4 gap-3">
               {[
@@ -175,38 +189,78 @@ export default function CommitteeNewPage() {
         <div className="card overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
             <h2 className="font-semibold text-gray-800">참석자 명단</h2>
-            <button type="button"
-              onClick={() => addMember({ seq:memberFields.length+1, name:'', position:'', affiliation:'', role:'member', is_present:true })}
-              className="btn-secondary text-xs gap-1">
-              <Plus className="w-3 h-3"/> 추가
-            </button>
           </div>
-          <table className="w-full text-sm">
-            <thead><tr className="bg-gray-50 border-b border-gray-200">
-              {['성명','직위','소속','역할','참석',''].map(h => <th key={h} className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500">{h}</th>)}
-            </tr></thead>
-            <tbody className="divide-y divide-gray-50">
-              {memberFields.map((f, idx) => (
-                <tr key={f.id}>
-                  <td className="px-4 py-2"><input {...form.register(`members.${idx}.name`)} placeholder="홍길동" className="input-base text-sm py-1.5"/></td>
-                  <td className="px-4 py-2"><input {...form.register(`members.${idx}.position`)} placeholder="안전보건관리책임자" className="input-base text-sm py-1.5"/></td>
-                  <td className="px-4 py-2"><input {...form.register(`members.${idx}.affiliation`)} placeholder="(주)건설" className="input-base text-sm py-1.5"/></td>
-                  <td className="px-4 py-2">
-                    <select {...form.register(`members.${idx}.role`)} className="input-base text-sm py-1.5">
-                      {ROLES.map(([v,l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
-                  </td>
-                  <td className="px-4 py-2 text-center">
-                    <input type="checkbox" {...form.register(`members.${idx}.is_present`)} className="w-4 h-4 accent-purple-600"/>
-                  </td>
-                  <td className="px-3 py-2">
-                    <button type="button" onClick={() => removeMember(idx)}
-                      className="p-1 text-gray-300 hover:text-red-500 rounded"><Trash2 className="w-3.5 h-3.5"/></button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="grid grid-cols-2 gap-4 p-4">
+            <div className="rounded-xl border border-blue-100 overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 bg-blue-50 border-b border-blue-100">
+                <span className="text-xs font-semibold text-blue-700">사용자측</span>
+                <button type="button" onClick={() => addMemberBySide('management')} className="text-[11px] text-blue-700 hover:underline flex items-center gap-1">
+                  <Plus className="w-3 h-3" /> 추가
+                </button>
+              </div>
+              <div className="divide-y divide-blue-50">
+                {managementIndexes.length === 0 ? (
+                  <div className="px-3 py-6 text-center text-xs text-gray-400">사용자측 참석자를 추가하세요.</div>
+                ) : (
+                  managementIndexes.map((idx) => (
+                    <div key={memberFields[idx]?.id ?? idx} className="p-3 space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <input {...form.register(`members.${idx}.name`)} placeholder="성명" className="input-base text-sm py-1.5" />
+                        <input {...form.register(`members.${idx}.position`)} placeholder="직위" className="input-base text-sm py-1.5" />
+                      </div>
+                      <input {...form.register(`members.${idx}.affiliation`)} placeholder="소속" className="input-base text-sm py-1.5" />
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs text-gray-500 flex items-center gap-1.5">
+                          <input type="checkbox" {...form.register(`members.${idx}.is_present`)} className="w-4 h-4 accent-blue-600" />
+                          참석
+                        </label>
+                        <button type="button" onClick={() => removeMember(idx)} className="p-1 text-gray-300 hover:text-red-500 rounded">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <input type="hidden" {...form.register(`members.${idx}.side`)} value="management" />
+                      <input type="hidden" {...form.register(`members.${idx}.role`)} value="mgmt_rep" />
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-green-100 overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 bg-green-50 border-b border-green-100">
+                <span className="text-xs font-semibold text-green-700">근로자측</span>
+                <button type="button" onClick={() => addMemberBySide('labor')} className="text-[11px] text-green-700 hover:underline flex items-center gap-1">
+                  <Plus className="w-3 h-3" /> 추가
+                </button>
+              </div>
+              <div className="divide-y divide-green-50">
+                {laborIndexes.length === 0 ? (
+                  <div className="px-3 py-6 text-center text-xs text-gray-400">근로자측 참석자를 추가하세요.</div>
+                ) : (
+                  laborIndexes.map((idx) => (
+                    <div key={memberFields[idx]?.id ?? idx} className="p-3 space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <input {...form.register(`members.${idx}.name`)} placeholder="성명" className="input-base text-sm py-1.5" />
+                        <input {...form.register(`members.${idx}.position`)} placeholder="직위" className="input-base text-sm py-1.5" />
+                      </div>
+                      <input {...form.register(`members.${idx}.affiliation`)} placeholder="소속" className="input-base text-sm py-1.5" />
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs text-gray-500 flex items-center gap-1.5">
+                          <input type="checkbox" {...form.register(`members.${idx}.is_present`)} className="w-4 h-4 accent-green-600" />
+                          참석
+                        </label>
+                        <button type="button" onClick={() => removeMember(idx)} className="p-1 text-gray-300 hover:text-red-500 rounded">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <input type="hidden" {...form.register(`members.${idx}.side`)} value="labor" />
+                      <input type="hidden" {...form.register(`members.${idx}.role`)} value="worker_rep" />
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* 안건 */}
@@ -221,17 +275,12 @@ export default function CommitteeNewPage() {
           </div>
           <div className="divide-y divide-gray-100">
             {agendaFields.map((f, idx) => (
-              <div key={f.id} className={clsx('p-5', idx === 0 && riskPerf && 'bg-purple-50/20')}>
+              <div key={f.id} className="p-5">
                 <div className="flex items-center gap-3 mb-3">
                   <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-xs flex items-center justify-center font-bold flex-shrink-0">
                     {idx+1}
                   </span>
                   <input {...form.register(`agenda_items.${idx}.title`)} placeholder="안건 제목" className="input-base flex-1 font-medium"/>
-                  {idx === 0 && riskPerf && (
-                    <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <Link2 className="w-2.5 h-2.5"/> 위험성평가 연계
-                    </span>
-                  )}
                   <button type="button" onClick={() => removeAgenda(idx)}
                     className="p-1 text-gray-300 hover:text-red-500 rounded flex-shrink-0">
                     <Trash2 className="w-3.5 h-3.5"/>

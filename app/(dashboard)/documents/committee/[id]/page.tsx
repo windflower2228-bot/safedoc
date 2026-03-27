@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ArrowLeft, UsersRound, Loader2, CheckCircle2, BarChart3, Edit2 } from 'lucide-react'
 import { clsx } from 'clsx'
-import { COMMITTEE_ROLE_LABEL } from '@/types/inspection'
 
 export default function CommitteeDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -37,6 +36,12 @@ export default function CommitteeDetailPage({ params }: { params: { id: string }
   const agendaItems  = doc.agenda_items  ?? []
   const perf         = doc.risk_performance
   const presentCount = members.filter((m: any) => m.is_present).length
+  const managementMembers = members.filter((m: any) =>
+    m.side === 'management' || (m.side == null && m.role !== 'worker_rep')
+  )
+  const laborMembers = members.filter((m: any) =>
+    m.side === 'labor' || m.role === 'worker_rep'
+  )
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -120,33 +125,69 @@ export default function CommitteeDetailPage({ params }: { params: { id: string }
         <div className="px-5 py-3.5 border-b border-gray-100">
           <span className="font-semibold text-gray-800">참석자 명단</span>
         </div>
-        <table className="w-full text-sm">
-          <thead><tr className="bg-gray-50 border-b border-gray-100">
-            {['성명','직위','소속','역할','참석'].map(h => (
-              <th key={h} className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500">{h}</th>
-            ))}
-          </tr></thead>
-          <tbody className="divide-y divide-gray-50">
-            {members.map((m: any) => (
-              <tr key={m.seq} className={m.is_present ? '' : 'opacity-50'}>
-                <td className="px-4 py-2.5 font-medium">{m.name || '—'}</td>
-                <td className="px-4 py-2.5 text-gray-600">{m.position}</td>
-                <td className="px-4 py-2.5 text-gray-500">{m.affiliation || '—'}</td>
-                <td className="px-4 py-2.5">
-                  <span className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">
-                    {COMMITTEE_ROLE_LABEL[m.role] ?? m.role}
-                  </span>
-                </td>
-                <td className="px-4 py-2.5">
-                  <span className={clsx('text-xs px-2 py-0.5 rounded-full font-medium',
-                    m.is_present ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700')}>
-                    {m.is_present ? '참석' : '불참'}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="grid grid-cols-2 gap-4 p-4">
+          <div className="rounded-xl border border-blue-100 overflow-hidden">
+            <div className="px-3 py-2 bg-blue-50 border-b border-blue-100 text-xs font-semibold text-blue-700">사용자측</div>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-white border-b border-blue-50">
+                  {['성명', '직위', '소속', '참석'].map((h) => (
+                    <th key={h} className="px-3 py-2 text-left text-[10px] font-semibold text-gray-500">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-blue-50">
+                {managementMembers.length === 0 ? (
+                  <tr><td colSpan={4} className="px-3 py-4 text-center text-xs text-gray-400">등록된 참석자 없음</td></tr>
+                ) : (
+                  managementMembers.map((m: any, idx: number) => (
+                    <tr key={`mgmt-${m.seq ?? idx}`} className={m.is_present ? '' : 'opacity-50'}>
+                      <td className="px-3 py-2 font-medium">{m.name || '—'}</td>
+                      <td className="px-3 py-2 text-gray-600">{m.position || '—'}</td>
+                      <td className="px-3 py-2 text-gray-500">{m.affiliation || '—'}</td>
+                      <td className="px-3 py-2">
+                        <span className={clsx('text-xs px-2 py-0.5 rounded-full font-medium', m.is_present ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700')}>
+                          {m.is_present ? '참석' : '불참'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="rounded-xl border border-green-100 overflow-hidden">
+            <div className="px-3 py-2 bg-green-50 border-b border-green-100 text-xs font-semibold text-green-700">근로자측</div>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-white border-b border-green-50">
+                  {['성명', '직위', '소속', '참석'].map((h) => (
+                    <th key={h} className="px-3 py-2 text-left text-[10px] font-semibold text-gray-500">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-green-50">
+                {laborMembers.length === 0 ? (
+                  <tr><td colSpan={4} className="px-3 py-4 text-center text-xs text-gray-400">등록된 참석자 없음</td></tr>
+                ) : (
+                  laborMembers.map((m: any, idx: number) => (
+                    <tr key={`labor-${m.seq ?? idx}`} className={m.is_present ? '' : 'opacity-50'}>
+                      <td className="px-3 py-2 font-medium">{m.name || '—'}</td>
+                      <td className="px-3 py-2 text-gray-600">{m.position || '—'}</td>
+                      <td className="px-3 py-2 text-gray-500">{m.affiliation || '—'}</td>
+                      <td className="px-3 py-2">
+                        <span className={clsx('text-xs px-2 py-0.5 rounded-full font-medium', m.is_present ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700')}>
+                          {m.is_present ? '참석' : '불참'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       {/* 안건 */}
@@ -156,13 +197,13 @@ export default function CommitteeDetailPage({ params }: { params: { id: string }
         </div>
         <div className="divide-y divide-gray-100">
           {agendaItems.map((a: any) => (
-            <div key={a.seq} className={clsx('p-5', a.seq === 1 && perf && 'bg-purple-50/20')}>
+            <div key={a.seq} className="p-5">
               <div className="flex items-center gap-3 mb-3">
                 <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-xs flex items-center justify-center font-bold flex-shrink-0">
                   {a.seq}
                 </span>
                 <span className="font-medium text-gray-900 text-sm">{a.title}</span>
-                {a.seq === 1 && perf && (
+                {a.title?.includes('위험성평가 실시에 관한 사항') && perf && (
                   <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
                     위험성평가 연계
                   </span>
