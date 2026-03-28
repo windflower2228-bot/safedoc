@@ -18,7 +18,6 @@ const POSITIONS = [
 
 export default function RegisterPage() {
   const router   = useRouter()
-  const supabase = createClient()
 
   const [loading, setLoading]     = useState(false)
   const [joinMode, setJoinMode]   = useState<'create' | 'join'>('create')
@@ -29,6 +28,7 @@ export default function RegisterPage() {
   async function onSubmit(data: RegisterFormData) {
     setLoading(true)
     try {
+      const supabase = createClient()
       // 1) Supabase Auth 회원가입
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,

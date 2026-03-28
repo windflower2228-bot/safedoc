@@ -7,13 +7,12 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { ShieldCheck, Loader2, Mail, ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { forgotPasswordSchema, type LoginFormData } from '@/lib/validators/schemas'
+import { forgotPasswordSchema } from '@/lib/validators/schemas'
 import { z } from 'zod'
 
 type ForgotData = z.infer<typeof forgotPasswordSchema>
 
 export default function ForgotPasswordPage() {
-  const supabase  = createClient()
   const [done, setDone]     = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -22,8 +21,9 @@ export default function ForgotPasswordPage() {
 
   async function onSubmit(data: ForgotData) {
     setLoading(true)
+    const supabase = createClient()
     const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `${location.origin}/auth/reset-password`,
+      redirectTo: `${window.location.origin}/auth/reset-password`,
     })
     setLoading(false)
     if (error) { toast.error('이메일 발송에 실패했습니다.'); return }

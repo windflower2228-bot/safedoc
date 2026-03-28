@@ -1,14 +1,7 @@
 import type { Metadata, Viewport } from 'next'
-import { Noto_Sans_KR } from 'next/font/google'
 import { Toaster } from 'sonner'
 import { PwaRegister, PwaInstallBanner } from '@/components/pwa/PwaRegister'
 import './globals.css'
-
-const notoSansKR = Noto_Sans_KR({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
-  variable: '--font-noto',
-})
 
 export const metadata: Metadata = {
   title:         'SafeDoc — 산업안전보건 문서 통합관리',
@@ -50,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icons/icon-192.png"/>
         <link rel="apple-touch-startup-image" href="/icons/icon-512.png"/>
       </head>
-      <body className={`${notoSansKR.variable} font-sans antialiased bg-gray-50`}>
+      <body className="font-sans antialiased bg-gray-50">
         {children}
         <PwaRegister/>
         <PwaInstallBanner/>
