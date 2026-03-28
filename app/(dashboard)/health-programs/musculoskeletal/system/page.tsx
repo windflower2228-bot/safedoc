@@ -17,10 +17,10 @@ export default function MusculoskeletalSystemPage() {
           <div>
             <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <Activity className="w-5 h-5 text-blue-600" />
-              근골격계 유해요인조사 통합 시스템
+              근골격계 유해요인조사 도구
             </h1>
             <p className="text-xs text-gray-400 mt-0.5">
-              요청하신 코드(msd_prevention_system)를 우선 반영한 화면입니다.
+              문서 작성 흐름과 동일하게 보이도록 대시보드형 레이아웃을 임베드 모드로 정리했습니다.
             </p>
           </div>
         </div>
@@ -28,8 +28,8 @@ export default function MusculoskeletalSystemPage() {
 
       <div className="card overflow-hidden">
         <iframe
-          src="/tools/msd_prevention_system.html"
-          title="근골격계 유해요인조사 통합 시스템"
+          src="/tools/msd_prevention_system.html?embed=1&start=step2"
+          title="근골격계 유해요인조사 도구"
           className="w-full h-[calc(100vh-220px)] min-h-[900px] border-0"
         />
       </div>

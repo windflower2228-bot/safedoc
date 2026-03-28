@@ -49,7 +49,7 @@ export default function MusculoskeletalListPage() {
         <div className="flex items-center gap-2">
           <Link href="/health-programs/musculoskeletal/system"
             className="btn-primary text-sm gap-1.5" style={{ background: '#2563eb' }}>
-            <Activity className="w-4 h-4" /> 통합 시스템(우선)
+            <Activity className="w-4 h-4" /> 조사 도구
           </Link>
           <Link href="/health-programs/musculoskeletal/new"
             className="btn-secondary text-sm gap-1.5">
@@ -106,7 +106,7 @@ export default function MusculoskeletalListPage() {
             <div className="mt-4 flex items-center justify-center gap-2">
               <Link href="/health-programs/musculoskeletal/system"
                 className="btn-primary text-sm inline-flex" style={{ background: '#2563eb' }}>
-                <Activity className="w-4 h-4" /> 통합 시스템(우선)
+                <Activity className="w-4 h-4" /> 조사 도구
               </Link>
               <Link href="/health-programs/musculoskeletal/new"
                 className="btn-secondary text-sm inline-flex">

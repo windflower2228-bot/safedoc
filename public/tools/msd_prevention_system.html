@@ -558,6 +558,16 @@ hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 20px 0
   .content-area { padding: 16px; }
 }
 
+/* Embedded mode (SafeDoc 내부 iframe 전용) */
+body.embed-mode { display: block; background: var(--gray-50); }
+body.embed-mode .sidebar { display: none; }
+body.embed-mode .main { margin-left: 0; }
+body.embed-mode .page-header {
+  position: static;
+  padding: 14px 20px;
+}
+body.embed-mode .content-area { padding: 16px 20px; }
+
 /* Print hidden */
 .no-print { }
 
@@ -2470,6 +2480,14 @@ function addRecord() {
 // 초기화
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const isEmbed = params.get('embed') === '1';
+  const startPage = params.get('start');
+
+  if (isEmbed) {
+    document.body.classList.add('embed-mode');
+  }
+
   // 오늘 날짜
   const now = new Date();
   const dateStr = now.toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
@@ -2511,6 +2529,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const r = document.getElementById('h-occasional-reason');
       if (r) r.style.display = surveyType.value === 'occasional' ? '' : 'none';
     });
+  }
+
+  if (startPage && document.getElementById('page-' + startPage)) {
+    showPage(startPage);
+  } else if (isEmbed) {
+    showPage('step2');
   }
 
   console.log('✅ 근골격계질환 예방 보건관리 시스템 초기화 완료');
