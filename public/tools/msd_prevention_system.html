@@ -1,0 +1,2521 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>근골격계질환 예방 보건관리 시스템 | KOSHA GUIDE E-G-1-2025</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN: 클린 정부/산업 안전 대시보드
+   테마: 화이트 + 딥 네이비 + 세이프티 그린 + 경고 오렌지
+   기준: KOSHA GUIDE E-G-1-2025
+============================================================ */
+:root {
+  --navy:       #0f2744;
+  --navy-mid:   #1a3a5c;
+  --navy-light: #2d5a8e;
+  --green:      #16a34a;
+  --green-bg:   #f0fdf4;
+  --green-brd:  #bbf7d0;
+  --orange:     #ea580c;
+  --orange-bg:  #fff7ed;
+  --orange-brd: #fed7aa;
+  --red:        #dc2626;
+  --red-bg:     #fef2f2;
+  --red-brd:    #fecaca;
+  --yellow:     #d97706;
+  --yellow-bg:  #fffbeb;
+  --yellow-brd: #fde68a;
+  --blue:       #2563eb;
+  --blue-bg:    #eff6ff;
+  --blue-brd:   #bfdbfe;
+  --gray-50:    #f8fafc;
+  --gray-100:   #f1f5f9;
+  --gray-200:   #e2e8f0;
+  --gray-300:   #cbd5e1;
+  --gray-400:   #94a3b8;
+  --gray-500:   #64748b;
+  --gray-600:   #475569;
+  --gray-700:   #334155;
+  --gray-800:   #1e293b;
+  --gray-900:   #0f172a;
+  --white:      #ffffff;
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow:     0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg:  0 10px 40px rgba(0,0,0,0.12);
+  --radius:     8px;
+  --radius-lg:  12px;
+  --sidebar-w:  260px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-800);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ============================================================
+   SIDEBAR
+============================================================ */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--navy);
+  min-height: 100vh;
+  position: fixed;
+  left: 0; top: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+.sidebar-logo {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-logo .kosha-badge {
+  display: inline-block;
+  background: var(--green);
+  color: white;
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.sidebar-logo h1 {
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  line-height: 1.4;
+}
+.sidebar-logo p {
+  font-size: 9.5px;
+  color: rgba(255,255,255,0.4);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 3px;
+}
+
+.sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+.nav-section-title {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 14px 20px 6px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  color: rgba(255,255,255,0.65);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 12.5px;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  margin: 1px 0;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+.nav-item.active {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border-left-color: #4ade80;
+}
+.nav-item .nav-icon { font-size: 15px; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--red);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.nav-badge.green { background: var(--green); }
+.nav-badge.orange { background: var(--orange); }
+
+.sidebar-footer {
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-footer p {
+  font-size: 9px;
+  color: rgba(255,255,255,0.25);
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   MAIN CONTENT
+============================================================ */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  min-height: 100vh;
+}
+.page { display: none; }
+.page.active { display: block; }
+
+/* Page Header */
+.page-header {
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.page-header-left h2 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.page-header-left p {
+  font-size: 11px;
+  color: var(--gray-400);
+  margin-top: 1px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.header-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ============================================================
+   COMPONENTS
+============================================================ */
+.content-area { padding: 24px 32px; }
+
+/* Stat Cards */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.stat-card.navy::before { background: var(--navy); }
+.stat-card.green::before { background: var(--green); }
+.stat-card.orange::before { background: var(--orange); }
+.stat-card.red::before { background: var(--red); }
+.stat-label { font-size: 10px; color: var(--gray-400); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+.stat-value { font-size: 28px; font-weight: 900; color: var(--navy); font-family: 'JetBrains Mono', monospace; }
+.stat-value.green { color: var(--green); }
+.stat-value.orange { color: var(--orange); }
+.stat-value.red { color: var(--red); }
+.stat-sub { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+.stat-icon {
+  position: absolute;
+  right: 14px; top: 14px;
+  font-size: 28px;
+  opacity: 0.12;
+}
+
+/* Cards */
+.card {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.card-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--gray-50);
+}
+.card-header-icon {
+  width: 32px; height: 32px;
+  background: var(--navy);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.card-title { font-size: 13px; font-weight: 700; color: var(--navy); }
+.card-desc { font-size: 10px; color: var(--gray-400); margin-top: 1px; }
+.card-body { padding: 20px; }
+.card-actions { margin-left: auto; display: flex; gap: 8px; }
+
+/* Grid */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.15s;
+}
+.btn-primary { background: var(--navy); color: white; }
+.btn-primary:hover { background: var(--navy-mid); }
+.btn-success { background: var(--green); color: white; }
+.btn-success:hover { background: #15803d; }
+.btn-danger { background: var(--red); color: white; }
+.btn-warning { background: var(--orange); color: white; }
+.btn-outline { background: transparent; color: var(--gray-600); border: 1px solid var(--gray-300); }
+.btn-outline:hover { background: var(--gray-50); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+.btn-lg { padding: 11px 22px; font-size: 14px; }
+
+/* Form Elements */
+.form-group { margin-bottom: 14px; }
+label.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 5px;
+  letter-spacing: 0.2px;
+}
+input[type="text"], input[type="number"], input[type="date"], select, textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--gray-800);
+  background: white;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--navy-light);
+  box-shadow: 0 0 0 3px rgba(45,90,142,0.12);
+}
+textarea { resize: vertical; min-height: 80px; }
+
+/* Checkbox custom */
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.check-row:hover { border-color: var(--navy-light); background: var(--blue-bg); }
+.check-row input[type="checkbox"] { width: auto; margin-top: 2px; accent-color: var(--navy); }
+.check-row label { cursor: pointer; font-size: 12px; line-height: 1.5; color: var(--gray-700); }
+.check-row label strong { color: var(--navy); display: block; font-size: 12.5px; }
+
+/* Tables */
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th {
+  background: var(--navy);
+  color: white;
+  padding: 9px 14px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+}
+.data-table th:first-child { border-radius: 6px 0 0 0; }
+.data-table th:last-child { border-radius: 0 6px 0 0; }
+.data-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--gray-100);
+  color: var(--gray-700);
+  vertical-align: middle;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--gray-50); }
+.data-table td.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.badge-red    { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-brd); }
+.badge-orange { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-brd); }
+.badge-yellow { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-brd); }
+.badge-green  { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-brd); }
+.badge-navy   { background: var(--blue-bg);   color: var(--blue);   border: 1px solid var(--blue-brd); }
+.badge-gray   { background: var(--gray-100);  color: var(--gray-500); border: 1px solid var(--gray-200); }
+
+/* Alert Boxes */
+.alert {
+  display: flex;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+.alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.alert-red    { background: var(--red-bg);    border: 1px solid var(--red-brd);    color: #991b1b; }
+.alert-orange { background: var(--orange-bg); border: 1px solid var(--orange-brd); color: #9a3412; }
+.alert-yellow { background: var(--yellow-bg); border: 1px solid var(--yellow-brd); color: #92400e; }
+.alert-green  { background: var(--green-bg);  border: 1px solid var(--green-brd);  color: #14532d; }
+.alert-blue   { background: var(--blue-bg);   border: 1px solid var(--blue-brd);   color: #1e3a8a; }
+
+/* Progress */
+.progress-bar-outer {
+  background: var(--gray-100);
+  border-radius: 10px;
+  height: 8px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.progress-bar-inner {
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--green), #22c55e);
+  transition: width 0.4s ease;
+}
+.progress-bar-inner.orange { background: linear-gradient(90deg, var(--orange), #fb923c); }
+.progress-bar-inner.red    { background: linear-gradient(90deg, var(--red),    #f87171); }
+
+/* Section Label */
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--navy);
+  margin-bottom: 16px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Step Indicator */
+.steps { display: flex; gap: 0; margin-bottom: 24px; }
+.step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  position: relative;
+}
+.step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--gray-200);
+  color: var(--gray-500);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+  z-index: 1;
+  transition: all 0.2s;
+}
+.step.done .step-num { background: var(--green); color: white; }
+.step.active .step-num { background: var(--navy); color: white; }
+.step-text { font-size: 11px; color: var(--gray-500); margin-left: 8px; font-weight: 500; }
+.step.active .step-text { color: var(--navy); font-weight: 700; }
+.step.done .step-text { color: var(--green); }
+.step-line { flex: 1; height: 2px; background: var(--gray-200); margin: 0 4px; }
+.step.done .step-line { background: var(--green); }
+
+/* Result Box */
+.result-box {
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  text-align: center;
+  margin-top: 16px;
+}
+.result-box.result-danger { border-color: var(--red); background: var(--red-bg); }
+.result-box.result-warning { border-color: var(--orange); background: var(--orange-bg); }
+.result-box.result-safe { border-color: var(--green); background: var(--green-bg); }
+.result-emoji { font-size: 40px; margin-bottom: 8px; }
+.result-title { font-size: 18px; font-weight: 900; margin-bottom: 6px; }
+.result-desc { font-size: 12px; color: var(--gray-600); line-height: 1.7; }
+
+/* Timeline */
+.timeline { position: relative; padding-left: 28px; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 10px; top: 6px; bottom: 6px;
+  width: 2px;
+  background: var(--gray-200);
+}
+.timeline-item { position: relative; margin-bottom: 20px; }
+.timeline-dot {
+  position: absolute;
+  left: -22px; top: 4px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--navy);
+  border: 2px solid white;
+  box-shadow: 0 0 0 2px var(--navy);
+}
+.timeline-dot.green { background: var(--green); box-shadow: 0 0 0 2px var(--green); }
+.timeline-dot.orange { background: var(--orange); box-shadow: 0 0 0 2px var(--orange); }
+.timeline-dot.red { background: var(--red); box-shadow: 0 0 0 2px var(--red); }
+.timeline-date { font-size: 10px; color: var(--gray-400); font-family: 'JetBrains Mono', monospace; }
+.timeline-title { font-size: 13px; font-weight: 600; color: var(--gray-800); }
+.timeline-desc { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+
+/* Flow Diagram */
+.flow-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.flow-node {
+  background: var(--navy);
+  color: white;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 160px;
+}
+.flow-node.green { background: var(--green); }
+.flow-node.orange { background: var(--orange); }
+.flow-node.red { background: var(--red); }
+.flow-node.gray { background: var(--gray-400); }
+.flow-arrow { color: var(--gray-400); font-size: 18px; line-height: 1.4; }
+.flow-row { display: flex; gap: 12px; align-items: center; }
+
+/* Risk Matrix */
+.risk-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  margin-bottom: 6px;
+  border: 1px solid var(--gray-200);
+}
+.risk-name { font-size: 12px; font-weight: 500; color: var(--gray-700); flex: 1; }
+.risk-score {
+  font-size: 16px;
+  font-weight: 900;
+  font-family: 'JetBrains Mono', monospace;
+  min-width: 36px;
+  text-align: right;
+}
+.risk-level { font-size: 10px; font-weight: 700; min-width: 50px; text-align: right; }
+
+/* Divider */
+hr.divider { border: none; border-top: 1px solid var(--gray-200); margin: 20px 0; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .two-col { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .main { margin-left: 0; }
+  .content-area { padding: 16px; }
+}
+
+/* Print hidden */
+.no-print { }
+
+/* Highlight row */
+.highlight-row td { background: var(--yellow-bg) !important; }
+
+/* Number input small */
+input.small-num { width: 70px !important; text-align: center; font-family: 'JetBrains Mono', monospace; }
+
+/* Tab */
+.tab-bar { display: flex; gap: 0; border-bottom: 2px solid var(--gray-200); margin-bottom: 20px; }
+.tab-btn {
+  padding: 9px 18px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.15s;
+}
+.tab-btn:hover { color: var(--navy); }
+.tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     SIDEBAR
+============================================================ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="kosha-badge">KOSHA GUIDE E-G-1-2025</div>
+    <h1>근골격계질환<br>예방 보건관리 시스템</h1>
+    <p>산업안전보건기준에 관한 규칙 제12장</p>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">메인</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="nav-icon">📊</span> 대시보드
+    </div>
+
+    <div class="nav-section-title">단계별 관리</div>
+    <div class="nav-item" onclick="showPage('step1')">
+      <span class="nav-icon">🔍</span> 부담작업 여부 판단
+      <span class="nav-badge orange" id="badge-step1">11</span>
+    </div>
+    <div class="nav-item" onclick="showPage('step2')">
+      <span class="nav-icon">📋</span> 유해요인조사
+    </div>
+    <div class="nav-item" onclick="showPage('step3')">
+      <span class="nav-icon">🩺</span> 증상조사 및 분류
+      <span class="nav-badge" id="badge-step3">0</span>
+    </div>
+    <div class="nav-item" onclick="showPage('step4')">
+      <span class="nav-icon">🔧</span> 작업환경개선 계획
+    </div>
+    <div class="nav-item" onclick="showPage('step5')">
+      <span class="nav-icon">💊</span> 의학적 조치 관리
+    </div>
+    <div class="nav-item" onclick="showPage('step6')">
+      <span class="nav-icon">📚</span> 예방·관리 프로그램
+    </div>
+
+    <div class="nav-section-title">기록</div>
+    <div class="nav-item" onclick="showPage('records')">
+      <span class="nav-icon">🗂️</span> 문서 기록·보존
+    </div>
+    <div class="nav-item" onclick="showPage('settings')">
+      <span class="nav-icon">⚙️</span> 사업장 기본정보
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <p>산업안전보건기준에 관한 규칙<br>제657조~제662조 기반<br>작성: 2025. 3. 26.</p>
+  </div>
+</aside>
+
+<!-- ============================================================
+     MAIN CONTENT
+============================================================ -->
+<main class="main">
+
+<!-- ====================================================
+     PAGE: 대시보드
+==================================================== -->
+<div id="page-dashboard" class="page active">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>📊 근골격계질환 예방 현황 대시보드</h2>
+      <p>MUSCULOSKELETAL DISEASE PREVENTION DASHBOARD</p>
+    </div>
+    <div class="header-actions">
+      <span id="today-date" style="font-size:11px;color:var(--gray-400);font-family:'JetBrains Mono',monospace;"></span>
+    </div>
+  </div>
+  <div class="content-area">
+
+    <div class="alert alert-blue">
+      <span class="alert-icon">ℹ️</span>
+      <div>
+        <strong>시스템 안내:</strong> 좌측 메뉴에서 단계별로 근골격계질환 예방 관리를 수행할 수 있습니다.
+        산업안전보건기준에 관한 규칙 제12장(제656조~제666조) 및 KOSHA GUIDE E-G-1-2025 기준을 적용합니다.
+        먼저 <strong>[⚙️ 사업장 기본정보]</strong>를 입력하고, 순서에 따라 관리를 진행하세요.
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card navy">
+        <span class="stat-icon">🏭</span>
+        <div class="stat-label">등록 근로자 수</div>
+        <div class="stat-value" id="dash-workers">-</div>
+        <div class="stat-sub">사업장 총 근로자</div>
+      </div>
+      <div class="stat-card orange">
+        <span class="stat-icon">⚠️</span>
+        <div class="stat-label">부담작업 보유 건수</div>
+        <div class="stat-value orange" id="dash-burden">0</div>
+        <div class="stat-sub">11개 유형 중 해당</div>
+      </div>
+      <div class="stat-card red">
+        <span class="stat-icon">🩺</span>
+        <div class="stat-label">증상 호소자</div>
+        <div class="stat-value red" id="dash-symptoms">0</div>
+        <div class="stat-sub">관리대상자 포함</div>
+      </div>
+      <div class="stat-card green">
+        <span class="stat-icon">✅</span>
+        <div class="stat-label">조사 완료율</div>
+        <div class="stat-value green" id="dash-progress">0%</div>
+        <div class="stat-sub">유해요인조사 기준</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <!-- 관리 절차 흐름도 -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon">🔄</div>
+          <div>
+            <div class="card-title">근골격계질환 예방 관리 흐름도</div>
+            <div class="card-desc">산업안전보건기준 제12장 기준 (KOSHA GUIDE E-G-1-2025 그림 1)</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="flow-box">
+            <div class="flow-node">📋 사업장 전체 작업 파악</div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-row">
+              <div>
+                <div class="flow-node green" style="min-width:140px;font-size:11px;">근골격계<br>부담작업 해당?</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <span style="font-size:10px;color:var(--gray-400);">아니오→</span>
+                <div class="flow-node gray" style="min-width:120px;font-size:11px;">유해성 주지<br>등 조치</div>
+              </div>
+            </div>
+            <div class="flow-arrow">↓ 예</div>
+            <div class="flow-row" style="gap:6px;">
+              <div class="flow-node" style="min-width:80px;font-size:10px;background:var(--navy-light);">최초조사<br>1년이내</div>
+              <div class="flow-node" style="min-width:80px;font-size:10px;background:var(--navy-light);">정기조사<br>3년마다</div>
+              <div class="flow-node orange" style="min-width:80px;font-size:10px;">수시조사<br>1개월이내</div>
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-node" style="background:var(--blue);">🔍 유해요인조사 실시 (근로자 참여)</div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-node green">🔧 작업환경개선 (안전보건규칙 제659조)</div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-node orange">💊 의학적 조치 (안전보건규칙 제660조)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 관리 현황 체크 -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon">✅</div>
+          <div>
+            <div class="card-title">단계별 관리 현황</div>
+            <div class="card-desc">각 단계 클릭 시 해당 메뉴로 이동</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="status-checklist">
+            <!-- JS로 렌더링 -->
+          </div>
+
+          <hr class="divider">
+          <div class="section-title">다음 조치 필요 항목</div>
+          <div class="alert alert-orange">
+            <span class="alert-icon">⏰</span>
+            <div>
+              <strong>정기 유해요인조사</strong> — 3년 주기 확인 필요.<br>
+              <strong>근골격계질환 예방·관리 프로그램</strong> — 해당 여부 검토 필요 (연간 10명 이상 발생 시 의무).<br>
+              각 메뉴에서 세부 사항을 입력하면 자동으로 갱신됩니다.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 관련 법규 요약 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon">⚖️</div>
+        <div>
+          <div class="card-title">관련 법규 및 의무사항 요약</div>
+          <div class="card-desc">산업안전보건기준에 관한 규칙 제12장 (근골격계부담작업으로 인한 건강장해의 예방)</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>조문</th>
+              <th>내용</th>
+              <th>의무 주기</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">제656조</td>
+              <td>근골격계부담작업 유해성 등 주지</td>
+              <td>수시 / 신규 배치 시</td>
+              <td><span class="badge badge-yellow">확인필요</span></td>
+            </tr>
+            <tr>
+              <td class="mono">제657조</td>
+              <td>근골격계부담작업 유해요인조사</td>
+              <td>최초 1년이내 / 정기 3년마다 / 수시</td>
+              <td><span class="badge badge-yellow">확인필요</span></td>
+            </tr>
+            <tr>
+              <td class="mono">제658조</td>
+              <td>유해요인조사 방법 (근로자 참여 의무)</td>
+              <td>조사 시 마다</td>
+              <td><span class="badge badge-gray">대기</span></td>
+            </tr>
+            <tr>
+              <td class="mono">제659조</td>
+              <td>작업환경개선 (인간공학적 설비 설치)</td>
+              <td>조사결과에 따라 즉시</td>
+              <td><span class="badge badge-gray">대기</span></td>
+            </tr>
+            <tr>
+              <td class="mono">제660조</td>
+              <td>근골격계질환 예방 의학적 조치</td>
+              <td>증상 발생 시 7일 이내</td>
+              <td><span class="badge badge-green">정상</span></td>
+            </tr>
+            <tr>
+              <td class="mono">제661조</td>
+              <td>유해요인 제거 시 근로자 알림</td>
+              <td>개선 즉시</td>
+              <td><span class="badge badge-gray">대기</span></td>
+            </tr>
+            <tr>
+              <td class="mono">제662조</td>
+              <td>근골격계질환 예방관리 프로그램 시행</td>
+              <td>연간 10명이상 또는 5명이상+10%이상 시 의무</td>
+              <td><span class="badge badge-green">해당없음</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ====================================================
+     PAGE: 부담작업 여부 판단 (11가지 체크리스트)
+==================================================== -->
+<div id="page-step1" class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>🔍 STEP 1 — 근골격계부담작업 여부 판단</h2>
+      <p>안전보건규칙 제656조 / 고용노동부고시 제2020-12호 기준 11개 유형 체크리스트</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline btn-sm" onclick="resetBurden()">초기화</button>
+      <button class="btn btn-primary btn-sm" onclick="evaluateBurden()">⚡ 판정 실행</button>
+    </div>
+  </div>
+  <div class="content-area">
+
+    <div class="alert alert-blue">
+      <span class="alert-icon">📌</span>
+      <div>
+        <strong>평가 원칙:</strong> 사업장 내 모든 작업(공정)을 대상으로 아래 11개 근골격계부담작업 체크리스트로 평가합니다.
+        근로자 1명이 여러 단위작업을 수행할 경우 전체를 하나의 작업으로 봅니다. (안전보건규칙 제656조 제1호)
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title">공정/작업 정보 입력</div>
+        <div class="form-group">
+          <label class="form-label">작업(공정)명</label>
+          <input type="text" id="burden-process" placeholder="예: 자동차 부품 조립공정">
+        </div>
+        <div class="form-group">
+          <label class="form-label">단위작업명</label>
+          <input type="text" id="burden-task" placeholder="예: 볼트 체결 작업">
+        </div>
+        <div class="form-group">
+          <label class="form-label">조사 일자</label>
+          <input type="date" id="burden-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">해당 근로자 수 (명)</label>
+          <input type="number" id="burden-workers-count" class="small-num" min="1" placeholder="0">
+        </div>
+      </div>
+
+      <div id="burden-result-area" style="display:none;">
+        <div class="section-title">판정 결과</div>
+        <div id="burden-result-box"></div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="section-title">근골격계부담작업 11개 유형 체크리스트</div>
+    <div class="alert alert-yellow">
+      <span class="alert-icon">⚠️</span>
+      해당되는 항목 전부에 체크하세요. 단 하나라도 해당되면 근골격계부담작업으로 분류됩니다.
+    </div>
+
+    <div id="burden-checklist">
+      <!-- JS 렌더링 -->
+    </div>
+
+    <div style="text-align:center;margin-top:20px;">
+      <button class="btn btn-primary btn-lg" onclick="evaluateBurden()">⚡ 부담작업 여부 최종 판정</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ====================================================
+     PAGE: 유해요인조사
+==================================================== -->
+<div id="page-step2" class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>📋 STEP 2 — 유해요인조사</h2>
+      <p>안전보건규칙 제657조·제658조 / 별지 제1호서식 기반</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-success btn-sm" onclick="saveHazardSurvey()">💾 저장</button>
+    </div>
+  </div>
+  <div class="content-area">
+
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('hazard', 'overview')">가. 조사 개요</button>
+      <button class="tab-btn" onclick="switchTab('hazard', 'workplace')">나. 작업장 상황조사</button>
+      <button class="tab-btn" onclick="switchTab('hazard', 'condition')">다. 작업조건 조사</button>
+      <button class="tab-btn" onclick="switchTab('hazard', 'result')">라. 조사 결과 요약</button>
+    </div>
+
+    <!-- 가. 조사 개요 -->
+    <div id="hazard-overview" class="tab-content active">
+      <div class="three-col">
+        <div class="form-group">
+          <label class="form-label">조사 구분</label>
+          <select id="h-survey-type">
+            <option value="initial">최초조사 (신설일부터 1년이내)</option>
+            <option value="regular">정기조사 (3년마다)</option>
+            <option value="occasional">수시조사 (1개월이내)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">조사 일시</label>
+          <input type="date" id="h-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">조사자</label>
+          <input type="text" id="h-surveyor" placeholder="성명">
+        </div>
+      </div>
+      <div class="three-col">
+        <div class="form-group">
+          <label class="form-label">조사 부서명</label>
+          <input type="text" id="h-dept" placeholder="예: 생산1팀">
+        </div>
+        <div class="form-group">
+          <label class="form-label">작업공정명</label>
+          <input type="text" id="h-process" placeholder="예: 도장공정">
+        </div>
+        <div class="form-group">
+          <label class="form-label">작업명</label>
+          <input type="text" id="h-task" placeholder="예: 상도 도장작업">
+        </div>
+      </div>
+
+      <div id="h-occasional-reason" style="display:none;">
+        <div class="section-title">수시조사 사유 (해당 항목 선택)</div>
+        <div class="check-row"><input type="checkbox" id="h-r1"><label for="h-r1"><strong>① 근골격계질환자 발생</strong><br>임시건강진단 등에서 근골격계질환자 발생 또는 업무상 질병 인정</label></div>
+        <div class="check-row"><input type="checkbox" id="h-r2"><label for="h-r2"><strong>② 새로운 작업·설비 도입</strong><br>근골격계부담작업에 해당하는 새로운 작업·설비 도입</label></div>
+        <div class="check-row"><input type="checkbox" id="h-r3"><label for="h-r3"><strong>③ 작업환경 변경</strong><br>근골격계부담작업에 해당하는 업무 양·공정 등 작업환경 변경</label></div>
+      </div>
+
+      <div class="alert alert-green" style="margin-top:16px;">
+        <span class="alert-icon">✅</span>
+        <div>
+          <strong>근로자 참여 확인:</strong> 유해요인조사 시 근로자 대표 또는 근로자를 반드시 참여시켜야 합니다. (안전보건규칙 제658조)
+          <br>참여 근로자: <input type="text" id="h-participant" placeholder="참여 근로자 성명" style="width:200px;display:inline-block;margin-left:8px;padding:3px 8px;font-size:12px;">
+        </div>
+      </div>
+    </div>
+
+    <!-- 나. 작업장 상황조사 -->
+    <div id="hazard-workplace" class="tab-content">
+      <div class="section-title">작업장 상황 조사 항목</div>
+      <div class="two-col">
+        <div>
+          <div class="form-group">
+            <label class="form-label">① 작업 설비 변경 여부</label>
+            <select id="h-equip-change">
+              <option value="none">변경 없음</option>
+              <option value="changed">변경 있음</option>
+            </select>
+            <textarea id="h-equip-detail" placeholder="변경 내용 입력..." style="margin-top:6px;min-height:50px;display:none;"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">② 작업량 변경 여부</label>
+            <select id="h-amount-change">
+              <option value="none">변경 없음</option>
+              <option value="changed">변경 있음</option>
+            </select>
+            <textarea id="h-amount-detail" placeholder="변경 내용 입력..." style="margin-top:6px;min-height:50px;display:none;"></textarea>
+          </div>
+        </div>
+        <div>
+          <div class="form-group">
+            <label class="form-label">③ 작업 속도 변경 여부</label>
+            <select id="h-speed-change">
+              <option value="none">변경 없음</option>
+              <option value="changed">변경 있음</option>
+            </select>
+            <textarea id="h-speed-detail" placeholder="변경 내용 입력..." style="margin-top:6px;min-height:50px;display:none;"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">④ 업무 형태 변경 여부</label>
+            <select id="h-type-change">
+              <option value="none">변경 없음</option>
+              <option value="changed">변경 있음</option>
+            </select>
+            <textarea id="h-type-detail" placeholder="변경 내용 입력..." style="margin-top:6px;min-height:50px;display:none;"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 다. 작업조건 조사 -->
+    <div id="hazard-condition" class="tab-content">
+      <div class="section-title">유해요인 평가 (근로자 면담 기반)</div>
+
+      <div class="alert alert-yellow">
+        <span class="alert-icon">📊</span>
+        작업강도(A)와 작업빈도(B) 점수를 선택하면 위험도 총점이 자동 산출됩니다. 총점 = A×B (최대 25점)
+      </div>
+
+      <table class="data-table" style="margin-bottom:16px;">
+        <thead>
+          <tr>
+            <th>단위작업명</th>
+            <th>관련 부담작업(호)</th>
+            <th>작업강도 A<br><small style="font-weight:400;opacity:0.8;">1매우쉬움~5매우힘듦</small></th>
+            <th>작업빈도 B<br><small style="font-weight:400;opacity:0.8;">1매우가끔~5초과근무</small></th>
+            <th>총점(A×B)</th>
+            <th>주요 유해요인</th>
+          </tr>
+        </thead>
+        <tbody id="condition-table-body">
+          <tr>
+            <td><input type="text" placeholder="작업명" style="border:none;width:100%;background:transparent;font-size:12px;"></td>
+            <td>
+              <select style="font-size:11px;padding:4px;">
+                <option>선택</option>
+                <option>제1호</option><option>제2호</option><option>제3호</option><option>제4호</option>
+                <option>제5호</option><option>제6호</option><option>제7호</option><option>제8호</option>
+                <option>제9호</option><option>제10호</option><option>제11호</option>
+              </select>
+            </td>
+            <td>
+              <select class="strength-sel" onchange="calcRisk(this)" style="font-size:11px;padding:4px;">
+                <option value="0">-</option>
+                <option value="1">1 매우 쉬움</option>
+                <option value="2">2 쉬움</option>
+                <option value="3">3 약간 힘듦</option>
+                <option value="4">4 힘듦</option>
+                <option value="5">5 매우 힘듦</option>
+              </select>
+            </td>
+            <td>
+              <select class="freq-sel" onchange="calcRisk(this)" style="font-size:11px;padding:4px;">
+                <option value="0">-</option>
+                <option value="1">1 매우 가끔</option>
+                <option value="2">2 가끔</option>
+                <option value="3">3 자주(4h미만)</option>
+                <option value="4">4 계속(4h이상)</option>
+                <option value="5">5 초과근무</option>
+              </select>
+            </td>
+            <td class="risk-total mono" style="font-weight:700;color:var(--navy);">-</td>
+            <td>
+              <select style="font-size:11px;padding:4px;">
+                <option>반복동작</option>
+                <option>부적절한 자세</option>
+                <option>과도한 힘</option>
+                <option>접촉스트레스</option>
+                <option>진동</option>
+                <option>복합요인</option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn btn-outline btn-sm" onclick="addConditionRow()">+ 단위작업 추가</button>
+
+      <hr class="divider">
+      <div class="section-title">유해요인 발생 원인 분석</div>
+      <div class="two-col">
+        <div class="form-group">
+          <label class="form-label">주요 유해요인 및 발생 원인</label>
+          <textarea id="h-cause" placeholder="예) 반복적인 손목 굴곡 동작 - 작업공구 설계 미흡, 작업면 높이 부적절&#10;부적절한 허리 굽힘 자세 - 작업대 높이 조절 불가..." style="min-height:120px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">개선 제안 (근로자 의견)</label>
+          <textarea id="h-suggestion" placeholder="근로자 면담 시 청취한 개선 의견을 입력하세요..." style="min-height:120px;"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 라. 조사 결과 -->
+    <div id="hazard-result" class="tab-content">
+      <div class="section-title">유해요인조사 결과 요약</div>
+      <div class="alert alert-blue">
+        <span class="alert-icon">📄</span>
+        조사 결과를 종합하여 작성합니다. 이 내용은 작업환경개선계획 수립의 근거가 됩니다.
+      </div>
+      <div class="form-group">
+        <label class="form-label">결과 요약 (주요 유해요인, 개선 필요 작업, 우선순위 등)</label>
+        <textarea id="h-final-result" placeholder="유해요인조사 결과를 종합하여 작성하세요.&#10;예) 조립라인 볼트 체결 작업에서 손목 반복굴곡 동작이 주요 유해요인으로 확인됨. 작업자 5명 중 3명이 손목 통증 호소. 개선 우선순위: 1순위 - 전동공구 교체, 2순위 - 작업대 높이 조절..." style="min-height:160px;"></textarea>
+      </div>
+      <div class="two-col" style="margin-top:16px;">
+        <div>
+          <div class="form-group">
+            <label class="form-label">근골격계질환 발생 위험 여부</label>
+            <select id="h-risk-judgment">
+              <option value="low">낮음 — 현 수준 유지, 정기 모니터링</option>
+              <option value="med">중간 — 일부 작업환경 개선 필요</option>
+              <option value="high">높음 — 즉각적인 작업환경개선 조치 필요</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div class="form-group">
+            <label class="form-label">다음 정기조사 예정일</label>
+            <input type="date" id="h-next-date">
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <button class="btn btn-success" onclick="saveHazardSurvey()">💾 유해요인조사 결과 저장</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ====================================================
+     PAGE: 증상조사 및 분류
+==================================================== -->
+<div id="page-step3" class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>🩺 STEP 3 — 근골격계질환 증상조사 및 분류</h2>
+      <p>NIOSH Symptom Survey 기준 / 별지 제2호서식 기반</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary btn-sm" onclick="addSymptomWorker()">+ 근로자 추가</button>
+    </div>
+  </div>
+  <div class="content-area">
+
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('symptom', 'input')">증상 입력</button>
+      <button class="tab-btn" onclick="switchTab('symptom', 'classify')">분류 기준</button>
+      <button class="tab-btn" onclick="switchTab('symptom', 'list')">증상자 목록</button>
+    </div>
+
+    <!-- 증상 입력 -->
+    <div id="symptom-input" class="tab-content active">
+      <div class="two-col">
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-header">
+            <div class="card-header-icon">👤</div>
+            <div><div class="card-title">근로자 기본정보</div></div>
+          </div>
+          <div class="card-body">
+            <div class="three-col">
+              <div class="form-group">
+                <label class="form-label">성명</label>
+                <input type="text" id="s-name" placeholder="홍길동">
+              </div>
+              <div class="form-group">
+                <label class="form-label">연령</label>
+                <input type="number" id="s-age" placeholder="만 나이" class="small-num">
+              </div>
+              <div class="form-group">
+                <label class="form-label">성별</label>
+                <select id="s-gender">
+                  <option value="m">남</option>
+                  <option value="f">여</option>
+                </select>
+              </div>
+            </div>
+            <div class="two-col">
+              <div class="form-group">
+                <label class="form-label">작업부서/공정</label>
+                <input type="text" id="s-dept" placeholder="생산1팀">
+              </div>
+              <div class="form-group">
+                <label class="form-label">현 작업 경력</label>
+                <input type="text" id="s-career" placeholder="예: 3년 2개월">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">현재 수행 작업 내용</label>
+              <textarea id="s-work" placeholder="구체적인 작업 내용 입력..." style="min-height:60px;"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-header">
+            <div class="card-header-icon">💡</div>
+            <div><div class="card-title">증상 구분 자동 판정 기준</div><div class="card-desc">NIOSH Symptom Survey 기준</div></div>
+          </div>
+          <div class="card-body">
+            <div class="risk-item" style="background:var(--green-bg);border-color:var(--green-brd);">
+              <div class="risk-name"><strong style="color:var(--green);">정상</strong><br><span style="font-size:10px;color:var(--gray-500);">관리대상자·통증호소자에 해당되지 않는 경우</span></div>
+              <div class="badge badge-green">정상</div>
+            </div>
+            <div class="risk-item" style="background:var(--yellow-bg);border-color:var(--yellow-brd);">
+              <div class="risk-name"><strong style="color:var(--yellow);">관리대상자</strong><br><span style="font-size:10px;color:var(--gray-500);">통증 1주 이상 OR 월 1회이상 + 중간정도 통증</span></div>
+              <div class="badge badge-yellow">관리대상</div>
+            </div>
+            <div class="risk-item" style="background:var(--red-bg);border-color:var(--red-brd);">
+              <div class="risk-name"><strong style="color:var(--red);">통증호소자</strong><br><span style="font-size:10px;color:var(--gray-500);">통증 1주 이상 AND 월 1회이상 + 심한/매우심한 통증</span></div>
+              <div class="badge badge-red">통증호소자</div>
+            </div>
+            <div class="alert alert-orange" style="margin-top:12px;margin-bottom:0;">
+              <span class="alert-icon">⏰</span>
+              <div>증상 보고 접수 후 <strong>7일 이내</strong>에 작업 관련 여부 판단 및 적절한 조치를 해야 합니다. (안전보건규칙 제660조)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <div class="card-header">
+          <div class="card-header-icon">🗺️</div>
+          <div><div class="card-title">신체 부위별 증상 입력</div><div class="card-desc">지난 1년간 작업과 관련된 통증/불편함 여부</div></div>
+        </div>
+        <div class="card-body">
+          <div id="symptom-body-parts"></div>
+
+          <hr class="divider">
+          <div class="two-col">
+            <div>
+              <div class="form-group">
+                <label class="form-label">현재 육체적 부담 정도</label>
+                <select id="s-burden-level">
+                  <option value="0">전혀 힘들지 않음</option>
+                  <option value="1">견딜만 함</option>
+                  <option value="2">약간 힘듦</option>
+                  <option value="3">힘듦</option>
+                  <option value="4">매우 힘듦</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <div class="form-group">
+                <label class="form-label">관련 기왕력 (해당 시 체크)</label>
+                <select id="s-history">
+                  <option value="none">해당없음</option>
+                  <option value="rheumatoid">류머티스 관절염</option>
+                  <option value="diabetes">당뇨병</option>
+                  <option value="gout">통풍</option>
+                  <option value="injury">과거 사고 부상</option>
+                  <option value="other">기타</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div style="text-align:center;margin-top:12px;">
+            <button class="btn btn-primary btn-lg" onclick="classifySymptom()">🔍 증상 자동 분류 및 저장</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="symptom-class-result" style="display:none;margin-top:16px;"></div>
+    </div>
+
+    <!-- 분류 기준 -->
+    <div id="symptom-classify" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon">📊</div>
+          <div><div class="card-title">의학적 조치 단계별 흐름도</div><div class="card-desc">사업장 내 의학적 조치 (KOSHA GUIDE 그림 11)</div></div>
+        </div>
+        <div class="card-body">
+          <div class="flow-box">
+            <div class="flow-node" style="background:var(--blue);">무증상 근로자 예방 — 관리감독자</div>
+            <div class="flow-arrow">↓ 초기 증상 있는가?</div>
+            <div class="flow-node orange">초기 증상자 관리 — 관리감독자(보건관리자)</div>
+            <div class="flow-arrow">↓ 3일 이내 증상 호전?</div>
+            <div class="flow-row" style="gap:20px;">
+              <div class="flow-box">
+                <span style="font-size:10px;color:var(--green);font-weight:700;">예 → 복귀</span>
+              </div>
+              <div class="flow-box">
+                <span style="font-size:10px;color:var(--red);font-weight:700;">아니오 →</span>
+                <div class="flow-node red" style="margin-top:6px;font-size:11px;">급성기 환자 치료<br>외부전문의(보건관리자)</div>
+                <div class="flow-arrow" style="font-size:14px;">↓</div>
+                <div class="flow-node green" style="font-size:11px;">치료 후 복귀 지원<br>관리감독자+보건관리자</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="divider">
+          <table class="data-table">
+            <thead><tr><th>단계</th><th>구분</th><th>실시자</th><th>실시시기</th><th>주요 조치 내용</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">①</td><td><span class="badge badge-navy">무증상기</span></td><td>관리감독자</td><td>매일 / 연 1회 체력평가</td><td>표준작업서 작성, 올바른 작업방법 훈련, 증상체크, 스트레칭, 근력강화</td></tr>
+              <tr><td class="mono">②</td><td><span class="badge badge-yellow">초기증상기</span></td><td>관리감독자/보건관리자</td><td>증상 호소 후 3일까지</td><td>근무상 조치(업무경감·전환), 증상완화요법(냉찜질), 필요시 전문가 의뢰</td></tr>
+              <tr><td class="mono">③</td><td><span class="badge badge-red">급성기</span></td><td>외부 전문의료기관</td><td>초기 증상 호소 3일 초과 시</td><td>근무 중 치료, 휴업치료, 스트레칭·근력강화 병행</td></tr>
+              <tr><td class="mono">④</td><td><span class="badge badge-green">복귀기</span></td><td>관리감독자+보건관리자</td><td>급성기 경과 직후</td><td>업무복귀 프로그램, 업무적합성 평가, 복귀 후 조치 (첫 1개월 잔업 금지)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 증상자 목록 -->
+    <div id="symptom-list" class="tab-content">
+      <div class="section-title">등록 증상자 목록</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>성명</th>
+            <th>부서</th>
+            <th>주요 통증 부위</th>
+            <th>분류</th>
+            <th>조치 단계</th>
+            <th>등록일</th>
+            <th>조치</th>
+          </tr>
+        </thead>
+        <tbody id="symptom-list-body">
+          <tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:30px;">등록된 증상자가 없습니다. 증상 입력 탭에서 추가하세요.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ====================================================
+     PAGE: 작업환경개선 계획
+==================================================== -->
+<div id="page-step4" class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>🔧 STEP 4 — 작업환경개선 계획</h2>
+      <p>안전보건규칙 제659조 / KOSHA GUIDE 부록 6 개선계획서</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary btn-sm" onclick="addImprovement()">+ 개선과제 추가</button>
+    </div>
+  </div>
+  <div class="content-area">
+
+    <div class="two-col" style="margin-bottom:20px;">
+      <div>
+        <div class="section-title">개선 우선순위 결정 기준</div>
+        <div class="alert alert-blue" style="margin-bottom:10px;">
+          <span class="alert-icon">📌</span>
+          <div>다음 두 조건을 우선적으로 개선합니다.<br>
+          <strong>① 다수 근로자가 유해요인에 노출되거나 증상을 호소하는 작업</strong><br>
+          <strong>② 비용편익 효과가 큰 작업</strong></div>
+        </div>
+        <div class="section-title">개선 방법 유형</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div class="risk-item" style="background:var(--blue-bg);border-color:var(--blue-brd);">
+            <div class="risk-name"><strong style="color:var(--blue);">① 공학적 개선</strong><br><span style="font-size:10px;">공구/장비·작업장·부품/제품 재설계, 재배열, 수정, 교체</span></div>
+          </div>
+          <div class="risk-item" style="background:var(--green-bg);border-color:var(--green-brd);">
+            <div class="risk-name"><strong style="color:var(--green);">② 관리적 개선</strong><br><span style="font-size:10px;">작업순환, 휴식시간 제공, 작업속도 조절, 적정 배치</span></div>
+          </div>
+          <div class="risk-item" style="background:var(--yellow-bg);border-color:var(--yellow-brd);">
+            <div class="risk-name"><strong style="color:var(--yellow);">③ 행동 개선</strong><br><span style="font-size:10px;">올바른 작업방법 훈련, 태도·지식·생활패턴 개선</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">인체측정 기반 설계 원칙</div>
+        <table class="data-table">
+          <thead><tr><th>설계 유형</th><th>적용 범위</th><th>기준</th></tr></thead>
+          <tbody>
+            <tr><td><strong>조절 가능한 설계</strong></td><td>작업대, 의자 등</td><td>여성 5%ile ~ 남성 95%ile</td></tr>
+            <tr><td><strong>최대치 설계</strong></td><td>통로, 비상구 높이, 받침대 한계중량</td><td>남성 95 퍼센타일</td></tr>
+            <tr><td><strong>최소치 설계</strong></td><td>선반 높이, 조정장치 거리</td><td>여성 5 퍼센타일</td></tr>
+            <tr><td><strong>평균치 설계</strong></td><td>식당 테이블, 버스 손잡이</td><td>남녀 혼합 50 퍼센타일</td></tr>
+          </tbody>
+        </table>
+
+        <div class="alert alert-orange" style="margin-top:12px;">
+          <span class="alert-icon">⚠️</span>
+          <div>개선이 불가능하거나 유해요인이 계속 존재하는 경우:<br>
+          <strong>유해요인 노출시간 단축, 작업순환</strong> 등 관리적 개선을 적용하세요.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 작업환경개선계획서 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon">📝</div>
+        <div>
+          <div class="card-title">작업환경 개선 계획서</div>
+          <div class="card-desc">KOSHA GUIDE 부록 6 양식 기반</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="improvement-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>공정명</th>
+                <th>작업명</th>
+                <th>문제점(유해요인)</th>
+                <th>개선방안</th>
+                <th>개선유형</th>
+                <th>추진일정</th>
+                <th>개선비용<br>(천원)</th>
+                <th>우선순위</th>
+                <th>상태</th>
+                <th>삭제</th>
+              </tr>
+            </thead>
+            <tbody id="improvement-body">
+              <!-- JS 렌더링 -->
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;">
+          <button class="btn btn-outline btn-sm" onclick="addImprovement()">+ 개선과제 추가</button>
+        </div>
+
+        <hr class="divider">
+        <div class="section-title">개선 완료 평가 체크리스트</div>
+        <div class="two-col">
+          <div>
+            <div class="check-row"><input type="checkbox" id="eval1"><label for="eval1"><strong>유해요인 노출 특성의 변화 확인</strong></label></div>
+            <div class="check-row"><input type="checkbox" id="eval2"><label for="eval2"><strong>증상 및 질환 발생 특성의 변화 확인</strong><br>발생률, 강도율, 증상호소율 등</label></div>
+            <div class="check-row"><input type="checkbox" id="eval3"><label for="eval3"><strong>근로자 만족도 조사 완료</strong></label></div>
+          </div>
+          <div>
+            <div class="check-row"><input type="checkbox" id="eval4"><label for="eval4"><strong>해당 근로자에게 개선 결과 통보</strong></label></div>
+            <div class="check-row"><input type="checkbox" id="eval5"><label for="eval5"><strong>개선 후 신규 위험요소 점검 완료</strong></label></div>
+            <div class="check-row"><input type="checkbox" id="eval6"><label for="eval6"><strong>개선 결과 문서 보존 조치</strong><br>시설·설비 존재 기간 동안</label></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ====================================================
+     PAGE: 의학적 조치 관리
+==================================================== -->
+<div id="page-step5" class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>💊 STEP 5 — 의학적 조치 관리</h2>
+      <p>안전보건규칙 제660조 / KOSHA GUIDE 8장 기반 단계별 의학적 조치</p>
+    </div>
+  </div>
+  <div class="content-area">
+
+    <div class="three-col" style="margin-bottom:20px;">
+      <div class="card" style="margin-bottom:0;border-top:3px solid var(--blue);">
+        <div class="card-header"><div class="card-header-icon" style="background:var(--blue);">🛡️</div><div><div class="card-title">무증상기 예방</div><div class="card-desc">관리감독자 주도</div></div></div>
+        <div class="card-body">
+          <div style="font-size:11px;color:var(--gray-600);line-height:1.8;">
+            <div>✅ 배치 전 고려사항 검토</div>
+            <div>✅ 표준작업서 작성 및 훈련</div>
+            <div>✅ 매일 증상체크 실시</div>
+            <div>✅ 스트레칭 / 근력강화</div>
+            <div>✅ 연 1회 체력평가</div>
+          </div>
+          <div class="alert alert-blue" style="margin-top:12px;margin-bottom:0;padding:10px 12px;">
+            <span class="alert-icon" style="font-size:12px;">📅</span>
+            <div style="font-size:11px;">작업방법훈련: 연 1회 정기<br>증상체크: 매일 업무 개시 전</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0;border-top:3px solid var(--orange);">
+        <div class="card-header"><div class="card-header-icon" style="background:var(--orange);">⚡</div><div><div class="card-title">초기증상기 조치</div><div class="card-desc">증상 호소 후 3일까지</div></div></div>
+        <div class="card-body">
+          <div style="font-size:11px;color:var(--gray-600);line-height:1.8;">
+            <div>⚠️ 업무 경감 또는 전환 (근무상 조치)</div>
+            <div>⚠️ 냉찜질 — 하루 2회, 15분씩</div>
+            <div>⚠️ 소염 진통 습포제 적용</div>
+            <div>⚠️ 3일 내 미회복 시 전문의 의뢰</div>
+          </div>
+          <div class="alert alert-orange" style="margin-top:12px;margin-bottom:0;padding:10px 12px;">
+            <span class="alert-icon" style="font-size:12px;">🚨</span>
+            <div style="font-size:11px;"><strong>즉시 전문의 의뢰:</strong><br>아침 손가락 걸림 / 팔 올릴 때 통증 / 다리로 뻗치는 저림</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0;border-top:3px solid var(--red);">
+        <div class="card-header"><div class="card-header-icon" style="background:var(--red);">🏥</div><div><div class="card-title">급성기·복귀기 관리</div><div class="card-desc">3일 초과 시</div></div></div>
+        <div class="card-body">
+          <div style="font-size:11px;color:var(--gray-600);line-height:1.8;">
+            <div>🔴 전문의료기관 의뢰 (3일 초과)</div>
+            <div>🔴 근무 중 치료 또는 휴업치료</div>
+            <div>🟢 복귀 전 업무복귀 프로그램</div>
+            <div>🟢 업무적합성 평가 (산업의학)</div>
+            <div>🟢 복귀 후 첫 1개월 잔업 금지</div>
+            <div>🟢 복귀 후 작업제한 90일 이내</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 증상 단계별 의학적 조치 관리 현황 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon">📋</div>
+        <div><div class="card-title">의학적 조치 현황 관리표</div><div class="card-desc">증상자별 단계 추적 및 조치 기록</div></div>
+        <div class="card-actions">
+          <button class="btn btn-outline btn-sm" onclick="addMedicalRecord()">+ 조치 기록 추가</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <table class="data-table">
+          <thead>
+            <tr><th>근로자명</th><th>증상부위</th><th>최초보고일</th><th>현재단계</th><th>최근조치내용</th><th>조치담당자</th><th>다음조치일</th><th>상태</th></tr>
+          </thead>
+          <tbody id="medical-table-body">
+            <tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:30px;">등록된 의학적 조치 기록이 없습니다.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 업무복귀 프로그램 안내 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon">🔄</div>
+        <div><div class="card-title">업무복귀 프로그램 체크리스트</div><div class="card-desc">KOSHA GUIDE 부록 11 기반</div></div>
+      </div>
+      <div class="card-body">
+        <div class="two-col">
+          <div>
+            <div class="section-title">제1일~제3일 (초기 적응)</div>
+            <div class="check-row"><input type="checkbox"><label>부서 출근, 복귀 프로그램 일정 공지</label></div>
+            <div class="check-row"><input type="checkbox"><label>현장 작업공정 견학</label></div>
+            <div class="check-row"><input type="checkbox"><label>보건관리자 면담</label></div>
+            <div class="check-row"><input type="checkbox"><label>스트레칭 비디오 관람 및 교육</label></div>
+            <div class="check-row"><input type="checkbox"><label>근력검사 및 근력강화운동</label></div>
+            <div class="check-row"><input type="checkbox"><label>근골격계질환 및 안전보건교육</label></div>
+          </div>
+          <div>
+            <div class="section-title">제4일~제12일 (단계적 복귀)</div>
+            <div class="check-row"><input type="checkbox"><label>스트레칭 실시 (매일)</label></div>
+            <div class="check-row"><input type="checkbox"><label>근력강화 및 유연성 운동</label></div>
+            <div class="check-row"><input type="checkbox"><label>현장작업 참여 (2시간 → 4시간 단계적 증가)</label></div>
+            <div class="check-row"><input type="checkbox"><label>최종 부서평가 및 보건관리자 면담</label></div>
+            <div class="check-row"><input type="checkbox"><label>업무적합성 평가 (산업의학전문의)</label></div>
+            <div class="check-row"><input type="checkbox"><label>복귀 후 조치: 첫 1개월 잔업·특근 금지</label></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ====================================================
+     PAGE: 예방·관리 프로그램
+==================================================== -->
+<div id="page-step6" class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>📚 STEP 6 — 근골격계질환 예방·관리 프로그램</h2>
+      <p>안전보건규칙 제662조 / KOSHA GUIDE 9장 기반</p>
+    </div>
+  </div>
+  <div class="content-area">
+
+    <!-- 의무 대상 판단 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon">⚖️</div>
+        <div><div class="card-title">예방·관리 프로그램 수립 의무 대상 판단</div><div class="card-desc">안전보건규칙 제662조</div></div>
+      </div>
+      <div class="card-body">
+        <div class="two-col">
+          <div>
+            <div class="section-title">의무 대상 기준 입력</div>
+            <div class="form-group">
+              <label class="form-label">연간 근골격계질환 업무상 질병 인정 근로자 수</label>
+              <input type="number" id="prog-annual-cases" placeholder="0" class="small-num" oninput="checkProgramObligation()"> 명
+            </div>
+            <div class="form-group">
+              <label class="form-label">전체 근로자 수</label>
+              <input type="number" id="prog-total-workers" placeholder="0" class="small-num" oninput="checkProgramObligation()"> 명
+            </div>
+            <div class="check-row" style="margin-top:10px;">
+              <input type="checkbox" id="prog-dispute" onchange="checkProgramObligation()">
+              <label for="prog-dispute"><strong>노사 간 이견이 지속되는 사업장으로 고용노동부장관이 명령한 경우</strong></label>
+            </div>
+          </div>
+          <div>
+            <div id="prog-obligation-result">
+              <div class="alert alert-blue">
+                <span class="alert-icon">ℹ️</span>
+                좌측에 수치를 입력하면 의무 여부가 자동 판단됩니다.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 예방·관리팀 구성 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon">👥</div>
+        <div><div class="card-title">근골격계질환 예방·관리추진팀 구성</div><div class="card-desc">KOSHA GUIDE 9.3항 기반 / 예산 결정권자 반드시 포함</div></div>
+        <div class="card-actions"><button class="btn btn-outline btn-sm" onclick="addTeamMember()">+ 팀원 추가</button></div>
+      </div>
+      <div class="card-body">
+        <table class="data-table">
+          <thead><tr><th>역할</th><th>성명</th><th>직위/부서</th><th>주요 업무</th><th>예산권한</th></tr></thead>
+          <tbody id="team-table-body">
+            <tr>
+              <td><select style="font-size:11px;padding:3px;">
+                <option>팀장 (예산결정권자)</option>
+                <option>보건관리자</option>
+                <option>안전관리자</option>
+                <option>근로자 대표</option>
+                <option>명예산업안전감독관</option>
+                <option>생산기술 담당자</option>
+                <option>노무 담당자</option>
+              </select></td>
+              <td><input type="text" placeholder="성명" style="border:none;font-size:12px;width:100%;"></td>
+              <td><input type="text" placeholder="직위/부서" style="border:none;font-size:12px;width:100%;"></td>
+              <td><input type="text" placeholder="주요 업무" style="border:none;font-size:12px;width:100%;"></td>
+              <td style="text-align:center;"><input type="checkbox" style="width:auto;" checked></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 교육 계획 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon">📖</div>
+        <div><div class="card-title">근골격계질환 예방·관리 교육 계획</div><div class="card-desc">KOSHA GUIDE 9.5항 기반</div></div>
+      </div>
+      <div class="card-body">
+        <div class="two-col">
+          <div>
+            <div class="section-title">근로자 교육 (기본교육)</div>
+            <table class="data-table">
+              <thead><tr><th>교육 내용</th><th>시기</th><th>시간</th><th>완료</th></tr></thead>
+              <tbody>
+                <tr><td>근골격계부담작업 유해요인</td><td>최초 6개월이내 / 이후 3년마다</td><td>2h 이상</td><td><input type="checkbox" style="width:auto;"></td></tr>
+                <tr><td>작업도구와 장비 올바른 사용방법</td><td>동일</td><td>포함</td><td><input type="checkbox" style="width:auto;"></td></tr>
+                <tr><td>증상·징후 식별 및 보고방법</td><td>매년 1회 이상</td><td>1h 이상</td><td><input type="checkbox" style="width:auto;"></td></tr>
+                <tr><td>근골격계질환 발생 시 대처요령</td><td>동일</td><td>포함</td><td><input type="checkbox" style="width:auto;"></td></tr>
+                <tr><td>신규 설비 도입·작업방법 변경 시</td><td>수시</td><td>1h 이상</td><td><input type="checkbox" style="width:auto;"></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <div class="section-title">예방·관리팀 전문교육</div>
+            <table class="data-table">
+              <thead><tr><th>교육 내용</th><th>완료</th></tr></thead>
+              <tbody>
+                <tr><td>근골격계부담작업 유해요인 및 식별방법</td><td><input type="checkbox" style="width:auto;"></td></tr>
+                <tr><td>예방·관리 프로그램 수립 및 운영방법</td><td><input type="checkbox" style="width:auto;"></td></tr>
+                <tr><td>유해요인 평가 방법 (인간공학적 도구)</td><td><input type="checkbox" style="width:auto;"></td></tr>
+                <tr><td>유해요인 제거 원칙 및 개선 조치</td><td><input type="checkbox" style="width:auto;"></td></tr>
+                <tr><td>프로그램 평가 방법</td><td><input type="checkbox" style="width:auto;"></td></tr>
+                <tr><td>해당 부서 유해요인 개선대책</td><td><input type="checkbox" style="width:auto;"></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ====================================================
+     PAGE: 문서 기록·보존
+==================================================== -->
+<div id="page-records" class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>🗂️ 문서 기록·보존 관리</h2>
+      <p>안전보건규칙 제662조 / KOSHA GUIDE 10장 기반</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary btn-sm" onclick="addRecord()">+ 문서 추가</button>
+    </div>
+  </div>
+  <div class="content-area">
+
+    <div class="two-col" style="margin-bottom:20px;">
+      <div class="alert alert-blue" style="margin:0;">
+        <span class="alert-icon">📁</span>
+        <div>
+          <strong>5년 보존:</strong> 유해요인조사 결과 (증상 설문조사 결과 포함), 의학적 조치 및 그 결과<br>
+          <strong>시설·설비 존재 기간:</strong> 작업환경 개선계획 및 그 결과보고서
+        </div>
+      </div>
+      <div class="alert alert-orange" style="margin:0;">
+        <span class="alert-icon">⚠️</span>
+        <div>
+          문서 보존 기간이 경과하지 않도록 주기적으로 확인하고, 전산 또는 서면으로 체계적으로 보관하세요.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon">📄</div>
+        <div><div class="card-title">문서 보존 현황</div></div>
+      </div>
+      <div class="card-body">
+        <table class="data-table">
+          <thead>
+            <tr><th>문서 종류</th><th>문서명/내용</th><th>작성일</th><th>보존 기간</th><th>만료일</th><th>D-Day</th><th>상태</th></tr>
+          </thead>
+          <tbody id="records-table-body">
+            <tr>
+              <td><span class="badge badge-navy">유해요인조사</span></td>
+              <td>근골격계부담작업 유해요인조사표 (예시)</td>
+              <td class="mono">2023-03-15</td>
+              <td>5년</td>
+              <td class="mono">2028-03-15</td>
+              <td class="mono" style="color:var(--green);font-weight:700;">D-733</td>
+              <td><span class="badge badge-green">보존중</span></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-yellow">증상조사</span></td>
+              <td>근골격계질환 증상조사표</td>
+              <td class="mono">2023-03-15</td>
+              <td>5년</td>
+              <td class="mono">2028-03-15</td>
+              <td class="mono" style="color:var(--green);font-weight:700;">D-733</td>
+              <td><span class="badge badge-green">보존중</span></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-red">의학적조치</span></td>
+              <td>의학적 조치 결과 기록</td>
+              <td class="mono">2024-06-10</td>
+              <td>5년</td>
+              <td class="mono">2029-06-10</td>
+              <td class="mono" style="color:var(--green);font-weight:700;">D-1170</td>
+              <td><span class="badge badge-green">보존중</span></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-orange">개선계획</span></td>
+              <td>작업환경 개선계획서 및 결과보고서</td>
+              <td class="mono">2024-06-10</td>
+              <td>시설 존속기간</td>
+              <td class="mono">-</td>
+              <td class="mono">-</td>
+              <td><span class="badge badge-green">보존중</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ====================================================
+     PAGE: 사업장 기본정보
+==================================================== -->
+<div id="page-settings" class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>⚙️ 사업장 기본정보 설정</h2>
+      <p>근골격계질환 예방 관리 시스템 기본 설정</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-success btn-sm" onclick="saveSettings()">💾 저장</button>
+    </div>
+  </div>
+  <div class="content-area">
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header"><div class="card-header-icon">🏭</div><div><div class="card-title">사업장 기본정보</div></div></div>
+        <div class="card-body">
+          <div class="form-group"><label class="form-label">사업장명</label><input type="text" id="cfg-company" placeholder="(주)예시회사"></div>
+          <div class="form-group"><label class="form-label">사업장 소재지</label><input type="text" id="cfg-address" placeholder="서울특별시 ..."></div>
+          <div class="form-group"><label class="form-label">업종</label><input type="text" id="cfg-industry" placeholder="예: 자동차 부품 제조업"></div>
+          <div class="form-group"><label class="form-label">전체 근로자 수 (명)</label><input type="number" id="cfg-workers" placeholder="0" class="small-num"></div>
+          <div class="form-group"><label class="form-label">보건관리자 성명</label><input type="text" id="cfg-hm" placeholder="성명 (미선임 시 보건담당자)"></div>
+          <div class="form-group"><label class="form-label">안전보건관리책임자</label><input type="text" id="cfg-manager" placeholder="성명"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-header-icon">📅</div><div><div class="card-title">유해요인조사 일정 관리</div></div></div>
+        <div class="card-body">
+          <div class="form-group"><label class="form-label">최초 유해요인조사 완료일</label><input type="date" id="cfg-first-survey"></div>
+          <div class="form-group"><label class="form-label">마지막 정기조사 완료일</label><input type="date" id="cfg-last-survey"></div>
+          <div class="form-group"><label class="form-label">다음 정기조사 예정일 (3년마다)</label><input type="date" id="cfg-next-survey"></div>
+          <hr class="divider">
+          <div class="form-group"><label class="form-label">사업장 개설일</label><input type="date" id="cfg-open-date"></div>
+          <div class="form-group"><label class="form-label">근골격계질환 예방·관리 프로그램 수립일</label><input type="date" id="cfg-prog-date"></div>
+          <div class="alert alert-yellow" style="margin-top:12px;margin-bottom:0;font-size:11px;">
+            <span class="alert-icon">📌</span>
+            신설 사업장은 신설일부터 1년 이내에 최초 유해요인조사를 실시해야 합니다.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+/* ============================================================
+   KOSHA GUIDE E-G-1-2025
+   근골격계질환 예방 보건관리 시스템 - 메인 로직
+============================================================ */
+
+// ============================================================
+// 전역 상태
+// ============================================================
+const AppState = {
+  company: '',
+  workers: 0,
+  burdenWorks: [],      // 부담작업 해당 항목
+  hazardSurveys: [],    // 유해요인조사 결과
+  symptoms: [],         // 증상자 목록
+  improvements: [],     // 개선과제
+  medicalRecords: [],   // 의학적 조치 기록
+  records: [],          // 문서 보존
+};
+
+// ============================================================
+// 1. 근골격계부담작업 11개 유형 데이터
+// ============================================================
+const BURDEN_WORKS = [
+  {
+    no: 1,
+    title: '키보드·마우스 집중 조작',
+    desc: '하루에 4시간 이상 집중적으로 자료입력 등을 위해 키보드 또는 마우스를 조작하는 작업',
+    body: '손, 손가락',
+    exposure: '하루 4시간 이상',
+    freq: '-',
+    hazard: '반복동작',
+    tip: '4시간 이상인 경우 부담작업. 키보드 3시간+마우스 2시간=5시간이어도 각각 4시간 미만이면 해당 안됨에 주의'
+  },
+  {
+    no: 2,
+    title: '목·어깨·손목 등 반복 동작',
+    desc: '하루에 총 2시간 이상 목, 어깨, 팔꿈치, 손목 또는 손을 사용하여 같은 동작을 반복하는 작업',
+    body: '목, 어깨, 손목, 손, 팔꿈치',
+    exposure: '하루 총 2시간 이상',
+    freq: '-',
+    hazard: '반복동작',
+    tip: '신체 부위별 각각 2시간 이상 여부를 판단. 어깨 1.5h + 손목 3h이면 손목이 해당'
+  },
+  {
+    no: 3,
+    title: '어깨 위 팔꿈치 거상 작업',
+    desc: '하루에 총 2시간 이상 머리 위에 손이 있거나, 팔꿈치가 어깨 위에 있거나, 팔꿈치를 몸통으로부터 들거나, 팔꿈치를 몸통 뒤쪽에 위치하도록 하는 상태에서 이루어지는 작업',
+    body: '어깨, 팔',
+    exposure: '하루 총 2시간 이상',
+    freq: '-',
+    hazard: '부적절한 자세',
+    tip: '제3호는 각 동작을 합산하여 판단(동일조직 부담). 머리위손 1.5h + 어깨위 0.5h + 몸통뒤 1h = 3h → 부담작업'
+  },
+  {
+    no: 4,
+    title: '목·허리 굽힘·비틀기',
+    desc: '지지되지 않은 상태이거나 임의로 자세를 바꿀 수 없는 조건에서, 하루에 총 2시간 이상 목이나 허리를 구부리거나 트는 상태에서 이루어지는 작업',
+    body: '목, 허리',
+    exposure: '하루 총 2시간 이상',
+    freq: '-',
+    hazard: '부적절한 자세',
+    tip: '목과 허리는 별도 판단. 임의로 자세 변경 불가 조건이 전제'
+  },
+  {
+    no: 5,
+    title: '쪼그리기·무릎 굽힘 작업',
+    desc: '하루에 총 2시간 이상 쪼그리고 앉거나 무릎을 굽힌 자세에서 이루어지는 작업',
+    body: '다리, 무릎',
+    exposure: '하루 총 2시간 이상',
+    freq: '-',
+    hazard: '부적절한 자세',
+    tip: '쪼그리기와 무릎굽힘은 별도 판단. 쪼그리기 2.5h → 해당, 무릎굽힘 1h → 비해당'
+  },
+  {
+    no: 6,
+    title: '손가락 집기·쥐기 (소중량)',
+    desc: '하루에 총 2시간 이상 지지되지 않은 상태에서 1kg 이상의 물건을 한손의 손가락으로 집어 옮기거나, 2kg 이상에 상응하는 힘을 가하여 한손의 손가락으로 물건을 쥐는 작업',
+    body: '손가락',
+    exposure: '하루 총 2시간 이상',
+    freq: '-',
+    hazard: '과도한 힘',
+    tip: '손가락으로 집기(1kg 이상) 또는 쥐기(2kg 이상 힘). 지지되지 않은 상태 조건 주의'
+  },
+  {
+    no: 7,
+    title: '한손으로 중량물(4.5kg 이상) 들기',
+    desc: '하루에 총 2시간 이상 지지되지 않은 상태에서 4.5kg 이상의 물건을 한 손으로 들거나 동일한 힘으로 쥐는 작업',
+    body: '손',
+    exposure: '하루 총 2시간 이상',
+    freq: '-',
+    hazard: '과도한 힘',
+    tip: '한 손 기준. 6kg 물건을 3h 들기 → 해당. 4kg 힘 쥐기 1h → 비해당(4.5kg 미만, 2h 미만)'
+  },
+  {
+    no: 8,
+    title: '25kg 이상 물체 반복 들기',
+    desc: '하루에 10회 이상 25kg 이상의 물체를 드는 작업',
+    body: '허리',
+    exposure: '-',
+    freq: '하루 10회 이상',
+    hazard: '과도한 힘',
+    tip: '2인 작업 시 개인 무게로 판단. 30kg을 2명이 들면 15kg → 비해당'
+  },
+  {
+    no: 9,
+    title: '10kg 이상 부적절한 자세로 들기',
+    desc: '하루에 25회 이상 10kg 이상의 물체를 무릎 아래에서 들거나, 어깨 위에서 들거나, 팔을 뻗은 상태에서 드는 작업',
+    body: '손, 무릎, 팔꿈치',
+    exposure: '-',
+    freq: '하루 25회 이상',
+    hazard: '과도한 힘, 부적절한 자세',
+    tip: '무릎아래/어깨위/팔뻗음 각 자세별 개별 판단. 7kg은 10kg 미만 → 비해당'
+  },
+  {
+    no: 10,
+    title: '4.5kg 이상 고빈도 반복 들기',
+    desc: '하루에 총 2시간 이상, 분당 2회 이상 4.5kg 이상의 물체를 드는 작업',
+    body: '허리',
+    exposure: '하루 총 2시간 이상',
+    freq: '분당 2회 이상',
+    hazard: '과도한 힘, 반복성',
+    tip: '시간과 빈도 모두 충족해야 해당. 분당 4회, 6kg, 3h → 해당'
+  },
+  {
+    no: 11,
+    title: '손·무릎 반복 충격',
+    desc: '하루에 총 2시간 이상 시간당 10회 이상 손 또는 무릎을 사용하여 반복적으로 충격을 가하는 작업',
+    body: '손, 무릎, 팔꿈치',
+    exposure: '하루 총 2시간 이상',
+    freq: '시간당 10회 이상',
+    hazard: '접촉스트레스',
+    tip: '시간당 8회, 1h → 비해당(2h 미만, 10회 미만)'
+  }
+];
+
+// ============================================================
+// 2. 네비게이션
+// ============================================================
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+  // 해당 nav-item 활성화
+  const items = document.querySelectorAll('.nav-item');
+  items.forEach(item => {
+    if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(pageId)) {
+      item.classList.add('active');
+    }
+  });
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// 3. 탭 전환
+// ============================================================
+function switchTab(group, tabId) {
+  const allContents = document.querySelectorAll(`[id^="${group}-"]`);
+  const allBtns = document.querySelectorAll('.tab-btn');
+  allContents.forEach(c => c.classList.remove('active'));
+  allBtns.forEach(b => b.classList.remove('active'));
+  document.getElementById(`${group}-${tabId}`).classList.add('active');
+  event.target.classList.add('active');
+
+  // 수시조사 사유 토글
+  if (tabId === 'overview') {
+    const type = document.getElementById('h-survey-type');
+    if (type) {
+      type.addEventListener('change', () => {
+        const r = document.getElementById('h-occasional-reason');
+        if (r) r.style.display = type.value === 'occasional' ? '' : 'none';
+      });
+    }
+  }
+}
+
+// ============================================================
+// 4. 부담작업 체크리스트 렌더링
+// ============================================================
+function renderBurdenChecklist() {
+  const container = document.getElementById('burden-checklist');
+  container.innerHTML = BURDEN_WORKS.map(w => `
+    <div class="check-row" id="burden-row-${w.no}">
+      <input type="checkbox" id="burden-${w.no}" onchange="updateBurdenBadge()">
+      <div style="flex:1;">
+        <label for="burden-${w.no}" style="cursor:pointer;">
+          <strong>제${w.no}호 — ${w.title}</strong><br>
+          <span style="color:var(--gray-600);">${w.desc}</span><br>
+          <span style="color:var(--gray-400);font-size:10px;font-family:'JetBrains Mono',monospace;">
+            📍 신체부위: ${w.body} &nbsp;|&nbsp; ⏱ 노출시간: ${w.exposure} &nbsp;|&nbsp; 🔄 노출빈도: ${w.freq} &nbsp;|&nbsp; ⚠️ 유해요인: ${w.hazard}
+          </span>
+        </label>
+        <div style="font-size:10px;color:var(--blue);margin-top:4px;background:var(--blue-bg);padding:4px 8px;border-radius:4px;border-left:2px solid var(--blue);">
+          💡 판단 팁: ${w.tip}
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:12px;">
+        <div>
+          <div style="font-size:9px;color:var(--gray-400);margin-bottom:2px;">일일노출시간</div>
+          <input type="number" placeholder="0" step="0.5" min="0" style="width:70px;font-size:12px;text-align:center;font-family:'JetBrains Mono',monospace;" id="btime-${w.no}">
+          <span style="font-size:9px;color:var(--gray-400);">h</span>
+        </div>
+        ${w.freq !== '-' ? `<div>
+          <div style="font-size:9px;color:var(--gray-400);margin-bottom:2px;">빈도</div>
+          <input type="number" placeholder="0" min="0" style="width:70px;font-size:12px;text-align:center;font-family:'JetBrains Mono',monospace;" id="bfreq-${w.no}">
+          <span style="font-size:9px;color:var(--gray-400);">회</span>
+        </div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateBurdenBadge() {
+  const count = document.querySelectorAll('#burden-checklist input[type="checkbox"]:checked').length;
+  document.getElementById('badge-step1').textContent = count > 0 ? count : '11';
+  document.getElementById('badge-step1').className = 'nav-badge' + (count > 0 ? ' orange' : '');
+}
+
+function evaluateBurden() {
+  const process = document.getElementById('burden-process').value || '(미입력)';
+  const task    = document.getElementById('burden-task').value || '(미입력)';
+  const checked = [];
+
+  BURDEN_WORKS.forEach(w => {
+    if (document.getElementById('burden-' + w.no)?.checked) {
+      checked.push(w);
+    }
+  });
+
+  const resultArea = document.getElementById('burden-result-area');
+  const resultBox  = document.getElementById('burden-result-box');
+  resultArea.style.display = '';
+
+  if (checked.length === 0) {
+    resultBox.innerHTML = `
+      <div class="result-box result-safe">
+        <div class="result-emoji">✅</div>
+        <div class="result-title" style="color:var(--green);">부담작업 해당 없음</div>
+        <div class="result-desc">작업 <strong>${task}</strong>은 현재 체크한 항목 기준으로 근골격계부담작업에 해당하지 않습니다.<br>
+        단, 작업 조건이 변경되면 재평가가 필요합니다.</div>
+      </div>`;
+  } else {
+    const noList = checked.map(w => `<span class="badge badge-red">제${w.no}호</span>`).join(' ');
+    resultBox.innerHTML = `
+      <div class="result-box result-danger">
+        <div class="result-emoji">⚠️</div>
+        <div class="result-title" style="color:var(--red);">근골격계부담작업 해당</div>
+        <div class="result-desc">
+          <strong>${process} — ${task}</strong><br>
+          해당 호: ${noList}<br><br>
+          <strong>→ 유해요인조사 실시 의무 발생</strong><br>
+          신설 사업장: 신설일부터 1년 이내<br>
+          기존 사업장: 매 3년마다 정기조사
+        </div>
+      </div>
+      <div class="alert alert-orange" style="margin-top:12px;">
+        <span class="alert-icon">📋</span>
+        <div>다음 단계: <strong>[STEP 2 유해요인조사]</strong> 메뉴로 이동하여 조사표를 작성하세요.</div>
+      </div>`;
+
+    AppState.burdenWorks = checked.map(w => w.no);
+    document.getElementById('dash-burden').textContent = AppState.burdenWorks.length;
+    updateProgress();
+  }
+
+  resultArea.scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetBurden() {
+  BURDEN_WORKS.forEach(w => {
+    const cb = document.getElementById('burden-' + w.no);
+    if (cb) cb.checked = false;
+    const t = document.getElementById('btime-' + w.no);
+    if (t) t.value = '';
+    const f = document.getElementById('bfreq-' + w.no);
+    if (f) f.value = '';
+  });
+  document.getElementById('burden-result-area').style.display = 'none';
+  updateBurdenBadge();
+}
+
+// ============================================================
+// 5. 유해요인조사
+// ============================================================
+function saveHazardSurvey() {
+  const data = {
+    type: document.getElementById('h-survey-type')?.value,
+    date: document.getElementById('h-date')?.value,
+    dept: document.getElementById('h-dept')?.value,
+    process: document.getElementById('h-process')?.value,
+    risk: document.getElementById('h-risk-judgment')?.value
+  };
+  AppState.hazardSurveys.push(data);
+  updateProgress();
+  alert('✅ 유해요인조사 결과가 저장되었습니다.');
+}
+
+// 작업조건 위험도 계산
+function calcRisk(el) {
+  const row = el.closest('tr');
+  const A = parseInt(row.querySelector('.strength-sel').value) || 0;
+  const B = parseInt(row.querySelector('.freq-sel').value) || 0;
+  const total = A * B;
+  const cell = row.querySelector('.risk-total');
+  cell.textContent = total > 0 ? total : '-';
+  if (total >= 15) cell.style.color = 'var(--red)';
+  else if (total >= 9) cell.style.color = 'var(--orange)';
+  else if (total >= 4) cell.style.color = 'var(--yellow)';
+  else cell.style.color = 'var(--navy)';
+}
+
+function addConditionRow() {
+  const tbody = document.getElementById('condition-table-body');
+  const tr = tbody.rows[0].cloneNode(true);
+  tr.querySelectorAll('input').forEach(i => i.value = '');
+  tr.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+  tr.querySelector('.risk-total').textContent = '-';
+  tr.querySelectorAll('select.strength-sel, select.freq-sel').forEach(s => {
+    s.onchange = function() { calcRisk(this); };
+  });
+  tbody.appendChild(tr);
+}
+
+// ============================================================
+// 6. 증상조사 및 분류
+// ============================================================
+const BODY_PARTS = [
+  { id: 'neck',   label: '목',     icon: '🔴' },
+  { id: 'shoulder',label: '어깨',  icon: '🟠' },
+  { id: 'arm',    label: '팔/팔꿈치', icon: '🟡' },
+  { id: 'wrist',  label: '손/손목/손가락', icon: '🟢' },
+  { id: 'back',   label: '허리',   icon: '🔵' },
+  { id: 'leg',    label: '다리/발', icon: '🟣' },
+];
+
+function renderSymptomForm() {
+  const container = document.getElementById('symptom-body-parts');
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      ${BODY_PARTS.map(p => `
+        <div style="border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px;">
+          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;">${p.icon} ${p.label}</div>
+          <div class="form-group" style="margin-bottom:8px;">
+            <label class="form-label">통증 여부</label>
+            <select id="s-pain-${p.id}" onchange="toggleSymptomDetail('${p.id}')">
+              <option value="0">해당없음</option>
+              <option value="1">있음</option>
+            </select>
+          </div>
+          <div id="s-detail-${p.id}" style="display:none;">
+            <div class="form-group" style="margin-bottom:6px;">
+              <label class="form-label">통증 지속기간</label>
+              <select id="s-dur-${p.id}" style="font-size:11px;">
+                <option value="0">1일 미만</option>
+                <option value="1">1일~1주일 미만</option>
+                <option value="2">1주일~1달 미만</option>
+                <option value="3">1달~6개월 미만</option>
+                <option value="4">6개월 이상</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:6px;">
+              <label class="form-label">통증 빈도</label>
+              <select id="s-freq-${p.id}" style="font-size:11px;">
+                <option value="0">6개월에 1번</option>
+                <option value="1">2~3달에 1번</option>
+                <option value="2">1달에 1번</option>
+                <option value="3">1주일에 1번</option>
+                <option value="4">매일</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">통증 강도</label>
+              <select id="s-severity-${p.id}" style="font-size:11px;">
+                <option value="0">약한 통증 (작업 중 못느낌)</option>
+                <option value="1">중간 통증 (귀가 후 괜찮음)</option>
+                <option value="2">심한 통증 (귀가 후도 지속)</option>
+                <option value="3">매우 심한 (일상생활 어려움)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function toggleSymptomDetail(partId) {
+  const val = document.getElementById(`s-pain-${partId}`).value;
+  document.getElementById(`s-detail-${partId}`).style.display = val === '1' ? '' : 'none';
+}
+
+function classifySymptom() {
+  const name = document.getElementById('s-name').value;
+  const dept = document.getElementById('s-dept').value;
+  if (!name) { alert('근로자 성명을 입력하세요.'); return; }
+
+  // NIOSH Symptom Survey 기준 분류
+  let classification = '정상';
+  let classColor = 'result-safe';
+  let badgeClass = 'badge-green';
+  let painParts = [];
+  let maxSeverity = 0;
+  let hasWeekOrMore = false;
+  let hasMonthlyOrMore = false;
+
+  BODY_PARTS.forEach(p => {
+    const pain = document.getElementById(`s-pain-${p.id}`)?.value;
+    if (pain === '1') {
+      const dur  = parseInt(document.getElementById(`s-dur-${p.id}`)?.value || 0);
+      const freq = parseInt(document.getElementById(`s-freq-${p.id}`)?.value || 0);
+      const sev  = parseInt(document.getElementById(`s-severity-${p.id}`)?.value || 0);
+      painParts.push(p.label);
+      if (dur >= 2) hasWeekOrMore = true;    // 1주일 이상
+      if (freq >= 2) hasMonthlyOrMore = true; // 월 1번 이상
+      maxSeverity = Math.max(maxSeverity, sev);
+    }
+  });
+
+  // 통증호소자: (1주이상 AND 월1회이상) AND 심한/매우심한 통증
+  if (hasWeekOrMore && hasMonthlyOrMore && maxSeverity >= 2) {
+    classification = '통증호소자';
+    classColor = 'result-danger';
+    badgeClass = 'badge-red';
+  }
+  // 관리대상자: (1주이상 OR 월1회이상) AND 중간정도 통증
+  else if ((hasWeekOrMore || hasMonthlyOrMore) && maxSeverity >= 1) {
+    classification = '관리대상자';
+    classColor = 'result-warning';
+    badgeClass = 'badge-yellow';
+  }
+
+  const resultDiv = document.getElementById('symptom-class-result');
+  resultDiv.style.display = '';
+  resultDiv.innerHTML = `
+    <div class="result-box ${classColor}">
+      <div class="result-emoji">${classification === '정상' ? '✅' : classification === '관리대상자' ? '⚠️' : '🚨'}</div>
+      <div class="result-title" style="color:${classification === '정상' ? 'var(--green)' : classification === '관리대상자' ? 'var(--orange)' : 'var(--red)'};">
+        ${name} — <span class="badge ${badgeClass}">${classification}</span>
+      </div>
+      <div class="result-desc">
+        통증 부위: ${painParts.length > 0 ? painParts.join(', ') : '없음'}<br>
+        ${classification === '통증호소자' ? '→ 즉각적인 의학적 조치 및 외부 전문의 상담이 필요합니다.' :
+          classification === '관리대상자' ? '→ 관리감독자 및 보건관리자의 관리가 필요합니다. 증상 모니터링을 강화하세요.' :
+          '→ 현재 정상 범위입니다. 지속적인 예방 활동을 유지하세요.'}
+      </div>
+    </div>`;
+
+  // 목록에 추가
+  AppState.symptoms.push({
+    name, dept,
+    parts: painParts.join(', ') || '없음',
+    classification,
+    date: new Date().toLocaleDateString('ko-KR')
+  });
+  document.getElementById('dash-symptoms').textContent = AppState.symptoms.filter(s => s.classification !== '정상').length;
+  document.getElementById('badge-step3').textContent = AppState.symptoms.length;
+
+  renderSymptomList();
+  updateProgress();
+  resultDiv.scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderSymptomList() {
+  const tbody = document.getElementById('symptom-list-body');
+  if (AppState.symptoms.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:30px;">등록된 증상자가 없습니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = AppState.symptoms.map((s, i) => {
+    const cls = s.classification === '통증호소자' ? 'badge-red' : s.classification === '관리대상자' ? 'badge-yellow' : 'badge-green';
+    return `<tr>
+      <td><strong>${s.name}</strong></td>
+      <td>${s.dept || '-'}</td>
+      <td>${s.parts}</td>
+      <td><span class="badge ${cls}">${s.classification}</span></td>
+      <td>${s.classification === '통증호소자' ? '급성기 조치' : s.classification === '관리대상자' ? '초기증상 관리' : '무증상 예방'}</td>
+      <td class="mono">${s.date}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="removeSymptom(${i})">삭제</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function removeSymptom(i) {
+  AppState.symptoms.splice(i, 1);
+  renderSymptomList();
+  document.getElementById('dash-symptoms').textContent = AppState.symptoms.filter(s => s.classification !== '정상').length;
+}
+
+// ============================================================
+// 7. 작업환경개선 계획
+// ============================================================
+function addImprovement() {
+  const tbody = document.getElementById('improvement-body');
+  const rowCount = tbody.rows.length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="mono">${rowCount}</td>
+    <td><input type="text" placeholder="공정명" style="border:none;font-size:11px;width:80px;background:transparent;"></td>
+    <td><input type="text" placeholder="작업명" style="border:none;font-size:11px;width:90px;background:transparent;"></td>
+    <td><input type="text" placeholder="문제점/유해요인" style="border:none;font-size:11px;width:120px;background:transparent;"></td>
+    <td><input type="text" placeholder="개선방안" style="border:none;font-size:11px;width:120px;background:transparent;"></td>
+    <td><select style="font-size:11px;padding:3px;">
+      <option>공학적</option><option>관리적</option><option>행동적</option><option>복합</option>
+    </select></td>
+    <td><input type="date" style="font-size:11px;padding:3px;width:120px;"></td>
+    <td><input type="number" placeholder="0" style="border:none;font-size:11px;width:60px;text-align:right;background:transparent;font-family:'JetBrains Mono',monospace;"></td>
+    <td><select style="font-size:11px;padding:3px;">
+      <option>1순위</option><option>2순위</option><option>3순위</option>
+    </select></td>
+    <td><select style="font-size:11px;padding:3px;">
+      <option value="plan">계획</option><option value="progress">진행중</option><option value="done">완료</option>
+    </select></td>
+    <td><button class="btn btn-outline btn-sm" style="font-size:10px;" onclick="this.closest('tr').remove()">삭제</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+// ============================================================
+// 8. 예방·관리 프로그램
+// ============================================================
+function checkProgramObligation() {
+  const cases = parseInt(document.getElementById('prog-annual-cases')?.value || 0);
+  const total  = parseInt(document.getElementById('prog-total-workers')?.value || 1);
+  const dispute= document.getElementById('prog-dispute')?.checked;
+  const rate   = total > 0 ? (cases / total) * 100 : 0;
+
+  const resultDiv = document.getElementById('prog-obligation-result');
+  let isObligated = false;
+  let reason = '';
+
+  if (cases >= 10) {
+    isObligated = true;
+    reason = `연간 업무상 질병 인정자 ${cases}명 (10명 이상 기준 충족)`;
+  } else if (cases >= 5 && rate >= 10) {
+    isObligated = true;
+    reason = `5명 이상 발생 + 발생 비율 ${rate.toFixed(1)}% (10% 이상 기준 충족)`;
+  } else if (dispute) {
+    isObligated = true;
+    reason = '노사 간 이견 지속으로 고용노동부장관 명령';
+  }
+
+  resultDiv.innerHTML = isObligated ?
+    `<div class="result-box result-danger">
+      <div class="result-emoji">🚨</div>
+      <div class="result-title" style="color:var(--red);">예방·관리 프로그램 수립 의무</div>
+      <div class="result-desc">${reason}<br><br><strong>→ 노사협의를 거쳐 즉시 프로그램을 수립하고 시행해야 합니다.</strong></div>
+    </div>` :
+    `<div class="result-box result-safe">
+      <div class="result-emoji">✅</div>
+      <div class="result-title" style="color:var(--green);">의무 해당 없음</div>
+      <div class="result-desc">현재 입력 수치 기준으로 의무 대상에 해당하지 않습니다.<br>그러나 자율적인 예방·관리 프로그램 운영을 권장합니다.</div>
+    </div>`;
+}
+
+function addTeamMember() {
+  const tbody = document.getElementById('team-table-body');
+  const tr = tbody.rows[0].cloneNode(true);
+  tr.querySelectorAll('input[type="text"]').forEach(i => i.value = '');
+  tr.querySelector('input[type="checkbox"]').checked = false;
+  tbody.appendChild(tr);
+}
+
+// ============================================================
+// 9. 대시보드 상태 체크리스트
+// ============================================================
+const STATUS_ITEMS = [
+  { label: '사업장 기본정보 등록', page: 'settings',  key: 'company',    done: () => !!AppState.company },
+  { label: '부담작업 여부 판단',   page: 'step1',     key: 'burden',     done: () => AppState.burdenWorks.length >= 0 },
+  { label: '유해요인조사 실시',    page: 'step2',     key: 'hazard',     done: () => AppState.hazardSurveys.length > 0 },
+  { label: '증상조사 실시',        page: 'step3',     key: 'symptom',    done: () => AppState.symptoms.length > 0 },
+  { label: '작업환경개선 계획 수립', page: 'step4',   key: 'improve',    done: () => false },
+  { label: '의학적 조치 기록',     page: 'step5',     key: 'medical',    done: () => false },
+];
+
+function renderStatusChecklist() {
+  const container = document.getElementById('status-checklist');
+  if (!container) return;
+  container.innerHTML = STATUS_ITEMS.map(item => {
+    const done = item.done();
+    return `<div class="risk-item" style="cursor:pointer;${done ? 'background:var(--green-bg);border-color:var(--green-brd);' : ''}" onclick="showPage('${item.page}')">
+      <div class="risk-name" style="${done ? 'color:var(--green);' : ''}">${done ? '✅' : '○'} ${item.label}</div>
+      <span class="badge ${done ? 'badge-green' : 'badge-gray'}">${done ? '완료' : '대기'}</span>
+    </div>`;
+  }).join('');
+}
+
+function updateProgress() {
+  const done = STATUS_ITEMS.filter(i => i.done()).length;
+  const pct  = Math.round((done / STATUS_ITEMS.length) * 100);
+  const el   = document.getElementById('dash-progress');
+  if (el) el.textContent = pct + '%';
+  renderStatusChecklist();
+}
+
+// ============================================================
+// 10. 설정 저장
+// ============================================================
+function saveSettings() {
+  AppState.company = document.getElementById('cfg-company')?.value || '';
+  AppState.workers = parseInt(document.getElementById('cfg-workers')?.value || 0);
+  document.getElementById('dash-workers').textContent = AppState.workers || '-';
+  updateProgress();
+  alert('✅ 사업장 기본정보가 저장되었습니다.');
+}
+
+// ============================================================
+// 11. 의학적 조치 기록 추가
+// ============================================================
+function addMedicalRecord() {
+  const tbody = document.getElementById('medical-table-body');
+  const isEmpty = tbody.innerHTML.includes('등록된');
+  if (isEmpty) tbody.innerHTML = '';
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" placeholder="성명" style="border:none;width:70px;font-size:12px;background:transparent;"></td>
+    <td><input type="text" placeholder="부위" style="border:none;width:70px;font-size:12px;background:transparent;"></td>
+    <td><input type="date" style="font-size:11px;border:none;background:transparent;"></td>
+    <td><select style="font-size:11px;padding:3px;">
+      <option>무증상기</option><option>초기증상기</option><option>급성기</option><option>복귀기</option>
+    </select></td>
+    <td><input type="text" placeholder="조치내용" style="border:none;font-size:11px;width:140px;background:transparent;"></td>
+    <td><input type="text" placeholder="담당자" style="border:none;width:80px;font-size:12px;background:transparent;"></td>
+    <td><input type="date" style="font-size:11px;border:none;background:transparent;"></td>
+    <td><span class="badge badge-yellow">진행중</span></td>`;
+  tbody.appendChild(tr);
+}
+
+function addRecord() {
+  const tbody = document.getElementById('records-table-body');
+  const today = new Date().toISOString().split('T')[0];
+  const expire = new Date(Date.now() + 5*365*24*3600*1000).toISOString().split('T')[0];
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><select style="font-size:11px;padding:3px;">
+      <option>유해요인조사</option><option>증상조사</option><option>의학적조치</option><option>개선계획</option>
+    </select></td>
+    <td><input type="text" placeholder="문서명" style="border:none;font-size:12px;width:180px;background:transparent;"></td>
+    <td class="mono">${today}</td>
+    <td><select style="font-size:11px;padding:3px;"><option>5년</option><option>시설 존속기간</option></select></td>
+    <td class="mono">${expire}</td>
+    <td class="mono" style="color:var(--green);font-weight:700;">D-1825</td>
+    <td><span class="badge badge-green">보존중</span></td>`;
+  tbody.appendChild(tr);
+}
+
+// ============================================================
+// 초기화
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  // 오늘 날짜
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+  const el = document.getElementById('today-date');
+  if (el) el.textContent = dateStr;
+
+  // 날짜 기본값
+  const today = now.toISOString().split('T')[0];
+  ['burden-date','h-date','cfg-first-survey','cfg-last-survey'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+
+  // 부담작업 체크리스트 렌더링
+  renderBurdenChecklist();
+
+  // 증상조사 폼 렌더링
+  renderSymptomForm();
+
+  // 대시보드 상태 체크리스트 초기 렌더링
+  renderStatusChecklist();
+
+  // 작업장 상황조사 변경사항 토글
+  ['h-equip-change','h-amount-change','h-speed-change','h-type-change'].forEach((selId, i) => {
+    const sel = document.getElementById(selId);
+    const detailIds = ['h-equip-detail','h-amount-detail','h-speed-detail','h-type-detail'];
+    if (sel) {
+      sel.addEventListener('change', () => {
+        const det = document.getElementById(detailIds[i]);
+        if (det) det.style.display = sel.value === 'changed' ? '' : 'none';
+      });
+    }
+  });
+
+  // 수시조사 토글
+  const surveyType = document.getElementById('h-survey-type');
+  if (surveyType) {
+    surveyType.addEventListener('change', () => {
+      const r = document.getElementById('h-occasional-reason');
+      if (r) r.style.display = surveyType.value === 'occasional' ? '' : 'none';
+    });
+  }
+
+  console.log('✅ 근골격계질환 예방 보건관리 시스템 초기화 완료');
+  console.log('📋 기준: KOSHA GUIDE E-G-1-2025 / 산업안전보건기준에 관한 규칙 제12장');
+});
+</script>
+</body>
+</html>

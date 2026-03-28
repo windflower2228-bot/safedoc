@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { ArrowLeft, Save, Loader2, Users, ChevronDown, ChevronUp, Plus, Trash2, CheckCircle2, XCircle } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Users, ChevronDown, ChevronUp, Plus, Trash2, CheckCircle2, XCircle, Activity } from 'lucide-react'
 import { clsx } from 'clsx'
 
 // ─── 근골격계부담작업 11가지 (고용노동부고시 제2020-12호) ──────
@@ -76,7 +76,7 @@ export default function NewMusculoskeletalPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Link href="/health-programs/musculoskeletal" className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"><ArrowLeft className="w-4 h-4"/></Link>
@@ -86,6 +86,9 @@ export default function NewMusculoskeletalPage() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Link href="/health-programs/musculoskeletal/system" className="btn-secondary gap-1.5">
+            <Activity className="w-4 h-4" /> 통합 시스템(우선)
+          </Link>
           {step > 0 && <button onClick={()=>setStep(s=>s-1)} className="btn-secondary">이전</button>}
           {step < STEPS.length-1
             ? <button onClick={()=>setStep(s=>s+1)} className="btn-primary" style={{background:'#2563eb'}}>다음 단계</button>
@@ -93,6 +96,18 @@ export default function NewMusculoskeletalPage() {
                 {saving?<Loader2 className="w-4 h-4 animate-spin"/>:<Save className="w-4 h-4"/>}저장
               </button>}
         </div>
+      </div>
+
+      <div className="card overflow-hidden mb-6">
+        <div className="px-5 py-3.5 border-b border-gray-100">
+          <h2 className="font-semibold text-gray-800">근골격계 유해요인조사 통합 시스템 (코드 우선 반영)</h2>
+          <p className="text-[11px] text-gray-500 mt-0.5">요청하신 <code>msd_prevention_system</code> 코드를 이 메뉴에서 바로 실행합니다.</p>
+        </div>
+        <iframe
+          src="/tools/msd_prevention_system.html"
+          title="근골격계 유해요인조사 통합 시스템"
+          className="w-full h-[980px] border-0"
+        />
       </div>
 
       {/* 단계 표시 */}

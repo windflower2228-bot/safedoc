@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Plus, Users, ArrowLeft, Loader2, Calendar, AlertCircle, ChevronRight } from 'lucide-react'
+import { Plus, Users, ArrowLeft, Loader2, Calendar, AlertCircle, ChevronRight, Activity } from 'lucide-react'
 import { clsx } from 'clsx'
 
 const SURVEY_TYPE_CFG = {
@@ -46,10 +46,16 @@ export default function MusculoskeletalListPage() {
             </p>
           </div>
         </div>
-        <Link href="/health-programs/musculoskeletal/new"
-          className="btn-primary text-sm gap-1.5" style={{ background: '#2563eb' }}>
-          <Plus className="w-4 h-4" /> 유해요인조사 작성
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/health-programs/musculoskeletal/system"
+            className="btn-primary text-sm gap-1.5" style={{ background: '#2563eb' }}>
+            <Activity className="w-4 h-4" /> 통합 시스템(우선)
+          </Link>
+          <Link href="/health-programs/musculoskeletal/new"
+            className="btn-secondary text-sm gap-1.5">
+            <Plus className="w-4 h-4" /> 기존 작성
+          </Link>
+        </div>
       </div>
 
       {/* 법적 안내 */}
@@ -97,10 +103,16 @@ export default function MusculoskeletalListPage() {
           <div className="py-14 text-center text-sm text-gray-400">
             <Users className="w-10 h-10 mx-auto mb-3 opacity-20"/>
             <p>유해요인조사 기록이 없습니다.</p>
-            <Link href="/health-programs/musculoskeletal/new"
-              className="btn-primary mt-4 text-sm inline-flex" style={{ background: '#2563eb' }}>
-              <Plus className="w-4 h-4" /> 조사 시작
-            </Link>
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <Link href="/health-programs/musculoskeletal/system"
+                className="btn-primary text-sm inline-flex" style={{ background: '#2563eb' }}>
+                <Activity className="w-4 h-4" /> 통합 시스템(우선)
+              </Link>
+              <Link href="/health-programs/musculoskeletal/new"
+                className="btn-secondary text-sm inline-flex">
+                <Plus className="w-4 h-4" /> 기존 작성
+              </Link>
+            </div>
           </div>
         ) : (
           <table className="w-full text-sm">
