@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { userInviteSchema } from '@/lib/validators/schemas'
+import { sendEmail, buildInviteEmail } from '@/lib/notifications/email'
 
 // ─── GET /api/users — 회사 사용자 목록 ──────────────────────────────────────
 export async function GET(req: NextRequest) {
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
   // 권한 조회는 admin client로 수행 (RLS 영향 제거)
   const { data: profile, error: accessProfileError } = await adminSupabase
     .from('user_profiles')
-    .select('company_id, role')
+    .select('company_id, role, name')
     .eq('id', user.id)
     .single()
 
@@ -57,20 +58,51 @@ export async function POST(req: NextRequest) {
 
   const { email, name, position, department, phone, role } = parsed.data
 
-  // Supabase Admin API로 초대 이메일 발송 + 계정 생성
-  const { data: inviteData, error: inviteError } = await adminSupabase.auth.admin.inviteUserByEmail(
+  // 1) 초대 링크 생성 (이메일은 직접 한국어 템플릿 발송)
+  const { data: inviteData, error: inviteError } = await adminSupabase.auth.admin.generateLink({
+    type: 'invite',
     email,
-    {
+    options: {
       data: { name, position, role },
       redirectTo: `${siteUrl}/auth/callback`,
-    }
-  )
+    },
+  })
 
   if (inviteError) {
     if (inviteError.message.includes('already been registered')) {
       return NextResponse.json({ error: '이미 등록된 이메일입니다.' }, { status: 400 })
     }
     return NextResponse.json({ error: inviteError.message }, { status: 500 })
+  }
+
+  const actionLink = inviteData.properties?.action_link
+  const invitedUserId = inviteData.user?.id
+  if (!actionLink || !invitedUserId) {
+    return NextResponse.json({ error: '초대 링크 생성에 실패했습니다.' }, { status: 500 })
+  }
+
+  // 회사명/초대자명 조회
+  const { data: companyData } = await adminSupabase
+    .from('companies')
+    .select('name')
+    .eq('id', profile.company_id)
+    .single()
+
+  const inviterName = profile.name || '관리자'
+  const companyName = companyData?.name || 'SafeDoc'
+
+  const { subject, html } = buildInviteEmail({
+    inviterName,
+    companyName,
+    inviteUrl: actionLink,
+  })
+
+  const emailResult = await sendEmail({ to: email, subject, html })
+  if (!emailResult.success) {
+    return NextResponse.json({
+      error: '한국어 초대 메일 발송에 실패했습니다.',
+      details: emailResult.error ?? null,
+    }, { status: 500 })
   }
 
   // user_profiles 에 회사 정보 연결
@@ -83,12 +115,12 @@ export async function POST(req: NextRequest) {
       phone: phone || null,
       role,
     })
-    .eq('id', inviteData.user.id)
+    .eq('id', invitedUserId)
 
   if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 })
 
   return NextResponse.json({
     message: `${email}로 초대 이메일을 발송했습니다.`,
-    userId: inviteData.user.id,
+    userId: invitedUserId,
   }, { status: 201 })
 }
