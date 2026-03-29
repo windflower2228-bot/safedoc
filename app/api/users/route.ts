@@ -32,12 +32,16 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
 
-  // 권한: company_admin 이상만 초대 가능
-  const { data: profile } = await supabase
+  // 권한 조회는 admin client로 수행 (RLS 영향 제거)
+  const { data: profile, error: accessProfileError } = await adminSupabase
     .from('user_profiles')
     .select('company_id, role')
     .eq('id', user.id)
     .single()
+
+  if (accessProfileError || !profile?.company_id) {
+    return NextResponse.json({ error: '사용자 프로필을 찾을 수 없습니다. 관리자에게 권한을 확인해주세요.' }, { status: 403 })
+  }
 
   if (!['super_admin', 'company_admin'].includes(profile?.role ?? '')) {
     return NextResponse.json({ error: '초대 권한이 없습니다.' }, { status: 403 })
