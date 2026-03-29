@@ -41,7 +41,11 @@ export async function middleware(request: NextRequest) {
                      request.nextUrl.pathname.startsWith('/register') ||
                      request.nextUrl.pathname.startsWith('/forgot-password')
 
-  const isPublicApi = request.nextUrl.pathname.startsWith('/api/auth')
+  const isPublicApi =
+    request.nextUrl.pathname.startsWith('/api/auth') ||
+    request.nextUrl.pathname === '/api/company/create' ||
+    request.nextUrl.pathname === '/api/companies/search' ||
+    request.nextUrl.pathname.startsWith('/api/company-join-requests')
   const isPublicAsset =
     request.nextUrl.pathname === '/sw.js' ||
     request.nextUrl.pathname === '/manifest.json' ||

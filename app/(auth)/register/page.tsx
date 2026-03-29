@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { ShieldCheck, Loader2, Building2, UserPlus } from 'lucide-react'
+import { ShieldCheck, Loader2, Building2, UserPlus, Search, Check } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { registerSchema, type RegisterFormData } from '@/lib/validators/schemas'
 
@@ -16,20 +16,69 @@ const POSITIONS = [
   '현장소장', '공사부장', '기타',
 ]
 
+interface CompanyOption {
+  id: string
+  name: string
+}
+
 export default function RegisterPage() {
-  const router   = useRouter()
+  const router = useRouter()
 
-  const [loading, setLoading]     = useState(false)
-  const [joinMode, setJoinMode]   = useState<'create' | 'join'>('create')
+  const [loading, setLoading] = useState(false)
+  const [joinMode, setJoinMode] = useState<'create' | 'join'>('create')
+  const [companyQuery, setCompanyQuery] = useState('')
+  const [companyResults, setCompanyResults] = useState<CompanyOption[]>([])
+  const [selectedCompany, setSelectedCompany] = useState<CompanyOption | null>(null)
+  const [searchLoading, setSearchLoading] = useState(false)
 
-  const { register, handleSubmit, watch, formState: { errors } } =
+  const { register, handleSubmit, formState: { errors } } =
     useForm<RegisterFormData>({ resolver: zodResolver(registerSchema) })
 
+  useEffect(() => {
+    if (joinMode !== 'join') {
+      setCompanyQuery('')
+      setCompanyResults([])
+      setSelectedCompany(null)
+      return
+    }
+
+    const keyword = companyQuery.trim()
+    if (keyword.length < 2) {
+      setCompanyResults([])
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setSearchLoading(true)
+        const res = await fetch(`/api/companies/search?q=${encodeURIComponent(keyword)}`)
+        const json = await res.json()
+        if (!res.ok) {
+          setCompanyResults([])
+          return
+        }
+        setCompanyResults(json.data ?? [])
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [joinMode, companyQuery])
+
   async function onSubmit(data: RegisterFormData) {
+    if (joinMode === 'create' && !(data.companyName ?? '').trim()) {
+      toast.error('회사명을 입력해주세요.')
+      return
+    }
+    if (joinMode === 'join' && !selectedCompany) {
+      toast.error('가입 신청할 회사를 검색 후 선택해주세요.')
+      return
+    }
+
     setLoading(true)
     try {
       const supabase = createClient()
-      // 1) Supabase Auth 회원가입
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -44,7 +93,6 @@ export default function RegisterPage() {
       if (!userId) throw new Error('사용자 ID를 가져올 수 없습니다.')
 
       if (joinMode === 'create' && data.companyName) {
-        // 2-A) 회사 생성 → API 호출 (service role 필요)
         const res = await fetch('/api/company/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -57,10 +105,29 @@ export default function RegisterPage() {
           const err = await res.json()
           throw new Error(err.error || '회사 생성 중 오류가 발생했습니다.')
         }
+      } else if (joinMode === 'join' && selectedCompany) {
+        const res = await fetch('/api/company-join-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            companyId: selectedCompany.id,
+            userId,
+            email: data.email,
+            name: data.name,
+            position: data.position,
+            requestedRole: 'viewer',
+          }),
+        })
+        const json = await res.json()
+        if (!res.ok) {
+          throw new Error(json.error || '가입신청 처리 중 오류가 발생했습니다.')
+        }
       }
 
       toast.success(
-        '가입 완료! 이메일 인증 후 로그인해주세요.',
+        joinMode === 'create'
+          ? '가입 완료! 이메일 인증 후 로그인해주세요.'
+          : '가입신청이 접수되었습니다. 회사 관리자 승인 후 이용 가능합니다.',
         { description: `${data.email}로 인증 메일을 발송했습니다.`, duration: 8000 }
       )
       router.push('/login')
@@ -79,7 +146,6 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
       <div className="w-full max-w-lg">
-        {/* 로고 */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <ShieldCheck className="w-7 h-7 text-blue-600" />
           <span className="text-blue-600 text-xl font-bold">SafeDoc</span>
@@ -92,7 +158,6 @@ export default function RegisterPage() {
             <Link href="/login" className="text-blue-600 hover:underline font-medium">로그인</Link>
           </p>
 
-          {/* 회사 가입 방식 선택 */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             <button
               type="button"
@@ -119,7 +184,6 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* 이름 + 직급 */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="label-base">이름 *</label>
@@ -136,7 +200,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* 회사 정보 */}
             {joinMode === 'create' ? (
               <div>
                 <label className="label-base">회사명 *</label>
@@ -149,18 +212,47 @@ export default function RegisterPage() {
               </div>
             ) : (
               <div>
-                <label className="label-base">회사 초대 코드 *</label>
-                <input
-                  {...register('companyCode')}
-                  placeholder="관리자에게 받은 6자리 코드"
-                  className="input-base tracking-widest uppercase"
-                  maxLength={6}
-                />
-                <p className="mt-1 text-xs text-gray-400">회사 관리자에게 초대 코드를 요청하세요.</p>
+                <label className="label-base">회사 검색 후 가입신청 *</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    value={companyQuery}
+                    onChange={(e) => {
+                      setCompanyQuery(e.target.value)
+                      setSelectedCompany(null)
+                    }}
+                    placeholder="회사명을 입력하세요 (2자 이상)"
+                    className="input-base pl-9"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-gray-400">원하는 회사를 선택하면 관리자 승인 후 가입됩니다.</p>
+
+                <div className="mt-2 max-h-40 overflow-auto rounded-lg border border-gray-200 bg-white">
+                  {searchLoading ? (
+                    <div className="px-3 py-2 text-xs text-gray-500">검색 중...</div>
+                  ) : companyQuery.trim().length < 2 ? (
+                    <div className="px-3 py-2 text-xs text-gray-400">회사명을 2자 이상 입력해주세요.</div>
+                  ) : companyResults.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-gray-400">검색 결과가 없습니다.</div>
+                  ) : (
+                    companyResults.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setSelectedCompany(c)}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-left text-sm hover:bg-blue-50 ${
+                          selectedCompany?.id === c.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                        }`}
+                      >
+                        <span>{c.name}</span>
+                        {selectedCompany?.id === c.id && <Check className="w-4 h-4" />}
+                      </button>
+                    ))
+                  )}
+                </div>
               </div>
             )}
 
-            {/* 이메일 */}
             <div>
               <label className="label-base">이메일 *</label>
               <input
@@ -173,7 +265,6 @@ export default function RegisterPage() {
               {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
             </div>
 
-            {/* 비밀번호 */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="label-base">비밀번호 *</label>
@@ -212,3 +303,4 @@ export default function RegisterPage() {
     </div>
   )
 }
+

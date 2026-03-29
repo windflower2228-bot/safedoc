@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { Plus, Search, Mail, Shield, UserX, UserCheck, Loader2, X } from 'lucide-react'
+import { Plus, Search, Mail, Shield, UserX, UserCheck, Loader2, X, CheckCircle2, XCircle } from 'lucide-react'
 import { userInviteSchema, type UserInviteFormData } from '@/lib/validators/schemas'
 import type { UserProfile } from '@/types'
 
@@ -27,10 +27,22 @@ const POSITIONS = [
 
 export default function UsersPage() {
   const [users, setUsers]       = useState<UserProfile[]>([])
+  const [joinRequests, setJoinRequests] = useState<Array<{
+    id: string
+    requester_email: string
+    requester_name: string
+    requester_position: string
+    requester_department: string | null
+    requester_phone: string | null
+    requested_role: string
+    requested_at: string
+  }>>([])
   const [loading, setLoading]   = useState(true)
+  const [loadingRequests, setLoadingRequests] = useState(true)
   const [q, setQ]               = useState('')
   const [showModal, setModal]   = useState(false)
   const [submitting, setSub]    = useState(false)
+  const [reviewingId, setReviewingId] = useState<string | null>(null)
 
   const { register, handleSubmit, reset, formState: { errors } } =
     useForm<UserInviteFormData>({ resolver: zodResolver(userInviteSchema) })
@@ -43,7 +55,29 @@ export default function UsersPage() {
     setLoading(false)
   }, [q])
 
-  useEffect(() => { fetchUsers() }, [fetchUsers])
+  const fetchJoinRequests = useCallback(async () => {
+    setLoadingRequests(true)
+    try {
+      const res = await fetch('/api/company-join-requests')
+      if (res.status === 403 || res.status === 401) {
+        setJoinRequests([])
+        return
+      }
+      const json = await res.json()
+      if (!res.ok) {
+        setJoinRequests([])
+        return
+      }
+      setJoinRequests(json.data ?? [])
+    } finally {
+      setLoadingRequests(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchUsers()
+    fetchJoinRequests()
+  }, [fetchUsers, fetchJoinRequests])
 
   async function onInvite(data: UserInviteFormData) {
     setSub(true)
@@ -70,6 +104,27 @@ export default function UsersPage() {
     if (res.ok) {
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_active: !current } : u))
       toast.success(!current ? '계정을 활성화했습니다.' : '계정을 비활성화했습니다.')
+    }
+  }
+
+  async function reviewJoinRequest(id: string, action: 'approve' | 'reject') {
+    setReviewingId(id)
+    try {
+      const res = await fetch(`/api/company-join-requests/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        toast.error(json.error ?? '요청 처리에 실패했습니다.')
+        return
+      }
+      toast.success(json.message ?? (action === 'approve' ? '승인 처리되었습니다.' : '반려 처리되었습니다.'))
+      setJoinRequests(prev => prev.filter(r => r.id !== id))
+      fetchUsers()
+    } finally {
+      setReviewingId(null)
     }
   }
 
@@ -171,6 +226,73 @@ export default function UsersPage() {
                   </td>
                 </tr>
               )}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* 가입신청 승인 */}
+      <div className="card overflow-hidden mt-6">
+        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+          <h2 className="text-sm font-semibold text-gray-700">회사 가입신청 승인</h2>
+          <p className="text-xs text-gray-500 mt-0.5">사용자가 회사 검색으로 신청한 합류 요청을 승인/반려합니다.</p>
+        </div>
+        {loadingRequests ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
+          </div>
+        ) : joinRequests.length === 0 ? (
+          <div className="py-12 text-center text-sm text-gray-400">대기 중인 가입신청이 없습니다.</div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">신청자</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">이메일</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">요청 권한</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">신청일시</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500">처리</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {joinRequests.map((r) => (
+                <tr key={r.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-gray-900">{r.requester_name}</div>
+                    <div className="text-xs text-gray-400">{r.requester_position || '직급 미입력'}</div>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-600">{r.requester_email}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${ROLE_COLORS[r.requested_role] ?? 'bg-gray-100 text-gray-600'}`}>
+                      <Shield className="w-3 h-3" />
+                      {ROLE_LABELS[r.requested_role] ?? r.requested_role}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-500">{new Date(r.requested_at).toLocaleString('ko-KR')}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        disabled={reviewingId === r.id}
+                        onClick={() => reviewJoinRequest(r.id, 'approve')}
+                        className="btn-secondary text-xs px-2 py-1.5 border-green-200 text-green-700 hover:bg-green-50"
+                      >
+                        {reviewingId === r.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                        승인
+                      </button>
+                      <button
+                        type="button"
+                        disabled={reviewingId === r.id}
+                        onClick={() => reviewJoinRequest(r.id, 'reject')}
+                        className="btn-secondary text-xs px-2 py-1.5 border-red-200 text-red-700 hover:bg-red-50"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                        반려
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}

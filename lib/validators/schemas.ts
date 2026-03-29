@@ -20,6 +20,22 @@ export const registerSchema = z.object({
   path: ['confirmPassword'],
 })
 
+export const companyJoinRequestCreateSchema = z.object({
+  companyId: z.string().uuid('회사 ID 형식이 올바르지 않습니다'),
+  userId: z.string().uuid('사용자 ID 형식이 올바르지 않습니다'),
+  email: z.string().email('올바른 이메일 형식을 입력해주세요'),
+  name: z.string().min(2, '이름은 2자 이상이어야 합니다'),
+  position: z.string().min(1, '직급을 입력해주세요'),
+  department: z.string().optional(),
+  phone: z.string().optional(),
+  requestedRole: z.enum(['company_admin', 'manager', 'viewer']).default('viewer'),
+})
+
+export const companyJoinRequestReviewSchema = z.object({
+  action: z.enum(['approve', 'reject']),
+  reviewerMemo: z.string().optional(),
+})
+
 export const forgotPasswordSchema = z.object({
   email: z.string().email('올바른 이메일 형식을 입력해주세요'),
 })
@@ -112,3 +128,5 @@ export type RiskAssessmentFormData = z.infer<typeof riskAssessmentSchema>
 export type RiskItemFormData = z.infer<typeof riskItemSchema>
 export type UserInviteFormData = z.infer<typeof userInviteSchema>
 export type CompanyFormData = z.infer<typeof companySchema>
+export type CompanyJoinRequestCreateFormData = z.infer<typeof companyJoinRequestCreateSchema>
+export type CompanyJoinRequestReviewFormData = z.infer<typeof companyJoinRequestReviewSchema>
