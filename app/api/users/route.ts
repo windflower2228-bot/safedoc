@@ -28,6 +28,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const supabase      = createClient()
   const adminSupabase = createAdminClient()
+  const requestOrigin = new URL(req.url).origin
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? requestOrigin).replace(/\/$/, '')
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
@@ -60,7 +62,7 @@ export async function POST(req: NextRequest) {
     email,
     {
       data: { name, position, role },
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      redirectTo: `${siteUrl}/auth/callback`,
     }
   )
 
