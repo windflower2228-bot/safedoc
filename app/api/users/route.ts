@@ -59,7 +59,10 @@ export async function POST(req: NextRequest) {
   const { email, name, position, department, phone, role } = parsed.data
 
   // 1) 초대 링크 생성 (이메일은 직접 한국어 템플릿 발송)
-  const { data: inviteData, error: inviteError } = await adminSupabase.auth.admin.generateLink({
+  // - 신규 사용자: invite 링크
+  // - 기존(초대 이력 포함) 사용자: magiclink 재초대 링크로 폴백
+  let inviteData: any = null
+  const { data: firstInviteData, error: inviteError } = await adminSupabase.auth.admin.generateLink({
     type: 'invite',
     email,
     options: {
@@ -68,10 +71,23 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  if (inviteError) {
-    if (inviteError.message.includes('already been registered')) {
-      return NextResponse.json({ error: '이미 등록된 이메일입니다.' }, { status: 400 })
+  if (!inviteError) {
+    inviteData = firstInviteData
+  } else if (inviteError.message?.includes('already been registered')) {
+    const { data: resendData, error: resendError } = await adminSupabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email,
+      options: {
+        data: { name, position, role },
+        redirectTo: `${siteUrl}/auth/callback`,
+      },
+    })
+
+    if (resendError) {
+      return NextResponse.json({ error: `재초대 링크 생성 실패: ${resendError.message}` }, { status: 500 })
     }
+    inviteData = resendData
+  } else {
     return NextResponse.json({ error: inviteError.message }, { status: 500 })
   }
 
