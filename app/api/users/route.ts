@@ -115,10 +115,23 @@ export async function POST(req: NextRequest) {
 
   const emailResult = await sendEmail({ to: email, subject, html })
   if (!emailResult.success) {
-    return NextResponse.json({
-      error: '한국어 초대 메일 발송에 실패했습니다.',
-      details: emailResult.error ?? null,
-    }, { status: 500 })
+    // Resend 실패 시 Supabase 기본 메일(영문 템플릿)로 폴백
+    const { error: fallbackError } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${siteUrl}/auth/callback`,
+      },
+    })
+
+    if (fallbackError) {
+      return NextResponse.json({
+        error: '초대 메일 발송에 실패했습니다.',
+        details: {
+          korean_mail_error: emailResult.error ?? null,
+          fallback_error: fallbackError.message,
+        },
+      }, { status: 500 })
+    }
   }
 
   // user_profiles 에 회사 정보 연결
@@ -136,7 +149,10 @@ export async function POST(req: NextRequest) {
   if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 })
 
   return NextResponse.json({
-    message: `${email}로 초대 이메일을 발송했습니다.`,
+    message: emailResult.success
+      ? `${email}로 한국어 초대 이메일을 발송했습니다.`
+      : `${email}로 초대 이메일을 발송했습니다. (기본 템플릿)`,
     userId: invitedUserId,
+    mailChannel: emailResult.success ? 'korean_custom' : 'supabase_fallback',
   }, { status: 201 })
 }
