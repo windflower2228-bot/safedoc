@@ -1,6 +1,20 @@
 'use client'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { BookOpen, ChevronRight, FileText, Users, HardDriveUpload, UserCheck, Briefcase, Star } from 'lucide-react'
+import {
+  BookOpen,
+  ChevronRight,
+  FileText,
+  Users,
+  HardDriveUpload,
+  UserCheck,
+  Briefcase,
+  Star,
+  Loader2,
+  Link2,
+} from 'lucide-react'
+import { clsx } from 'clsx'
+import { EDU_TYPE_LABELS } from '@/types/education'
 
 const EDU_TYPES = [
   {
@@ -93,7 +107,34 @@ const EDU_TYPES = [
   },
 ]
 
+type EduListRow = {
+  id: string
+  title: string
+  edu_type: keyof typeof EDU_TYPE_LABELS
+  edu_date: string
+  edu_duration_hours: number | null
+  attendee_count: number
+  instructor_name: string | null
+  status: 'draft' | 'completed' | 'archived'
+  link_type: 'auto_from_risk' | 'manual'
+  source_risk?: { title?: string | null } | null
+}
+
 export default function EducationHubPage() {
+  const [items, setItems] = useState<EduListRow[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    fetch('/api/documents/education?page=1&pageSize=10')
+      .then((r) => r.json())
+      .then((j) => {
+        setItems((j.data ?? []) as EduListRow[])
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [])
+
   return (
     <div>
       <div className="mb-6">
@@ -134,6 +175,79 @@ export default function EducationHubPage() {
             </Link>
           )
         })}
+      </div>
+
+      <div className="card overflow-hidden mt-6">
+        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+          <div className="text-sm font-semibold text-gray-800">최근 교육일지 실적 (최대 10건)</div>
+          <Link href="/documents/education/regular-worker" className="text-xs text-blue-600 hover:underline">
+            교육일지 상세 목록으로 이동
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
+          </div>
+        ) : items.length === 0 ? (
+          <div className="py-14 text-center text-sm text-gray-400">
+            <FileText className="w-10 h-10 mx-auto mb-3 opacity-20" />
+            <p>표시할 교육 실적이 없습니다.</p>
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                {['교육명', '교육 유형', '교육일자', '교육시간', '참석인원', '연계', '상태', ''].map((h) => (
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {items.map((item) => (
+                <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-gray-900">{item.title}</div>
+                    <div className="text-xs text-gray-400">{item.instructor_name || '강사 미입력'}</div>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-600">{EDU_TYPE_LABELS[item.edu_type] ?? item.edu_type}</td>
+                  <td className="px-4 py-3 text-xs text-gray-600">{item.edu_date}</td>
+                  <td className="px-4 py-3 text-xs text-gray-600">{item.edu_duration_hours ? `${item.edu_duration_hours}h` : '—'}</td>
+                  <td className="px-4 py-3 text-xs text-gray-600">{item.attendee_count}명</td>
+                  <td className="px-4 py-3 text-center">
+                    {item.link_type === 'auto_from_risk'
+                      ? (
+                        <span className="inline-flex items-center gap-1 text-blue-600 text-xs" title={item.source_risk?.title ?? ''}>
+                          <Link2 className="w-3.5 h-3.5" />
+                          연계
+                        </span>
+                      )
+                      : <span className="text-gray-300">—</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={clsx(
+                        'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
+                        item.status === 'completed'
+                          ? 'bg-green-50 text-green-700'
+                          : item.status === 'archived'
+                            ? 'bg-gray-50 text-gray-500'
+                            : 'bg-amber-50 text-amber-700'
+                      )}
+                    >
+                      {item.status === 'completed' ? '완료' : item.status === 'archived' ? '보관' : '작성 중'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link href={`/documents/education/${item.id}`} className="text-xs text-blue-600 hover:underline">
+                      상세
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   )

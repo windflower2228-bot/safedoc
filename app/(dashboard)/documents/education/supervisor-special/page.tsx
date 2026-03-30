@@ -9,7 +9,7 @@ export default function EduPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/documents/education?edu_type=supervisor-special')
+    fetch('/api/documents/education?edu_type=supervisor-special&worker_type=supervisor')
       .then(r=>r.json()).then(j=>{ setItems(j.data??[]); setLoading(false) })
   }, [])
 

@@ -59,6 +59,20 @@ export async function GET(req: NextRequest) {
   const pageSize = Number(searchParams.get('pageSize') ?? 20)
   const q        = searchParams.get('q')
   const status   = searchParams.get('status')
+  const eduTypeRaw = searchParams.get('edu_type')
+  const workerType = searchParams.get('worker_type')
+  const excludeWorkerType = searchParams.get('exclude_worker_type')
+
+  const EDU_TYPE_ALIAS: Record<string, string> = {
+    'regular-worker': 'regular',
+    'supervisor-regular': 'regular',
+    'special-worker': 'special',
+    'supervisor-special': 'special',
+    'new-hire': 'onboarding',
+    'special-employment': 'onboarding',
+    'job-change': 'job_specific',
+  }
+  const eduType = eduTypeRaw ? (EDU_TYPE_ALIAS[eduTypeRaw] ?? eduTypeRaw) : null
 
   let query = supabase
     .from('education_journals')
@@ -76,6 +90,9 @@ export async function GET(req: NextRequest) {
 
   if (q)      query = query.ilike('title', `%${q}%`)
   if (status) query = query.eq('status', status)
+  if (eduType) query = query.eq('edu_type', eduType)
+  if (workerType) query = query.eq('worker_type', workerType)
+  if (excludeWorkerType) query = query.neq('worker_type', excludeWorkerType)
 
   const { data, count, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
