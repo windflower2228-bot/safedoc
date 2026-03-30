@@ -32,30 +32,30 @@ export type Annex4WorkKey =
   | 'vehicle_material_handling'
   | 'vehicle_construction_machine'
   | 'chemical_facility'
-  | 'concrete_pump_mixer_transport'
+  | 'electrical_work'
+  | 'deep_excavation'
+  | 'tunnel_excavation'
+  | 'bridge_work'
+  | 'quarry_work'
   | 'demolition'
   | 'heavy_object_handling'
   | 'rail_maintenance'
-  | 'fishing_work'
-  | 'lifting_work'
-  | 'electrical_work'
-  | 'deep_excavation'
-  | 'construction_work'
+  | 'rail_shunting'
 
 export const ANNEX4_WORK_LABELS: Record<Annex4WorkKey, string> = {
   tower_crane_install:            '타워크레인을 설치·조립·해체하는 작업',
   vehicle_material_handling:      '차량계 하역운반기계등을 사용하는 작업',
   vehicle_construction_machine:   '차량계 건설기계를 사용하는 작업',
   chemical_facility:              '화학설비 및 그 부속설비를 사용하는 작업',
-  concrete_pump_mixer_transport:  '콘크리트펌프 또는 콘크리트믹서트럭을 사용한 운반 작업',
+  electrical_work:                '전기작업',
+  deep_excavation:                '굴착면 높이 2m 이상 굴착 및 토사 붕괴 우려 장소의 토석 채취작업',
+  tunnel_excavation:              '터널굴착작업',
+  bridge_work:                    '교량(가설 포함) 관련 작업',
+  quarry_work:                    '채석작업',
   demolition:                     '건물등의 해체작업',
   heavy_object_handling:          '중량물 취급작업',
   rail_maintenance:               '궤도·관련 설비의 유지보수작업',
-  fishing_work:                   '어로작업',
-  lifting_work:                   '양중기를 사용하는 작업',
-  electrical_work:                '전기작업',
-  deep_excavation:                '굴착면 높이 2m 이상 굴착 및 토사 붕괴 우려 장소의 토석 채취작업',
-  construction_work:              '건물등의 건설 작업',
+  rail_shunting:                  '철도 입환작업',
 }
 
 // 별표 4 대상작업 선택 시 작업계획서 기본 분류 매핑
@@ -64,15 +64,15 @@ export const ANNEX4_WORK_TO_PLAN_TYPE: Record<Annex4WorkKey, WorkPlanType> = {
   vehicle_material_handling:     'heavy_equip',
   vehicle_construction_machine:  'heavy_equip',
   chemical_facility:             'chemical',
-  concrete_pump_mixer_transport: 'heavy_equip',
+  electrical_work:               'electrical',
+  deep_excavation:               'excavation',
+  tunnel_excavation:             'excavation',
+  bridge_work:                   'height',
+  quarry_work:                   'other',
   demolition:                    'demolition',
   heavy_object_handling:         'crane',
   rail_maintenance:              'other',
-  fishing_work:                  'other',
-  lifting_work:                  'crane',
-  electrical_work:               'electrical',
-  deep_excavation:               'excavation',
-  construction_work:             'height',
+  rail_shunting:                 'other',
 }
 
 // 법적 근거 (산업안전보건법 시행규칙 별표 4 등)

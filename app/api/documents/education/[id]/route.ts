@@ -1,6 +1,11 @@
 // app/api/documents/education/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
+import {
+  buildEducationLegalContent,
+  ensureEducationItemsLegalBasis,
+} from '@/lib/legal/mandatoryContent'
+import type { EduItem, EduType, WorkerType } from '@/types/education'
 
 type Params = { params: { id: string } }
 
@@ -9,8 +14,16 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
+  const admin = createAdminClient()
 
-  const { data, error } = await supabase
+  const { data: profile } = await admin
+    .from('user_profiles')
+    .select('company_id')
+    .eq('id', user.id)
+    .single()
+  if (!profile?.company_id) return NextResponse.json({ error: '권한 없음' }, { status: 403 })
+
+  const { data, error } = await admin
     .from('education_journals')
     .select(`
       *,
@@ -22,7 +35,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     .eq('id', params.id)
     .single()
 
-  if (error || !data) return NextResponse.json({ error: '문서를 찾을 수 없습니다.' }, { status: 404 })
+  if (error || !data || data.company_id !== profile.company_id) return NextResponse.json({ error: '문서를 찾을 수 없습니다.' }, { status: 404 })
   return NextResponse.json({ data })
 }
 
@@ -33,15 +46,38 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (!user) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
 
   const body = await req.json()
+  const { action: _action, ...updateBody } = body as Record<string, unknown>
+
+  const { data: current, error: currentError } = await supabase
+    .from('education_journals')
+    .select('edu_type, worker_type, edu_content, edu_items')
+    .eq('id', params.id)
+    .single()
+  if (currentError || !current) {
+    return NextResponse.json({ error: '문서를 찾을 수 없습니다.' }, { status: 404 })
+  }
+
+  const finalEduType = (updateBody.edu_type ?? current.edu_type) as EduType
+  const finalWorkerType = (updateBody.worker_type ?? current.worker_type) as WorkerType | null | undefined
+  const finalEduContent = buildEducationLegalContent(
+    finalEduType,
+    finalWorkerType,
+    (updateBody.edu_content as string | null | undefined) ?? (current.edu_content as string | null | undefined)
+  )
+  const finalEduItems = ensureEducationItemsLegalBasis(
+    ((updateBody.edu_items as EduItem[] | undefined) ?? (current.edu_items as EduItem[])) ?? []
+  )
+  updateBody.edu_content = finalEduContent
+  updateBody.edu_items = finalEduItems
 
   // 참석자 수 재계산
-  if (body.attendees) {
-    body.attendee_count = (body.attendees as any[]).filter((a: any) => a.name?.trim()).length
+  if (updateBody.attendees) {
+    updateBody.attendee_count = (updateBody.attendees as any[]).filter((a: any) => a.name?.trim()).length
   }
 
   const { data, error } = await supabase
     .from('education_journals')
-    .update({ ...body, updated_at: new Date().toISOString() })
+    .update({ ...updateBody, updated_at: new Date().toISOString() })
     .eq('id', params.id)
     .select()
     .single()

@@ -3,6 +3,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateWorkPlanDraftFromRisk } from '@/lib/linkage/riskToWorkPlan'
 import { extractSupervisorDuties, buildSupervisorDutiesSection } from '@/lib/linkage/riskToSupervisorDuties'
+import {
+  DEFAULT_ANNEX4_BY_PLAN_TYPE,
+  ensureWorkPlanLegalBasis,
+  ensureWorkPlanScopeWithLegal,
+} from '@/lib/legal/mandatoryContent'
+import { ANNEX4_WORK_LABELS, type Annex4WorkKey } from '@/types/workplan'
 
 export async function POST(req: NextRequest) {
   const supabase = createClient()
@@ -10,7 +16,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
 
   const body = await req.json()
-  const { risk_id, include_all, work_start_date, work_end_date, location } = body
+  const { risk_id, include_all, work_start_date, work_end_date, location, annex4_work_key, plan_round } = body
 
   if (!risk_id) {
     return NextResponse.json({ error: 'risk_id가 필요합니다.' }, { status: 400 })
@@ -52,6 +58,16 @@ export async function POST(req: NextRequest) {
     workEndDate:   work_end_date,
     location,
   })
+  const annex4WorkKey = (
+    typeof annex4_work_key === 'string' && annex4_work_key in ANNEX4_WORK_LABELS
+      ? annex4_work_key
+      : DEFAULT_ANNEX4_BY_PLAN_TYPE[draft.plan_type]
+  ) as Annex4WorkKey
+  const planRound = typeof plan_round === 'number' && Number.isFinite(plan_round)
+    ? Math.max(1, Math.floor(plan_round))
+    : 1
+  const enforcedWorkScope = ensureWorkPlanScopeWithLegal(draft.work_scope, annex4WorkKey, planRound)
+  const enforcedLegalBasis = ensureWorkPlanLegalBasis(draft.legal_basis, draft.plan_type)
 
   // 관리감독자의 유해위험방지업무 자동 추출 (별표2 연계)
   const riskItemsForDuty = (ra.items as any[]).map((i: any) => ({
@@ -66,6 +82,10 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     data: {
       ...draft,
+      annex4_work_key:          annex4WorkKey,
+      plan_round:               planRound,
+      work_scope:               enforcedWorkScope,
+      legal_basis:              enforcedLegalBasis,
       source_risk_id:          ra.id,
       source_risk_title:        ra.title,
       project_id:               null,

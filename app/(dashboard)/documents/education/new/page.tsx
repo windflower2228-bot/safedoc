@@ -31,7 +31,7 @@ const LEVEL_STYLE: Record<string, { label: string; cls: string }> = {
 // ─── 단계 ──────────────────────────────────────────────────────
 const STEPS = ['교육 기본정보', '교육 항목', '참석자', '최종 확인']
 
-const LEGAL_CONTENT_BASIS = '산업안전보건법 시행규칙 [별표 5]'
+const LEGAL_CONTENT_BASIS = '산업안전보건법 시행규칙 제26조제1항 (교육시간: [별표 4], 교육내용: [별표 5])'
 
 type MenuPreset = {
   title: string

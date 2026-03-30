@@ -4,6 +4,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateEduDraftFromRisk } from '@/lib/linkage/riskToEducation'
+import {
+  buildEducationLegalContent,
+  ensureEducationItemsLegalBasis,
+} from '@/lib/legal/mandatoryContent'
+import type { WorkerType } from '@/types/education'
 
 export async function POST(req: NextRequest) {
   const supabase = createClient()
@@ -58,15 +63,20 @@ export async function POST(req: NextRequest) {
     instructor: instructor ?? author?.name ?? '',
     location:   location,
   })
+  const defaultWorkerType: WorkerType = 'regular_field'
+  const enforcedEduContent = buildEducationLegalContent(draft.edu_type, defaultWorkerType, draft.edu_content)
+  const enforcedEduItems = ensureEducationItemsLegalBasis(draft.edu_items)
 
   return NextResponse.json({
     data: {
       ...draft,
+      edu_content: enforcedEduContent,
+      edu_items: enforcedEduItems,
       source_risk_id:    ra.id,
       source_risk_title: ra.title,
       project_id:        null,
       // worker_type 기본값: 현장직(상용직) — 사용자가 기본정보에서 변경 가능
-      worker_type: 'regular_field',
+      worker_type: defaultWorkerType,
     },
   })
 }

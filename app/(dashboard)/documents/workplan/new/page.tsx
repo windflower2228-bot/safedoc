@@ -11,10 +11,15 @@ import {
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import {
-  WORK_PLAN_TYPE_LABELS, WORK_PLAN_LEGAL_BASIS,
+  WORK_PLAN_TYPE_LABELS,
   ANNEX4_WORK_LABELS, ANNEX4_WORK_TO_PLAN_TYPE,
   type WorkPlanRiskItem, type WorkPlanWorker, type WorkPlanType, type Annex4WorkKey,
 } from '@/types/workplan'
+import {
+  DEFAULT_ANNEX4_BY_PLAN_TYPE,
+  ensureWorkPlanLegalBasis,
+  ensureWorkPlanScopeWithLegal,
+} from '@/lib/legal/mandatoryContent'
 
 const STEPS = ['기본정보', '위험요인·감소대책', '작업 방법', '작업 인원', '최종 확인']
 const PLAN_TYPES = Object.entries(WORK_PLAN_TYPE_LABELS) as [WorkPlanType, string][]
@@ -101,9 +106,14 @@ export default function NewWorkPlanPage() {
       if (json.warning) { toast.warning(json.warning); return }
 
       const d = json.data
+      const nextWorkKey: Annex4WorkKey =
+        d.annex4_work_key ?? DEFAULT_ANNEX4_BY_PLAN_TYPE[d.plan_type]
+      const nextPlanRound: number = Number(d.plan_round || 1)
       form.reset({
         ...form.getValues(),
         title:               d.title,
+        annex4_work_key:     nextWorkKey,
+        plan_round:          nextPlanRound,
         plan_type:           d.plan_type,
         work_location:       d.work_location,
         work_start_date:     d.work_start_date,
@@ -132,21 +142,6 @@ export default function NewWorkPlanPage() {
     return `${ANNEX4_WORK_LABELS[workKey]} 작업계획서 (${round}차)`
   }
 
-  function buildAnnex4MetaScope(originalScope: string, workKey: Annex4WorkKey, round: number) {
-    const cleanScope = (originalScope ?? '').trim()
-    const body = cleanScope
-      .split('\n')
-      .filter((line) => !line.startsWith('[별표4 대상작업]') && !line.startsWith('[계획서 회차]'))
-      .join('\n')
-      .trim()
-
-    return [
-      `[별표4 대상작업] ${ANNEX4_WORK_LABELS[workKey]}`,
-      `[계획서 회차] ${round}차`,
-      body,
-    ].filter(Boolean).join('\n')
-  }
-
   useEffect(() => {
     const key = form.getValues('annex4_work_key')
     const round = Number(form.getValues('plan_round') || 1)
@@ -154,10 +149,7 @@ export default function NewWorkPlanPage() {
       form.setValue('title', buildAutoTitle(key, round))
     }
     if (!form.getValues('legal_basis')) {
-      form.setValue(
-        'legal_basis',
-        `산업안전보건기준에 관한 규칙 제38조 및 [별표 4] / ${WORK_PLAN_LEGAL_BASIS[ANNEX4_WORK_TO_PLAN_TYPE[key]]}`
-      )
+      form.setValue('legal_basis', ensureWorkPlanLegalBasis('', ANNEX4_WORK_TO_PLAN_TYPE[key]))
     }
   }, [form])
 
@@ -168,9 +160,8 @@ export default function NewWorkPlanPage() {
 
     const autoTitle = buildAutoTitle(v.annex4_work_key, Number(v.plan_round) || 1)
     const finalTitle = (v.title ?? '').trim() || autoTitle
-    const finalScope = buildAnnex4MetaScope(v.work_scope ?? '', v.annex4_work_key, Number(v.plan_round) || 1)
-    const finalLegal = (v.legal_basis ?? '').trim()
-      || `산업안전보건기준에 관한 규칙 제38조 및 [별표 4] / ${WORK_PLAN_LEGAL_BASIS[v.plan_type]}`
+    const finalScope = ensureWorkPlanScopeWithLegal(v.work_scope, v.annex4_work_key, Number(v.plan_round) || 1)
+    const finalLegal = ensureWorkPlanLegalBasis(v.legal_basis, v.plan_type)
 
     setSaving(true)
     const res = await fetch('/api/documents/workplan', {
@@ -180,6 +171,8 @@ export default function NewWorkPlanPage() {
         source_risk_id: sourceRisk?.id,
         project_id: undefined,
         title: finalTitle,
+        annex4_work_key: v.annex4_work_key,
+        plan_round: Number(v.plan_round) || 1,
         plan_type: v.plan_type,
         work_location: v.work_location,
         work_start_date: v.work_start_date,
@@ -319,10 +312,7 @@ export default function NewWorkPlanPage() {
                   if (!title || title.includes('작업계획서')) {
                     form.setValue('title', buildAutoTitle(key, round))
                   }
-                  form.setValue(
-                    'legal_basis',
-                    `산업안전보건기준에 관한 규칙 제38조 및 [별표 4] / ${WORK_PLAN_LEGAL_BASIS[ANNEX4_WORK_TO_PLAN_TYPE[key]]}`
-                  )
+                  form.setValue('legal_basis', ensureWorkPlanLegalBasis('', ANNEX4_WORK_TO_PLAN_TYPE[key]))
                 }}
                 className="input-base"
               >
@@ -391,7 +381,7 @@ export default function NewWorkPlanPage() {
             <div>
               <label className="label-base">관계 법령</label>
               <input {...form.register('legal_basis')} className="input-base text-xs"
-                placeholder={WORK_PLAN_LEGAL_BASIS[form.watch('plan_type')] ?? ''} />
+                placeholder={ensureWorkPlanLegalBasis('', form.watch('plan_type'))} />
             </div>
             <div className="col-span-2">
               <label className="label-base">작업 범위·개요</label>
@@ -403,7 +393,7 @@ export default function NewWorkPlanPage() {
           {/* 법령 자동 채우기 */}
           <button
             type="button"
-            onClick={() => form.setValue('legal_basis', WORK_PLAN_LEGAL_BASIS[form.watch('plan_type')])}
+            onClick={() => form.setValue('legal_basis', ensureWorkPlanLegalBasis('', form.watch('plan_type')))}
             className="text-xs text-green-600 hover:underline flex items-center gap-1"
           >
             <Sparkles className="w-3 h-3" /> 작업 종류에 맞는 관계 법령 자동 입력

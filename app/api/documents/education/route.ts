@@ -1,7 +1,11 @@
 // app/api/documents/education/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { generateEduDraftFromRisk } from '@/lib/linkage/riskToEducation'
+import {
+  buildEducationLegalContent,
+  ensureEducationItemsLegalBasis,
+} from '@/lib/legal/mandatoryContent'
+import type { EduItem } from '@/types/education'
 import { z } from 'zod'
 
 // ─── 입력 스키마 ──────────────────────────────────────────────────────────────
@@ -106,6 +110,12 @@ export async function POST(req: NextRequest) {
   }
 
   const d = parsed.data
+  const enforcedEduItems = ensureEducationItemsLegalBasis(d.edu_items as EduItem[])
+  const enforcedEduContent = buildEducationLegalContent(
+    d.edu_type,
+    d.worker_type,
+    d.edu_content ?? null
+  )
 
   // 참석자 수 계산 (name 있는 행만)
   const realAttendees  = d.attendees.filter(a => a.name.trim())
@@ -129,8 +139,8 @@ export async function POST(req: NextRequest) {
       instructor_name:     d.instructor_name ?? null,
       instructor_position: d.instructor_position ?? null,
       instructor_affil:    d.instructor_affil ?? null,
-      edu_content:         d.edu_content ?? null,
-      edu_items:           d.edu_items,
+      edu_content:         enforcedEduContent,
+      edu_items:           enforcedEduItems,
       attendees:           d.attendees,
       attendee_count:      attendeeCount,
       status:              'draft',

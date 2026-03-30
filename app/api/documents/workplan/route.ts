@@ -1,6 +1,12 @@
 // app/api/documents/workplan/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import {
+  DEFAULT_ANNEX4_BY_PLAN_TYPE,
+  ensureWorkPlanLegalBasis,
+  ensureWorkPlanScopeWithLegal,
+} from '@/lib/legal/mandatoryContent'
+import { ANNEX4_WORK_LABELS, type Annex4WorkKey } from '@/types/workplan'
 import { z } from 'zod'
 
 const workPlanRiskItemSchema = z.object({
@@ -49,6 +55,8 @@ const createWorkPlanSchema = z.object({
   safety_summary:      z.string().optional(),
   risk_items:          z.array(workPlanRiskItemSchema).min(1, '작업 항목을 1개 이상 입력해주세요'),
   workers:             z.array(workerSchema).default([]),
+  annex4_work_key:     z.string().optional(),
+  plan_round:          z.number().int().min(1).optional(),
 })
 
 // ─── GET /api/documents/workplan ─────────────────────────────
@@ -115,6 +123,15 @@ export async function POST(req: NextRequest) {
   }
 
   const d = parsed.data
+  const annex4WorkKey = (
+    d.annex4_work_key && d.annex4_work_key in ANNEX4_WORK_LABELS
+      ? d.annex4_work_key
+      : DEFAULT_ANNEX4_BY_PLAN_TYPE[d.plan_type]
+  ) as Annex4WorkKey
+  const planRound = d.plan_round ?? 1
+  const enforcedScope = ensureWorkPlanScopeWithLegal(d.work_scope, annex4WorkKey, planRound)
+  const enforcedLegalBasis = ensureWorkPlanLegalBasis(d.legal_basis, d.plan_type)
+
   const { data: plan, error } = await supabase
     .from('work_plans')
     .insert({
@@ -129,8 +146,8 @@ export async function POST(req: NextRequest) {
       work_end_date:       d.work_end_date,
       work_start_time:     d.work_start_time ?? null,
       work_end_time:       d.work_end_time ?? null,
-      work_scope:          d.work_scope ?? null,
-      legal_basis:         d.legal_basis ?? null,
+      work_scope:          enforcedScope,
+      legal_basis:         enforcedLegalBasis,
       supervisor_name:     d.supervisor_name ?? null,
       supervisor_position: d.supervisor_position ?? null,
       supervisor_phone:    d.supervisor_phone ?? null,

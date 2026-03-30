@@ -1,7 +1,7 @@
 // lib/linkage/riskToEducation.ts
 // 위험성평가 → 안전보건교육일지 자동 변환 핵심 로직
 
-import type { EduItem } from '@/types/education'
+import type { EduItem, EduType } from '@/types/education'
 import { generateEduPoint, HAZARD_LEGAL_BASIS } from '@/types/education'
 
 // 위험성평가 항목 타입 (DB에서 조회한 형태)
@@ -35,7 +35,7 @@ interface RiskAssessmentRow {
 
 export interface GeneratedEduDraft {
   title:               string
-  edu_type:            string
+  edu_type:            EduType
   edu_date:            string
   edu_duration_hours:  number
   edu_location:        string
